@@ -15,49 +15,46 @@ import java.util.Set;
 import uk.ac.cam.gp.charlie.Executor;
 import uk.ac.cam.gp.charlie.Result;
 import uk.ac.cam.gp.charlie.Test;
+import uk.ac.cam.gp.charlie.TestEnvironment;
+import uk.ac.cam.gp.charlie.datalog.interpreter.Context;
+import uk.ac.cam.gp.charlie.datalog.interpreter.GraqlInterpreter;
 
 public class DatalogExecutor extends Executor {
 
   private DatalogEngine engine;
+  private Context c;
 
-  public DatalogExecutor() {
-  }
-
-  private void resetEngine() {
-    engine = new RecursiveQsqEngine();
+  public DatalogExecutor(TestEnvironment environment) {
+    try {
+      engine = new RecursiveQsqEngine();
+      c = GraqlInterpreter.toContext(environment);
+      String datalog = GraqlInterpreter.toDatalog(c);
+      DatalogTokenizer to = new DatalogTokenizer(new StringReader(datalog));
+      Set<Clause> ast = DatalogParser.parseProgram(to);
+      engine.init(ast);
+    } catch (DatalogParseException|DatalogValidationException e) {
+      e.printStackTrace();
+    }
   }
 
   @Override
   public Result execute(Test t) {
     try {
-      resetEngine();
-      String program = "edge(0,1). edge(1,2). tc(X,Y) :- edge(X,Y)."
-          + "tc(X,Y) :- edge(X,Z), tc(Z,Y). cycle :- tc(X,X).";
-      DatalogTokenizer to = new DatalogTokenizer(new StringReader(program));
-      Set<Clause> ast = DatalogParser.parseProgram(to);
-      PredicateSym edge = PredicateSym.create("edge", 2);
-      PredicateSym tc = PredicateSym.create("tc", 2);
-      PredicateSym cycle = PredicateSym.create("cycle", 0);
-      engine.init(ast);
-      String tests = "tc(0,Y).";
-      to = new DatalogTokenizer(new StringReader(tests));
+      String test = GraqlInterpreter.toDatalog(t.query,c);
+      DatalogTokenizer to = new DatalogTokenizer(new StringReader(test));
       while (to.hasNext()) {
         Set<PositiveAtom> atoms = engine.query(DatalogParser.parseClauseAsPositiveAtom(to));
         System.out.println("Queried:");
         System.out.println(atoms);
       }
-    } catch (DatalogParseException | DatalogValidationException e) {
+    } catch (DatalogParseException e) {
       System.err.println("Error during execution");
       e.printStackTrace();
-      System.exit(0);
     }
     return null;
   }
 
   public static void main(String[] args) {
     //FOR TESTING ONLY!!!!! DELETE AFTER
-
-    DatalogExecutor de = new DatalogExecutor();
-    de.execute(null);
   }
 }
