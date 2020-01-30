@@ -1,0 +1,25 @@
+###Schema
+define
+
+person sub entity,
+  has name,
+  plays employee;
+
+organisation sub entity,
+  has name,
+  plays employer;
+
+employment sub relation,
+  relates employee,
+  relates employer;
+
+###Data
+insert $x isa person has name "Bob";
+insert $y isa organisation has name "Uni"";
+insert $z (employer: $y, employee: $x) isa employment;
+
+###Test
+match $p isa person, has name $n; get;
+match $o isa organisation, has name $n; get;
+match (employer: $a, employee: $b) isa employment; get;
+
