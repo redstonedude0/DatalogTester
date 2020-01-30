@@ -5,7 +5,6 @@ import abcdatalog.engine.DatalogEngine;
 import abcdatalog.ast.PositiveAtom;
 import abcdatalog.parser.DatalogTokenizer;
 import abcdatalog.parser.DatalogParser;
-import abcdatalog.ast.PredicateSym;
 import abcdatalog.parser.DatalogParseException;
 import abcdatalog.ast.validation.DatalogValidationException;
 
@@ -14,7 +13,6 @@ import java.io.StringReader;
 import java.util.Set;
 import uk.ac.cam.gp.charlie.Executor;
 import uk.ac.cam.gp.charlie.Result;
-import uk.ac.cam.gp.charlie.Test;
 import uk.ac.cam.gp.charlie.TestEnvironment;
 import uk.ac.cam.gp.charlie.datalog.interpreter.Context;
 import uk.ac.cam.gp.charlie.datalog.interpreter.GraqlInterpreter;
@@ -38,9 +36,9 @@ public class DatalogExecutor extends Executor {
   }
 
   @Override
-  public Result execute(Test t) {
+  public Result execute(String query) {
     try {
-      String test = GraqlInterpreter.toDatalog(t.query,c);
+      String test = GraqlInterpreter.toDatalog(query,c);
       DatalogTokenizer to = new DatalogTokenizer(new StringReader(test));
       while (to.hasNext()) {
         Set<PositiveAtom> atoms = engine.query(DatalogParser.parseClauseAsPositiveAtom(to));
