@@ -45,7 +45,8 @@ public class Context {
    * insert $z (employer: $y, employee: $x) isa employment;
    */
 
-  List<Define> schema;
+  List<Define> schema = new ArrayList<>();
+  String TEST_REMOVE = "";
 
   public static void generateExample() {
     List<Define> schema = new ArrayList<>();

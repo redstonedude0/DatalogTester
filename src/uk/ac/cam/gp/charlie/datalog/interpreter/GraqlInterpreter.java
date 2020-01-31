@@ -6,9 +6,9 @@ import uk.ac.cam.gp.charlie.datalog.interpreter.ast.Define;
 public class GraqlInterpreter {
 
   public static Context toContext(TestEnvironment environment) {
-
-
-    return null;
+    Context c = new Context();
+    c.TEST_REMOVE = environment.schema + " " + environment.data;
+    return c;
   }
 
   public static String toDatalog(Context c) {
@@ -52,7 +52,7 @@ public class GraqlInterpreter {
     for (Define define: c.schema) {
 
     }
-    return null;
+    return c.TEST_REMOVE;
   }
 
   public static String toDatalog(String graql, Context c) {

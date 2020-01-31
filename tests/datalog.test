@@ -1,0 +1,15 @@
+###Schema###
+
+am(X) :- thinks(X).
+
+sees(X,Y) :- am(X), am(Y), X != Y.
+
+###Data###
+thinks(bob).
+thinks(alice).
+thinks(steve).
+
+###Test###
+am(X).
+sees(X,Y).
+sees(Z,james).
