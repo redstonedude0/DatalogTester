@@ -1,15 +1,37 @@
 ###Schema###
-
-am(X) :- thinks(X).
-
-sees(X,Y) :- am(X), am(Y), X != Y.
-
 ###Data###
-thinks(bob).
-thinks(alice).
-thinks(steve).
+t_subs(t_person,t_entity).
+t_subs(t_organisation,t_entity).
+t_subs(t_employment,t_relation).
+t_subs(t_coworkers,t_relation).
 
+t_hasattr(t_person,name).
+t_hasattr(t_organisation,name).
+
+t_playsrole(t_person,employee).
+t_playsrole(t_organisation,employer).
+
+t_relates(t_employment,employee).
+t_relates(t_employment,employer).
+
+instanceof(e_1,t_person).
+instanceof(e_2,t_person).
+instanceof(e_3,t_organisation).
+instanceof(e_4,t_employment).
+
+instanceattr(e_1,name,str_Bob).
+instanceattr(e_2,name,str_Alice).
+instanceattr(e_3,name,str_Uni).
+
+instancerel(e_4,employee,e_1).
+instancerel(e_4,employer,e_3).
+
+
+query1(X) :- instanceof(X,t_person), instanceattr(X,name,str_Bob).
+query2(X,Y,Z) :- instanceof(X,t_employment), instancerel(X,employee,Y), instancerel(X,employer,Z).
 ###Test###
-am(X).
-sees(X,Y).
-sees(Z,james).
+query1(X).
+query2(X,Y,Z).
+
+%match(X,[(isa,t_person),(has,name,"Bob")]).
+%match(Var,[(isa,t_employment),(relates,employee,X),(relates,employer,Y)]).

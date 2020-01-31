@@ -60,6 +60,6 @@ public class DatalogExecutor extends Executor {
 
   public static void main(String[] args) {
     //FOR TESTING ONLY!!!!! DELETE AFTER
-    TestLoader.runTestsFromFile(DatalogExecutor.class,new File("tests/datalog.test"));
+    TestLoader.runTestsFromFile(DatalogExecutor.class,new File("tests/datalog2.test"));
   }
 }
