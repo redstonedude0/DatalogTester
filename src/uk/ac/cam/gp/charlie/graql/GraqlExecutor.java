@@ -10,6 +10,13 @@ public class GraqlExecutor extends Executor {
 
   GraknClient.Session session;
 
+  /********
+   * Note to whoever is writing this code:
+   * Please include the relevant grakn/graql libraries in the /lib/ folder (with junit and hamcrest)
+   * Thanks ~Harrison
+   *
+   */
+
   public GraqlExecutor(TestEnvironment environment) {
     GraknClient client = new GraknClient("localhost:48555");
     GraknClient.Session session = client.session("social_network");

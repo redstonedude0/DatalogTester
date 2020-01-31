@@ -1,9 +1,11 @@
 package uk.ac.cam.gp.charlie.datalog.interpreter.ast;
 
-import java.util.List;
-
-public class Define {
+public abstract class Define {
 
   public Define subs = null;
+  public final String identifier;
 
+  protected Define(String identifier) {
+    this.identifier = identifier;
+  }
 }
