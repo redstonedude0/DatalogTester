@@ -10,6 +10,7 @@ import uk.ac.cam.gp.charlie.ast.Define;
 import uk.ac.cam.gp.charlie.ast.DefineEntity;
 import uk.ac.cam.gp.charlie.ast.DefineRelation;
 import uk.ac.cam.gp.charlie.ast.Plays;
+import uk.ac.cam.gp.charlie.graql.GraqlParser;
 
 /**
  * Represents a schema and data (test environment) in AST form
@@ -41,33 +42,7 @@ public class Context {
    * @return the example context
    */
   public static Context generateExample() {
-    List<Define> schema = new ArrayList<>();
-
-    Attribute nameAttribute = new Attribute("name");
-
-    Plays employee = new Plays("employee");
-    Plays employer = new Plays("employer");
-
-    DefineEntity person = new DefineEntity("person");
-    person.attributes.add(nameAttribute);
-    person.plays.add(employee);
-    schema.add(person);
-
-    DefineEntity organisation = new DefineEntity("organisation");
-    organisation.attributes.add(nameAttribute);
-    organisation.plays.add(employer);
-    schema.add(organisation);
-
-    DefineRelation employment = new DefineRelation("employment");
-    employment.relates.add(employee);
-    employment.relates.add(employer);
-    schema.add(employment);
-
-    DefineRelation coworkers = new DefineRelation("coworkers");
-    coworkers.relates.add(employee);
-    schema.add(coworkers);
-
-    Context toRet = new Context(schema, new ArrayList<>());
+    Context toRet = new Context(GraqlParser.schemaToAST(""), new ArrayList<>());
 
     return toRet;
   }
