@@ -28,10 +28,11 @@ instancerel(e_4,employer,e_3).
 
 
 query1(X) :- instanceof(X,t_person), instanceattr(X,name,str_Bob).
-query2(X,Y,Z) :- instanceof(X,t_employment), instancerel(X,employee,Y), instancerel(X,employer,Z).
+query2_b6hhds78adg8sa_8d7sga8da7s8_hsa8dsahday(X,Y,Z) :- instanceof(X,t_employment), instancerel(X,employee,Y), instancerel(X,employer,Z).
 ###Test###
 query1(X).
-query2(X,Y,Z).
+query2_b6hhds78adg8sa_8d7sga8da7s8_hsa8dsahday(X,Y,Z).
+query3(bob). query3(X).
 
 %match(X,[(isa,t_person),(has,name,"Bob")]).
 %match(Var,[(isa,t_employment),(relates,employee,X),(relates,employer,Y)]).

@@ -2,53 +2,55 @@ package uk.ac.cam.gp.charlie.datalog.interpreter;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.w3c.dom.Attr;
 import uk.ac.cam.gp.charlie.datalog.interpreter.ast.Attribute;
 import uk.ac.cam.gp.charlie.datalog.interpreter.ast.Define;
 import uk.ac.cam.gp.charlie.datalog.interpreter.ast.DefineEntity;
 import uk.ac.cam.gp.charlie.datalog.interpreter.ast.DefineRelation;
 import uk.ac.cam.gp.charlie.datalog.interpreter.ast.Plays;
 
+/**
+ * Represents a schema and data (test environment) in AST form
+ */
 public class Context {
 
-  //Stores a schema context in AST form
-  //TODO needs to transform
-  /**
+  /* TODO: Make sure the following example graql can be transformed
+   *
    * define
    *
-   * person sub entity,
-   *   has name,
-   *   plays employee;
+   * person sub entity, has name, plays employee;
    *
-   * organisation sub entity,
-   *   has name,
-   *   plays employer;
+   * organisation sub entity, has name, plays employer;
    *
-   * employment sub relation,
-   *   relates employee,
-   *   relates employer;
+   * employment sub relation, relates employee, relates employer;
    *
-   * coworkers sub relation,
-   *    relates employee;
+   * coworkers sub relation, relates employee;
    *
-   * same-employment-are-coworkers sub rule,
-   *   when {
-   *     (employee: $x, $z) isa employment;
-   *     (employee: $y, $z) isa employment;
-   *     $x != $y;
-   *   }, then {
-   *     ($x,$y) isa coworkers;
-   *   };
-   * ###Data
-   * insert $x isa person has name "Bob";
-   * insert $y isa organisation has name "Uni"";
-   * insert $z (employer: $y, employee: $x) isa employment;
+   * same-employment-are-coworkers sub rule, when { (employee: $x, $z) isa employment; (employee:
+   * $y, $z) isa employment; $x != $y; }, then { ($x,$y) isa coworkers; }; ###Data insert $x isa
+   * person has name "Bob"; insert $y isa organisation has name "Uni""; insert $z (employer: $y,
+   * employee: $x) isa employment;
    */
 
+  /**
+   * The Schema this Context represents
+   */
   List<Define> schema = new ArrayList<>();
+  /**
+   * The Data this context represents TODO: Define an AST for data (e.g. need 'Insert' AST node?,
+   * then change the below definition accordingly (don't use String)
+   */
+  List<String> data = null;
+  //TODO: Remove, this is just for testing so I can pass datalog into the interpreter directly
   String TEST_REMOVE = "";
 
-  public static void generateExample() {
+  /**
+   * TODO:Remove, or make into a unit test
+   *
+   * This method should generate an example Context. This is to allow us to test Context->Datalog
+   * conversion without having to finish coding Graql->Context conversion.
+   * @return the example context
+   */
+  public static Context generateExample() {
     List<Define> schema = new ArrayList<>();
 
     DefineEntity person = new DefineEntity("person");
@@ -72,6 +74,7 @@ public class Context {
     coworkers.relates.add(employee);
     schema.add(coworkers);
 
+    return null;
   }
 
 }

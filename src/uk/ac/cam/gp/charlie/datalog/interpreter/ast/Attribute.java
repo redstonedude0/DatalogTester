@@ -1,5 +1,10 @@
 package uk.ac.cam.gp.charlie.datalog.interpreter.ast;
 
+/**
+ * Represents an attribute an object (entity, relation) 'has'.
+ *
+ * Note: Later will need to change to DefineAttribute as something can sub attribute.
+ */
 public class Attribute {
 
   public final String identifier;
