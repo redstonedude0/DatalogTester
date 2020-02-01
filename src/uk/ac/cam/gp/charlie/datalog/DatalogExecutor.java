@@ -81,6 +81,12 @@ public class DatalogExecutor extends Executor {
 
   public static void main(String[] args) {
     //FOR TESTING ONLY!!!!! DELETE AFTER
-    TestLoader.runTestsFromFile(DatalogExecutor.class, new File("tests/datalog2.test"));
+//    TestLoader.runTestsFromFile(DatalogExecutor.class, new File("tests/datalog2.test"));
+
+    System.out.println(ContextInterpreter.toDatalog(Context.generateExample()));
+
+    //    DatalogExecutor de = new DatalogExecutor(new TestEnvironment("",""));
+//    de.c = Context.generateExample();
+//    de.execute("");
   }
 }
