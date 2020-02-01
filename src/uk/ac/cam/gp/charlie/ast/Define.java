@@ -1,4 +1,4 @@
-package uk.ac.cam.gp.charlie.datalog.interpreter.ast;
+package uk.ac.cam.gp.charlie.ast;
 
 /**
  * Represents abstract definition of a Grakn Concept Type or Grakn Rule. See subtypes for definition

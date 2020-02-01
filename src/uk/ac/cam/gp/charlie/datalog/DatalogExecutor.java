@@ -12,13 +12,16 @@ import abcdatalog.parser.DatalogTokenizer;
 import java.io.File;
 import java.io.StringReader;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import uk.ac.cam.gp.charlie.Executor;
 import uk.ac.cam.gp.charlie.Result;
 import uk.ac.cam.gp.charlie.TestEnvironment;
 import uk.ac.cam.gp.charlie.TestLoader;
+import uk.ac.cam.gp.charlie.ast.Define;
 import uk.ac.cam.gp.charlie.datalog.interpreter.Context;
-import uk.ac.cam.gp.charlie.datalog.interpreter.ContextInterpreter;
+import uk.ac.cam.gp.charlie.datalog.interpreter.ASTInterpreter;
+import uk.ac.cam.gp.charlie.graql.GraqlParser;
 
 public class DatalogExecutor extends Executor {
 
@@ -33,8 +36,12 @@ public class DatalogExecutor extends Executor {
    */
   public DatalogExecutor(TestEnvironment environment) {
     try {
-      c = ContextInterpreter.toContext(environment); //Convert the Graql environment to a Context
-      String datalog = ContextInterpreter.toDatalog(c); //Convert the Context to Datalog
+      //Convert the Graql environment to a Context
+      List<Define> schema = GraqlParser.schemaToAST(environment.schema);
+      List<String> data = GraqlParser.dataToAST(environment.data);
+      c = new Context(schema,data);
+
+      String datalog = ASTInterpreter.toDatalog(c); //Convert the Context to Datalog
 
       DatalogTokenizer to = new DatalogTokenizer(
           new StringReader(datalog)); //tokenise and parse the datalog
@@ -49,7 +56,7 @@ public class DatalogExecutor extends Executor {
   public Result execute(String query) {
     try {
       //Using the context, form the datalog
-      String[] test = ContextInterpreter.toDatalog(query, c);
+      String[] test = ASTInterpreter.toDatalog(query, c);
       Set<Clause> clauses = new HashSet<>();
       if (!test[0].equals("")) { //need to re-do engine
         engine = null;
@@ -83,7 +90,7 @@ public class DatalogExecutor extends Executor {
     //FOR TESTING ONLY!!!!! DELETE AFTER
 //    TestLoader.runTestsFromFile(DatalogExecutor.class, new File("tests/datalog2.test"));
 
-    System.out.println(ContextInterpreter.toDatalog(Context.generateExample()));
+    System.out.println(ASTInterpreter.toDatalog(Context.generateExample()));
 
     //    DatalogExecutor de = new DatalogExecutor(new TestEnvironment("",""));
 //    de.c = Context.generateExample();

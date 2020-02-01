@@ -1,4 +1,4 @@
-package uk.ac.cam.gp.charlie.datalog.interpreter.ast;
+package uk.ac.cam.gp.charlie.ast;
 
 import java.util.ArrayList;
 import java.util.List;

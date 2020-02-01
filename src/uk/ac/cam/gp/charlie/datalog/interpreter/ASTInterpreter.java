@@ -1,28 +1,16 @@
 package uk.ac.cam.gp.charlie.datalog.interpreter;
 
 import uk.ac.cam.gp.charlie.TestEnvironment;
-import uk.ac.cam.gp.charlie.datalog.interpreter.ast.Attribute;
-import uk.ac.cam.gp.charlie.datalog.interpreter.ast.Define;
-import uk.ac.cam.gp.charlie.datalog.interpreter.ast.DefineEntity;
-import uk.ac.cam.gp.charlie.datalog.interpreter.ast.DefineRelation;
-import uk.ac.cam.gp.charlie.datalog.interpreter.ast.Plays;
+import uk.ac.cam.gp.charlie.ast.Attribute;
+import uk.ac.cam.gp.charlie.ast.Define;
+import uk.ac.cam.gp.charlie.ast.DefineEntity;
+import uk.ac.cam.gp.charlie.ast.DefineRelation;
+import uk.ac.cam.gp.charlie.ast.Plays;
 
 /**
  * Interprets to and from Context (An AST representation)
  */
-public class ContextInterpreter {
-
-  /**
-   * Convert an environment (written in graql) into an AST Context
-   * @param environment the graql environment to convert
-   * @return A Context representing the environment
-   */
-  public static Context toContext(TestEnvironment environment) {
-    Context c = new Context();
-    //TODO remove. For now just dumping the raw (hopefully datalog) text into the context).
-    c.TEST_REMOVE = environment.schema + " " + environment.data;
-    return c;
-  }
+public class ASTInterpreter {
 
   /**
    * Convert a Context to datalog (to be used for initialising the environment)

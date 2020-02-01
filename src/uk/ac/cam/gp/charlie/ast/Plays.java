@@ -1,4 +1,4 @@
-package uk.ac.cam.gp.charlie.datalog.interpreter.ast;
+package uk.ac.cam.gp.charlie.ast;
 
 /**
  * Represents a 'plays' relationship connection.

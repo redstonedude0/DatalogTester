@@ -5,47 +5,33 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import org.w3c.dom.Attr;
-import uk.ac.cam.gp.charlie.datalog.interpreter.ast.Attribute;
-import uk.ac.cam.gp.charlie.datalog.interpreter.ast.Define;
-import uk.ac.cam.gp.charlie.datalog.interpreter.ast.DefineEntity;
-import uk.ac.cam.gp.charlie.datalog.interpreter.ast.DefineRelation;
-import uk.ac.cam.gp.charlie.datalog.interpreter.ast.Plays;
+import uk.ac.cam.gp.charlie.ast.Attribute;
+import uk.ac.cam.gp.charlie.ast.Define;
+import uk.ac.cam.gp.charlie.ast.DefineEntity;
+import uk.ac.cam.gp.charlie.ast.DefineRelation;
+import uk.ac.cam.gp.charlie.ast.Plays;
 
 /**
  * Represents a schema and data (test environment) in AST form
  */
 public class Context {
 
-  /* TODO: Make sure the following example graql can be transformed
-   *
-   * define
-   *
-   * person sub entity, has name, plays employee;
-   *
-   * organisation sub entity, has name, plays employer;
-   *
-   * employment sub relation, relates employee, relates employer;
-   *
-   * coworkers sub relation, relates employee;
-   *
-   * same-employment-are-coworkers sub rule, when { (employee: $x, $z) isa employment; (employee:
-   * $y, $z) isa employment; $x != $y; }, then { ($x,$y) isa coworkers; }; ###Data insert $x isa
-   * person has name "Bob"; insert $y isa organisation has name "Uni""; insert $z (employer: $y,
-   * employee: $x) isa employment;
-   */
+  public Context(List<Define> schema, List<String> data) {
+    this.schema = schema;
+    this.data = data;
+  }
 
   /**
    * The Schema this Context represents
    */
-  List<Define> schema = new ArrayList<>();
+  public List<Define> schema;
   /**
    * The Data this context represents TODO: Define an AST for data (e.g. need 'Insert' AST node?,
    * then change the below definition accordingly (don't use String)
    */
-  List<String> data = null;
+  public List<String> data;
   //TODO: Remove, this is just for testing so I can pass datalog into the interpreter directly
-  String TEST_REMOVE = "";
+  public String TEST_REMOVE = "";
 
   /**
    * TODO:Remove, or make into a unit test
@@ -55,7 +41,7 @@ public class Context {
    * @return the example context
    */
   public static Context generateExample() {
-    Context toRet = new Context();
+    List<Define> schema = new ArrayList<>();
 
     Attribute nameAttribute = new Attribute("name");
 
@@ -65,21 +51,23 @@ public class Context {
     DefineEntity person = new DefineEntity("person");
     person.attributes.add(nameAttribute);
     person.plays.add(employee);
-    toRet.schema.add(person);
+    schema.add(person);
 
     DefineEntity organisation = new DefineEntity("organisation");
     organisation.attributes.add(nameAttribute);
     organisation.plays.add(employer);
-    toRet.schema.add(organisation);
+    schema.add(organisation);
 
     DefineRelation employment = new DefineRelation("employment");
     employment.relates.add(employee);
     employment.relates.add(employer);
-    toRet.schema.add(employment);
+    schema.add(employment);
 
     DefineRelation coworkers = new DefineRelation("coworkers");
     coworkers.relates.add(employee);
-    toRet.schema.add(coworkers);
+    schema.add(coworkers);
+
+    Context toRet = new Context(schema, new ArrayList<>());
 
     return toRet;
   }
