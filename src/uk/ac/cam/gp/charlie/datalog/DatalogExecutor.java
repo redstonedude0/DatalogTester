@@ -15,6 +15,7 @@ import java.util.Set;
 import uk.ac.cam.gp.charlie.Executor;
 import uk.ac.cam.gp.charlie.Result;
 import uk.ac.cam.gp.charlie.TestEnvironment;
+import uk.ac.cam.gp.charlie.ast.queries.Query;
 import uk.ac.cam.gp.charlie.ast.queries.QueryDefine;
 import uk.ac.cam.gp.charlie.datalog.interpreter.ASTInterpreter;
 import uk.ac.cam.gp.charlie.datalog.interpreter.Context;
@@ -23,7 +24,7 @@ import uk.ac.cam.gp.charlie.graql.GraqlParser;
 public class DatalogExecutor extends Executor {
 
   private DatalogEngine engine; //The engine to use for datalog interpretation
-  private Context c; //The context of the test environment, contains the ASTs representing the environment
+  private Context c = new Context(); //The context of the test environment, contains the ASTs representing the environment
   private Set<Clause> datalog_environment;//The datalog environment, derived from c.
 
   /**
@@ -34,9 +35,12 @@ public class DatalogExecutor extends Executor {
   public DatalogExecutor(TestEnvironment environment) {
     try {
       //Convert the Graql environment to a Context
-      List<QueryDefine> schema = GraqlParser.schemaToAST(environment.schema);
-      List<String> data = GraqlParser.dataToAST(environment.data);
-      c = new Context(schema,data);
+      List<Query> schema = GraqlParser.graqlToAST(environment.schema);
+      List<Query> data = GraqlParser.graqlToAST(environment.data);
+
+      c.queryList.addAll(schema);
+      c.queryList.addAll(data);
+      //TODO remove
       c.TEST_REMOVE = environment.schema + " " + environment.data;
 
       String datalog = ASTInterpreter.toDatalog(c); //Convert the Context to Datalog
@@ -87,8 +91,8 @@ public class DatalogExecutor extends Executor {
   public static void main(String[] args) {
     //FOR TESTING ONLY!!!!! DELETE AFTER
 //    TestLoader.runTestsFromFile(DatalogExecutor.class, new File("tests/datalog2.test"));
-
-    System.out.println(ASTInterpreter.toDatalog(Context.generateExample()));
+    DatalogExecutor de = new DatalogExecutor(new TestEnvironment("test_schema","test_data"));
+    System.out.println(ASTInterpreter.toDatalog(de.c));
 
     //    DatalogExecutor de = new DatalogExecutor(new TestEnvironment("",""));
 //    de.c = Context.generateExample();

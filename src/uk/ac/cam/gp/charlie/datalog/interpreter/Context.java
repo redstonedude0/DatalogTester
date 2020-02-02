@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import uk.ac.cam.gp.charlie.ast.Attribute;
 import uk.ac.cam.gp.charlie.ast.Plays;
+import uk.ac.cam.gp.charlie.ast.queries.Query;
 import uk.ac.cam.gp.charlie.ast.queries.QueryDefine;
 import uk.ac.cam.gp.charlie.graql.GraqlParser;
 
@@ -15,35 +16,24 @@ import uk.ac.cam.gp.charlie.graql.GraqlParser;
  */
 public class Context {
 
-  public Context(List<QueryDefine> schema, List<String> data) {
-    this.schema = schema;
-    this.data = data;
+  public Context() {
   }
 
   /**
-   * The Schema this Context represents
+   * Current state of the datalog, in query form
    */
-  public List<QueryDefine> schema;
-  /**
-   * The Data this context represents TODO: Define an AST for data (e.g. need 'Insert' AST node?,
-   * then change the below definition accordingly (don't use String)
-   */
-  public List<String> data;
+  public List<Query> queryList = new ArrayList<>();
+  public String datalog_state = "";
+
+  public enum State {
+    INSERTING,
+    GETTING
+  }
+  public State state = State.INSERTING;
+
+
   //TODO: Remove, this is just for testing so I can pass datalog into the interpreter directly
   public String TEST_REMOVE = "";
-
-  /**
-   * TODO:Remove, or make into a unit test
-   *
-   * This method should generate an example Context. This is to allow us to test Context->Datalog
-   * conversion without having to finish coding Graql->Context conversion.
-   * @return the example context
-   */
-  public static Context generateExample() {
-    Context toRet = new Context(GraqlParser.schemaToAST(""), new ArrayList<>());
-
-    return toRet;
-  }
 
   /*********************************************************
    * Below is private data used by the datalog engine when converting the context.

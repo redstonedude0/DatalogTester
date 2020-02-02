@@ -5,7 +5,6 @@ import java.util.List;
 import uk.ac.cam.gp.charlie.ast.Attribute;
 import uk.ac.cam.gp.charlie.ast.Plays;
 import uk.ac.cam.gp.charlie.ast.queries.Query;
-import uk.ac.cam.gp.charlie.ast.queries.QueryDefine;
 import uk.ac.cam.gp.charlie.ast.queries.QueryDefineEntity;
 import uk.ac.cam.gp.charlie.ast.queries.QueryDefineRelation;
 
@@ -16,7 +15,15 @@ public class GraqlParser {
 
   public static List<Query> graqlToAST(String input) {
     //parse input into 0 or more graql statements, and return then
-    //TODO
+    //TODO return parsed graql, for now just return test trees
+    switch (input) {
+      case "test_schema":
+        return test_schema();
+      case "test_data":
+        break;
+      case "test_test":
+        break;
+    }
     return new ArrayList<>();
   }
 
@@ -32,17 +39,9 @@ public class GraqlParser {
    *
    */
 
-
-  /**
-   * Convert a test environment schema (written in graql) into a list of ASTs
-   *
-   * @param schema the graql schema to convert
-   * @return A list of ASTs representing the schema
-   */
-  public static List<QueryDefine> schemaToAST(String schema) {
-    List<QueryDefine> toRet = new ArrayList<>();
+  public static List<Query> test_schema() {
+    List<Query> toRet = new ArrayList<>();
     //this should parse the schema into a list of defines, for now it just returns an example schema
-
     /**
      * The below example is equivalent to the graql:
      *
@@ -65,7 +64,7 @@ public class GraqlParser {
      *
      */
 
-    Attribute nameAttribute = new Attribute("name");
+    Attribute nameAttribute = Attribute.fromIdentifier("name");
 
     Plays employee = new Plays("employee");
     Plays employer = new Plays("employer");
@@ -88,41 +87,6 @@ public class GraqlParser {
     QueryDefineRelation coworkers = new QueryDefineRelation("coworkers");
     coworkers.relates.add(employee);
     toRet.add(coworkers);
-    return toRet;
-  }
-
-  /**
-   * Convert a test environment data (written in graql) into a list of ASTs
-   *
-   * @param data the graql data to convert
-   * @return A list of asts representing the schema
-   *
-   * TODO: note - should not return List<String>, that is a placeholder. Please return a list of
-   * ASTs
-   */
-  public static List<String> dataToAST(String data) {
-    List<String> toRet = new ArrayList<>();
-    //Should convert the data to an AST, for now it just returns an example set of data
-
-    /**
-     * The following is an example of the graql:
-     *
-     * insert $x isa person has name "Bob";
-     * insert $y isa organisation has name "Uni"";
-     * insert $z (employer: $y, employee: $x) isa employment;
-     */
-
-    /**
-     * TODO - not sure how best to implement that yet. Perhaps;
-     * List<Insertable>[
-     *  Insert implements Insertable:
-     *    ...../TODO
-     *
-     *
-     * ]
-     *
-     */
-
     return toRet;
   }
 

@@ -2,9 +2,11 @@ package uk.ac.cam.gp.charlie.datalog.interpreter;
 
 import uk.ac.cam.gp.charlie.ast.Attribute;
 import uk.ac.cam.gp.charlie.ast.Plays;
+import uk.ac.cam.gp.charlie.ast.queries.Query;
 import uk.ac.cam.gp.charlie.ast.queries.QueryDefine;
 import uk.ac.cam.gp.charlie.ast.queries.QueryDefineEntity;
 import uk.ac.cam.gp.charlie.ast.queries.QueryDefineRelation;
+import uk.ac.cam.gp.charlie.datalog.interpreter.Context.State;
 
 /**
  * Interprets to and from Context (An AST representation)
@@ -89,34 +91,45 @@ public class ASTInterpreter {
      * t_relates(t_3,r_0)
      *
      */
-    StringBuilder toRet = new StringBuilder();
-    for (QueryDefine define: c.schema) {
-      if (define instanceof QueryDefineEntity) {
-        QueryDefineEntity entity = (QueryDefineEntity) define;
-        toRet.append(String.format("t_subs(t_%d,t_entity).\n", c.typeNumber));
-        for (Attribute attribute : entity.attributes) {
-          toRet.append(String
-              .format("t_hasattr(t_%d,a_%d).\n", c.typeNumber, c.getAttributeNumber(attribute)));
-        }
-        for (Plays play : entity.plays) {
-          toRet.append(
-              String.format("t_playsrole(t_%d,r_%d).\n", c.typeNumber, c.getPlaysNumber(play)));
-        }
-      } else if (define instanceof QueryDefineRelation) {
-        QueryDefineRelation entity = (QueryDefineRelation) define;
-        toRet.append(String.format("t_subs(t_%d,t_relation).\n", c.typeNumber));
-        for (Plays play : entity.relates) {
-          toRet.append(String
-              .format("t_relates(t_%d,r_%d).\n", c.typeNumber, c.getPlaysNumber(play)));
-        }
-      } else {
-        throw new RuntimeException("unknown define type");
-      }
-      toRet.append("\n");
-      c.typeDefinitions.put(c.typeNumber,define);
-      c.typeNumber++;
+    if (c.state == State.GETTING) {
+      return c.datalog_state;
     }
-    return toRet.toString();
+
+    StringBuilder toRet = new StringBuilder();
+    for (Query query: c.queryList) {
+      if (query instanceof QueryDefine) {
+        QueryDefine define = (QueryDefine) query;
+        if (define instanceof QueryDefineEntity) {
+          QueryDefineEntity entity = (QueryDefineEntity) define;
+          toRet.append(String.format("t_subs(t_%d,t_entity).\n", c.typeNumber));
+          for (Attribute attribute : entity.attributes) {
+            toRet.append(String
+                .format("t_hasattr(t_%d,a_%d).\n", c.typeNumber, c.getAttributeNumber(attribute)));
+          }
+          for (Plays play : entity.plays) {
+            toRet.append(
+                String.format("t_playsrole(t_%d,r_%d).\n", c.typeNumber, c.getPlaysNumber(play)));
+          }
+        } else if (define instanceof QueryDefineRelation) {
+          QueryDefineRelation entity = (QueryDefineRelation) define;
+          toRet.append(String.format("t_subs(t_%d,t_relation).\n", c.typeNumber));
+          for (Plays play : entity.relates) {
+            toRet.append(String
+                .format("t_relates(t_%d,r_%d).\n", c.typeNumber, c.getPlaysNumber(play)));
+          }
+        } else {
+          throw new RuntimeException("unknown define type");
+        }
+        toRet.append("\n");
+        c.typeDefinitions.put(c.typeNumber, define);
+        c.typeNumber++;
+      } else {
+        //not a define
+      }
+    }
+    c.datalog_state = toRet.toString();
+    c.state = State.GETTING;
+    return c.datalog_state;
   }
 
   /**

@@ -1,16 +1,17 @@
 package uk.ac.cam.gp.charlie.ast.queries;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import uk.ac.cam.gp.charlie.ast.Attribute;
-import uk.ac.cam.gp.charlie.ast.AttributeValue;
+import java.util.Map.Entry;
 import uk.ac.cam.gp.charlie.ast.Plays;
-import uk.ac.cam.gp.charlie.ast.things.Thing;
+import uk.ac.cam.gp.charlie.ast.Variable;
 
 public class QueryInsertRelation extends QueryInsert {
 
-  //List of Things which play in this relation
-  public Map<Plays, Thing> plays = new HashMap<>();
+  //List of Things which may play in this relation
+  public List<Entry<Plays,Variable>> plays = new ArrayList<>();
 
   public QueryInsertRelation(String identifier) {
     super(identifier);
