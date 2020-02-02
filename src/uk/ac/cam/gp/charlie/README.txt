@@ -6,6 +6,10 @@ Notes for anyone working on the graql executor (Gabriele):
 
 Notes for anyone working on the graql->ast transformation (Charles):
 - I've moved the AST stuff to uk.ac.cam.gp.charlie.ast
+- I think we need to tweak the AST stuff a bit, rather than having different ASTs for the schema, data,
+  and tests. I think it'd be good to have a generic AST which represents one Graql statement, that way
+  when it comes to building an interactive interface it'll be much easier to handle that input, and the
+  tests are less constrained too.
 
 
 Notes for all:

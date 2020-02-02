@@ -22,13 +22,8 @@ instanceattr(e_1,name,str_Bob).
 instanceattr(e_2,name,str_Alice).
 instanceattr(e_3,name,str_Uni).
 
-instanceof(Ent,t_employment) :- instanceof(Org,t_organisation), instanceattr(Org,name,str_Uni), instanceof(Person,t_person).
+instanceof(_,t_employment) :- instanceof(Org,t_organisation), instanceattr(Org,name,str_Uni), instanceof(Person,t_person).
 
-lt(e_1,e_2).
-lt(e_2,e_3).
-lt(e_3,e_4).
-
-lt(X,Y) :- lt(X,Z), lt(Z,Y).
 
 query1(X) :- instanceof(X,t_person), instanceattr(X,name,str_Bob).
 query2_b6hhds78adg8sa_8d7sga8da7s8_hsa8dsahday(X,Y,Z) :- instanceof(X,t_employment), instancerel(X,employee,Y), instancerel(X,employer,Z).

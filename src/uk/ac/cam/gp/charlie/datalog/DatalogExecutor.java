@@ -40,6 +40,7 @@ public class DatalogExecutor extends Executor {
       List<Define> schema = GraqlParser.schemaToAST(environment.schema);
       List<String> data = GraqlParser.dataToAST(environment.data);
       c = new Context(schema,data);
+      c.TEST_REMOVE = environment.schema + " " + environment.data;
 
       String datalog = ASTInterpreter.toDatalog(c); //Convert the Context to Datalog
 

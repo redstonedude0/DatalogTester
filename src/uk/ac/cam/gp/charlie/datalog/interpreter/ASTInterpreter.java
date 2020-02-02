@@ -19,6 +19,10 @@ public class ASTInterpreter {
    */
   public static String toDatalog(Context c) {
     //TODO actually code, for now just dumps test string through.
+
+    if (true) {
+//      return c.TEST_REMOVE;
+    }
     /**
      * Need to convert:
      * [Define->DefineEntity
