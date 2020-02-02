@@ -3,15 +3,35 @@ package uk.ac.cam.gp.charlie.graql;
 import java.util.ArrayList;
 import java.util.List;
 import uk.ac.cam.gp.charlie.ast.Attribute;
-import uk.ac.cam.gp.charlie.ast.Define;
-import uk.ac.cam.gp.charlie.ast.DefineEntity;
-import uk.ac.cam.gp.charlie.ast.DefineRelation;
 import uk.ac.cam.gp.charlie.ast.Plays;
+import uk.ac.cam.gp.charlie.ast.queries.Query;
+import uk.ac.cam.gp.charlie.ast.queries.QueryDefine;
+import uk.ac.cam.gp.charlie.ast.queries.QueryDefineEntity;
+import uk.ac.cam.gp.charlie.ast.queries.QueryDefineRelation;
 
 /**
  * Parse Graql into ASTs
  */
 public class GraqlParser {
+
+  public static List<Query> graqlToAST(String input) {
+    //parse input into 0 or more graql statements, and return then
+    //TODO
+    return new ArrayList<>();
+  }
+
+  /**
+   *
+   * #############################################################
+   * I suggest we remove all code below, in favour of just
+   * using the code above.
+   *
+   *
+   *
+   *
+   *
+   */
+
 
   /**
    * Convert a test environment schema (written in graql) into a list of ASTs
@@ -19,8 +39,8 @@ public class GraqlParser {
    * @param schema the graql schema to convert
    * @return A list of ASTs representing the schema
    */
-  public static List<Define> schemaToAST(String schema) {
-    List<Define> toRet = new ArrayList<>();
+  public static List<QueryDefine> schemaToAST(String schema) {
+    List<QueryDefine> toRet = new ArrayList<>();
     //this should parse the schema into a list of defines, for now it just returns an example schema
 
     /**
@@ -50,22 +70,22 @@ public class GraqlParser {
     Plays employee = new Plays("employee");
     Plays employer = new Plays("employer");
 
-    DefineEntity person = new DefineEntity("person");
+    QueryDefineEntity person = new QueryDefineEntity("person");
     person.attributes.add(nameAttribute);
     person.plays.add(employee);
     toRet.add(person);
 
-    DefineEntity organisation = new DefineEntity("organisation");
+    QueryDefineEntity organisation = new QueryDefineEntity("organisation");
     organisation.attributes.add(nameAttribute);
     organisation.plays.add(employer);
     toRet.add(organisation);
 
-    DefineRelation employment = new DefineRelation("employment");
+    QueryDefineRelation employment = new QueryDefineRelation("employment");
     employment.relates.add(employee);
     employment.relates.add(employer);
     toRet.add(employment);
 
-    DefineRelation coworkers = new DefineRelation("coworkers");
+    QueryDefineRelation coworkers = new QueryDefineRelation("coworkers");
     coworkers.relates.add(employee);
     toRet.add(coworkers);
     return toRet;

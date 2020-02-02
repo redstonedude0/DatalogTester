@@ -6,10 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import uk.ac.cam.gp.charlie.ast.Attribute;
-import uk.ac.cam.gp.charlie.ast.Define;
-import uk.ac.cam.gp.charlie.ast.DefineEntity;
-import uk.ac.cam.gp.charlie.ast.DefineRelation;
 import uk.ac.cam.gp.charlie.ast.Plays;
+import uk.ac.cam.gp.charlie.ast.queries.QueryDefine;
 import uk.ac.cam.gp.charlie.graql.GraqlParser;
 
 /**
@@ -17,7 +15,7 @@ import uk.ac.cam.gp.charlie.graql.GraqlParser;
  */
 public class Context {
 
-  public Context(List<Define> schema, List<String> data) {
+  public Context(List<QueryDefine> schema, List<String> data) {
     this.schema = schema;
     this.data = data;
   }
@@ -25,7 +23,7 @@ public class Context {
   /**
    * The Schema this Context represents
    */
-  public List<Define> schema;
+  public List<QueryDefine> schema;
   /**
    * The Data this context represents TODO: Define an AST for data (e.g. need 'Insert' AST node?,
    * then change the below definition accordingly (don't use String)
@@ -52,7 +50,7 @@ public class Context {
    * This maps datalog -> ast syntax
    *********************************************************/
 
-  Map<Integer,Define> typeDefinitions = new HashMap<>();
+  Map<Integer, QueryDefine> typeDefinitions = new HashMap<>();
   int typeNumber = 0;
 
   private int attributeNumber = 0;

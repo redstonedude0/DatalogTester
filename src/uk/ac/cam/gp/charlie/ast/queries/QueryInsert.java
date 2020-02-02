@@ -1,4 +1,4 @@
-package uk.ac.cam.gp.charlie.ast;
+package uk.ac.cam.gp.charlie.ast.queries;
 
 /**
  * Represents abstract definition of a Grakn Concept Type or Grakn Rule. See subtypes for definition
@@ -6,16 +6,16 @@ package uk.ac.cam.gp.charlie.ast;
  *
  * https://dev.grakn.ai/docs/schema/concepts#summary
  */
-public abstract class Define {
+public abstract class QueryInsert extends Query {
 
   /**
    * If null then this subtypes the parent type directly (e.g. entity, relation...)
    */
-  public Define subs = null;
+  public QueryInsert subs = null;
   //Unique string used to refer to this object
   public final String identifier;
 
-  protected Define(String identifier) {
+  protected QueryInsert(String identifier) {
     this.identifier = identifier;
   }
 }

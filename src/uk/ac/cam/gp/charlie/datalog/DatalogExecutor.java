@@ -5,11 +5,9 @@ import abcdatalog.ast.PositiveAtom;
 import abcdatalog.ast.validation.DatalogValidationException;
 import abcdatalog.engine.DatalogEngine;
 import abcdatalog.engine.bottomup.sequential.SemiNaiveEngine;
-import abcdatalog.executor.DatalogParallelExecutor;
 import abcdatalog.parser.DatalogParseException;
 import abcdatalog.parser.DatalogParser;
 import abcdatalog.parser.DatalogTokenizer;
-import java.io.File;
 import java.io.StringReader;
 import java.util.HashSet;
 import java.util.List;
@@ -17,10 +15,9 @@ import java.util.Set;
 import uk.ac.cam.gp.charlie.Executor;
 import uk.ac.cam.gp.charlie.Result;
 import uk.ac.cam.gp.charlie.TestEnvironment;
-import uk.ac.cam.gp.charlie.TestLoader;
-import uk.ac.cam.gp.charlie.ast.Define;
-import uk.ac.cam.gp.charlie.datalog.interpreter.Context;
+import uk.ac.cam.gp.charlie.ast.queries.QueryDefine;
 import uk.ac.cam.gp.charlie.datalog.interpreter.ASTInterpreter;
+import uk.ac.cam.gp.charlie.datalog.interpreter.Context;
 import uk.ac.cam.gp.charlie.graql.GraqlParser;
 
 public class DatalogExecutor extends Executor {
@@ -37,7 +34,7 @@ public class DatalogExecutor extends Executor {
   public DatalogExecutor(TestEnvironment environment) {
     try {
       //Convert the Graql environment to a Context
-      List<Define> schema = GraqlParser.schemaToAST(environment.schema);
+      List<QueryDefine> schema = GraqlParser.schemaToAST(environment.schema);
       List<String> data = GraqlParser.dataToAST(environment.data);
       c = new Context(schema,data);
       c.TEST_REMOVE = environment.schema + " " + environment.data;

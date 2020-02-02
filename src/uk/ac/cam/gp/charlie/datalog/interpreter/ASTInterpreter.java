@@ -1,11 +1,10 @@
 package uk.ac.cam.gp.charlie.datalog.interpreter;
 
-import uk.ac.cam.gp.charlie.TestEnvironment;
 import uk.ac.cam.gp.charlie.ast.Attribute;
-import uk.ac.cam.gp.charlie.ast.Define;
-import uk.ac.cam.gp.charlie.ast.DefineEntity;
-import uk.ac.cam.gp.charlie.ast.DefineRelation;
 import uk.ac.cam.gp.charlie.ast.Plays;
+import uk.ac.cam.gp.charlie.ast.queries.QueryDefine;
+import uk.ac.cam.gp.charlie.ast.queries.QueryDefineEntity;
+import uk.ac.cam.gp.charlie.ast.queries.QueryDefineRelation;
 
 /**
  * Interprets to and from Context (An AST representation)
@@ -91,9 +90,9 @@ public class ASTInterpreter {
      *
      */
     StringBuilder toRet = new StringBuilder();
-    for (Define define: c.schema) {
-      if (define instanceof DefineEntity) {
-        DefineEntity entity = (DefineEntity) define;
+    for (QueryDefine define: c.schema) {
+      if (define instanceof QueryDefineEntity) {
+        QueryDefineEntity entity = (QueryDefineEntity) define;
         toRet.append(String.format("t_subs(t_%d,t_entity).\n", c.typeNumber));
         for (Attribute attribute : entity.attributes) {
           toRet.append(String
@@ -103,8 +102,8 @@ public class ASTInterpreter {
           toRet.append(
               String.format("t_playsrole(t_%d,r_%d).\n", c.typeNumber, c.getPlaysNumber(play)));
         }
-      } else if (define instanceof DefineRelation) {
-        DefineRelation entity = (DefineRelation) define;
+      } else if (define instanceof QueryDefineRelation) {
+        QueryDefineRelation entity = (QueryDefineRelation) define;
         toRet.append(String.format("t_subs(t_%d,t_relation).\n", c.typeNumber));
         for (Plays play : entity.relates) {
           toRet.append(String
