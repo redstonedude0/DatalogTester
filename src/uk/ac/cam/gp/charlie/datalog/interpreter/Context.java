@@ -1,15 +1,17 @@
 package uk.ac.cam.gp.charlie.datalog.interpreter;
 
+import abcdatalog.ast.Clause;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import uk.ac.cam.gp.charlie.ast.Attribute;
 import uk.ac.cam.gp.charlie.ast.Plays;
 import uk.ac.cam.gp.charlie.ast.queries.Query;
 import uk.ac.cam.gp.charlie.ast.queries.QueryDefine;
-import uk.ac.cam.gp.charlie.graql.GraqlParser;
 
 /**
  * Represents a schema and data (test environment) in AST form
@@ -30,10 +32,10 @@ public class Context {
     GETTING
   }
   public State state = State.INSERTING;
+  public Set<Clause> datalog = new HashSet<>(); //current datalog clause set.
 
 
-  //TODO: Remove, this is just for testing so I can pass datalog into the interpreter directly
-  public String TEST_REMOVE = "";
+
 
   /*********************************************************
    * Below is private data used by the datalog engine when converting the context.
