@@ -8,15 +8,19 @@ import abcdatalog.engine.bottomup.sequential.SemiNaiveEngine;
 import abcdatalog.parser.DatalogParseException;
 import abcdatalog.parser.DatalogParser;
 import abcdatalog.parser.DatalogTokenizer;
+import java.io.File;
 import java.io.StringReader;
 import java.security.InvalidParameterException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.junit.Test;
+import uk.ac.cam.gp.charlie.DebugHelper;
 import uk.ac.cam.gp.charlie.Executor;
 import uk.ac.cam.gp.charlie.Result;
 import uk.ac.cam.gp.charlie.TestEnvironment;
+import uk.ac.cam.gp.charlie.TestLoader;
 import uk.ac.cam.gp.charlie.ast.Variable;
 import uk.ac.cam.gp.charlie.ast.queries.Query;
 import uk.ac.cam.gp.charlie.ast.queries.QueryDefine;
@@ -102,7 +106,46 @@ public class DatalogExecutor extends Executor {
 
   public static void main(String[] args) {
     //FOR TESTING ONLY!!!!! DELETE AFTER
-//    TestLoader.runTestsFromFile(DatalogExecutor.class, new File("tests/datalog2.test"));
-    DatalogExecutor de = new DatalogExecutor(new TestEnvironment("test_schema", "test_data"));
+
+    if (false) {
+      //Test from raw datalog file
+      TestLoader.runTestsFromFile(DatalogExecutor.class, new File("tests/datalog2.test"));
+    }
+    if (false) {
+      //Test AST->datalog
+      DatalogExecutor de = new DatalogExecutor(new TestEnvironment("test_schema", "test_data"));
+    }
+    if (true) {
+      //Test graql->AST
+      String schema_string = "define\n"
+          + "person sub entity,\n"
+          + "  has name,\n"
+          + "  plays employee;"
+          + "organisation sub entity,\n"
+          + "  has name,\n"
+          + "  plays employer;"
+          + "employment sub relation,\n"
+          + "  relates employee,\n"
+          + "  relates employer;";
+      List<Query> ast = GraqlParser.graqlToAST(schema_string);
+      System.out.print("AST:");
+      DebugHelper.printObjectTree(ast);
+      System.out.println("EOT");
+    }
+    if (false) {
+      //Test graql->AST->datalog
+      String schema_string = "define\n"
+          + "person sub entity,\n"
+          + "  has name,\n"
+          + "  plays employee;"
+          + "organisation sub entity,\n"
+          + "  has name,\n"
+          + "  plays employer;"
+          + "employment sub relation,\n"
+          + "  relates employee,\n"
+          + "  relates employer;";
+      String data_string = "";
+      DatalogExecutor de = new DatalogExecutor(new TestEnvironment(schema_string,"test_data"));
+    }
   }
 }
