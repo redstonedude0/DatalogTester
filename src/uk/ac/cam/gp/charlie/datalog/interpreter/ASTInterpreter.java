@@ -14,6 +14,8 @@ import uk.ac.cam.gp.charlie.ast.queries.QueryDefine;
 import uk.ac.cam.gp.charlie.ast.queries.QueryDefineEntity;
 import uk.ac.cam.gp.charlie.ast.queries.QueryDefineRelation;
 import uk.ac.cam.gp.charlie.ast.queries.QueryInsert;
+import uk.ac.cam.gp.charlie.ast.queries.QueryInsertEntity;
+import uk.ac.cam.gp.charlie.ast.queries.QueryInsertRelation;
 
 /**
  * Interprets to and from Context (An AST representation)
@@ -32,37 +34,46 @@ public class ASTInterpreter {
       QueryDefine define = (QueryDefine) q;
       if (define instanceof QueryDefineEntity) {
         QueryDefineEntity entity = (QueryDefineEntity) define;
-        toRet.append(String.format("t_subs(t_%d,t_entity).\n", c.typeNumber));
+        Integer typeNum = c.getTypeNumber(entity.identifier);
+        toRet.append(String.format("t_subs(t_%d,t_entity).\n", typeNum));
         for (Attribute attribute : entity.attributes) {
           toRet.append(String
-              .format("t_hasattr(t_%d,a_%d).\n", c.typeNumber, c.getAttributeNumber(attribute)));
+              .format("t_hasattr(t_%d,a_%d).\n", typeNum, c.getAttributeNumber(attribute)));
         }
         for (Plays play : entity.plays) {
           toRet.append(
-              String.format("t_playsrole(t_%d,r_%d).\n", c.typeNumber, c.getPlaysNumber(play)));
+              String.format("t_playsrole(t_%d,r_%d).\n", typeNum, c.getPlaysNumber(play)));
         }
       } else if (define instanceof QueryDefineRelation) {
         QueryDefineRelation entity = (QueryDefineRelation) define;
-        toRet.append(String.format("t_subs(t_%d,t_relation).\n", c.typeNumber));
+        Integer typeNum = c.getTypeNumber(entity.identifier);
+        toRet.append(String.format("t_subs(t_%d,t_relation).\n", typeNum));
         for (Plays play : entity.relates) {
           toRet.append(String
-              .format("t_relates(t_%d,r_%d).\n", c.typeNumber, c.getPlaysNumber(play)));
+              .format("t_relates(t_%d,r_%d).\n", typeNum, c.getPlaysNumber(play)));
         }
       } else {
         throw new RuntimeException("unknown define type");
       }
       toRet.append("\n");
-      c.typeDefinitions.put(c.typeNumber, define);
-      c.typeNumber++;
     } else if (q instanceof QueryInsert) {
+      QueryInsert insert = (QueryInsert) q;
+      if (insert instanceof QueryInsertEntity) {
+        QueryInsertEntity entity = (QueryInsertEntity) insert;
+        Integer iNum = c.getInstanceNumber();
+        toRet.append(String.format("instanceof(e_%d,t_%s).\n",iNum,c.getTypeNumber(entity.isa)));
+      } else if (insert instanceof QueryInsertRelation) {
 
+      } else {
+        throw new RuntimeException("unknown insert type");
+      }
     } else {
       //todo test for match query
       //not a define
       throw new RuntimeException(
           "Unsupported query type during datalog query execution: " + q.getClass());
     }
-
+    System.out.println(toRet.toString());
     DatalogTokenizer tokenizer = new DatalogTokenizer(new StringReader(toRet.toString()));
     try {
       Set<Clause> datalog_clauses = DatalogParser.parseProgram(tokenizer);

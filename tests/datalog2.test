@@ -15,20 +15,25 @@ t_relates(t_employment,employee).
 t_relates(t_employment,employer).
 
 instanceof(e_1,t_person).
-instanceof(e_2,t_person).
-instanceof(e_3,t_organisation).
-
 instanceattr(e_1,name,str_Bob).
+
+instanceof(e_2,t_person).
 instanceattr(e_2,name,str_Alice).
+
+instanceof(e_3,t_organisation).
 instanceattr(e_3,name,str_Uni).
 
-instanceof(Ent,t_employment) :- instanceof(Org,t_organisation), instanceattr(Org,name,str_Uni), instanceof(Person,t_person).
+instanceof(e_4,t_employment).
+instancerel(e_4,e_1,employee).
+instancerel(e_4,e_3,employer).
 
-lt(e_1,e_2).
-lt(e_2,e_3).
-lt(e_3,e_4).
+%instanceof(Ent,t_employment) :- instanceof(Org,t_organisation), instanceattr(Org,name,str_Uni), instanceof(Person,t_person).
 
-lt(X,Y) :- lt(X,Z), lt(Z,Y).
+%lt(e_1,e_2).
+%lt(e_2,e_3).
+%lt(e_3,e_4).
+
+%lt(X,Y) :- lt(X,Z), lt(Z,Y).
 
 query1(X) :- instanceof(X,t_person), instanceattr(X,name,str_Bob).
 query2_b6hhds78adg8sa_8d7sga8da7s8_hsa8dsahday(X,Y,Z) :- instanceof(X,t_employment), instancerel(X,employee,Y), instancerel(X,employer,Z).

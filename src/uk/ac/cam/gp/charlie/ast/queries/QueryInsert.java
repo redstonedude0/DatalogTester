@@ -1,5 +1,7 @@
 package uk.ac.cam.gp.charlie.ast.queries;
 
+import uk.ac.cam.gp.charlie.ast.Variable;
+
 /**
  * Represents abstract definition of a Grakn Concept Type or Grakn Rule. See subtypes for definition
  * of specific concept types.
@@ -11,11 +13,11 @@ public abstract class QueryInsert extends Query {
   /**
    * If null then this subtypes the parent type directly (e.g. entity, relation...)
    */
-  public QueryInsert subs = null;
-  //Unique string used to refer to this object
-  public final String identifier;
+  public String isa = null;
+  public Variable returnVariable;
 
-  protected QueryInsert(String identifier) {
-    this.identifier = identifier;
+  protected QueryInsert(Variable returnVariable, String type) {
+    this.returnVariable = returnVariable;
+    isa = type;
   }
 }

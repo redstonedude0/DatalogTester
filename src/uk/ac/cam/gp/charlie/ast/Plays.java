@@ -1,13 +1,28 @@
 package uk.ac.cam.gp.charlie.ast;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Represents a 'plays' relationship connection.
  */
 public class Plays {
 
   public final String identifier;
+  private static List<Plays> instances = new ArrayList<>();
 
-  public Plays(String identifier) {
+  private Plays(String identifier) {
     this.identifier = identifier;
+    instances.add(this);
   }
+
+  public static Plays fromIdentifier(String identifier) {
+    for(Plays v : instances) {
+      if (v.identifier.equals(identifier)) {
+        return v;
+      }
+    }
+    return new Plays(identifier);
+  }
+
 }

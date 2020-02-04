@@ -7,4 +7,8 @@ public class AttributeValue {
 
   public Object value;
 
+  public AttributeValue(Object value) {
+    this.value = value;
+  }
+
 }

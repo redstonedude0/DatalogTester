@@ -13,7 +13,7 @@ public class QueryInsertRelation extends QueryInsert {
   //List of Things which may play in this relation
   public List<Entry<Plays,Variable>> plays = new ArrayList<>();
 
-  public QueryInsertRelation(String identifier) {
-    super(identifier);
+  public QueryInsertRelation(Variable returnVariable, String type) {
+    super(returnVariable,type);
   }
 }
