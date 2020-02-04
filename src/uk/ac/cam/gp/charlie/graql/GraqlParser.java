@@ -20,16 +20,45 @@ public class GraqlParser {
 
   public static List<Query> graqlToAST(String input) {
     //parse input into 0 or more graql statements, and return then
-    //TODO return parsed graql, for now just return test trees
-    switch (input) {
-      case "test_schema":
-        return test_schema();
-      case "test_data":
-        return test_data();
-      case "test_test":
-        break;
+    List<Query> queryList = new ArrayList<Query>();
+    String[] typeQuery = input.split("\n", 2);
+    String[] queryBlocks = typeQuery[1].split(";");
+    for(String q : queryBlocks) {
+      String[] lines = q.split("\\s*,\\s*");
+      String[][] words =  new String[lines.length][];
+      for(int i = 0; i < lines.length; i++){
+        words[i] = lines[i].split(" ");
+      }
+      if (typeQuery[0].equals("define")){
+        if(words[0][2].equals("entity")){
+          QueryDefineEntity entity = new QueryDefineEntity(words[0][0]);
+          for(int i = 1; i < words.length; i++){
+            if(words[i][0].equals("has")){
+              Attribute attribute = Attribute.fromIdentifier(words[i][1]);
+              entity.attributes.add(attribute);
+            }
+            if(words[i][0].equals("plays")){
+              Plays role = Plays.fromIdentifier(words[i][1]);
+              entity.plays.add(role);
+            }
+          }
+          queryList.add(entity);
+        }
+        if(words[0][2].equals("relation")){
+          QueryDefineRelation relation = new QueryDefineRelation(words[0][0]);
+          for(int i = 1; i < words.length; i++){
+            if(words[i][0].equals("relates")){
+              Plays role = Plays.fromIdentifier(words[i][1]);
+              relation.relates.add(role);
+            }
+          }
+          queryList.add(relation);
+        }
+      }
+      System.out.println("breakpoint");
+
     }
-    return new ArrayList<>();
+    return queryList;
   }
 
   /**
