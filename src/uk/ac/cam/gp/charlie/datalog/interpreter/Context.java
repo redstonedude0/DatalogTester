@@ -93,7 +93,33 @@ public class Context {
     scope.put(v,i);
   }
 
-  public void prettifyDatalog(String datalog) {
+  public String prettifyDatalog(String datalog) {
+    for (Integer i : constDefinitions.keySet()) {
+      datalog = datalog.replaceAll("const_"+i,"\u001b[33m"+constDefinitions.get(i).value+"\u001b[0m");
+    }
+    for (int i = 0; i < instanceNumber; i++) {
+      datalog = datalog.replaceAll("e_"+i,"\u001b[35m{"+i+"}\u001b[0m");
+    }
+    for (Integer i : playsDefinitions.keySet()) {
+      datalog = datalog.replaceAll("r_"+i,"\u001b[32m"+playsDefinitions.get(i).identifier+"\u001b[0m");
+    }
+    for (Integer i : attributeDefinitions.keySet()) {
+      datalog = datalog.replaceAll("a_"+i,"\u001b[34m"+attributeDefinitions.get(i).identifier+"\u001b[0m");
+    }
+    for (Integer i : typeDefinitions.keySet()) {
+      datalog = datalog.replaceAll("t_"+i,"\u001b[31m"+typeDefinitions.get(i)+"\u001b[0m");
+    }
+    //Black: \u001b[30m
+    //Red: \u001b[31m (type)
+    //Green: \u001b[32m (plays)
+    //Yellow: \u001b[33m (constants)
+    //Blue: \u001b[34m (attribute)
+    //Magenta: \u001b[35m (things (instances))
+    //Cyan: \u001b[36m
+    //White: \u001b[37m
+    //Reset: \u001b[0m
+
+    return datalog;
 
   }
 

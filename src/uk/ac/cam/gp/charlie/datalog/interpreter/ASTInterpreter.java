@@ -93,11 +93,10 @@ public class ASTInterpreter {
       throw new RuntimeException(
           "Unsupported query type during datalog query execution: " + q.getClass());
     }
-    System.out.println(toRet.toString());
+    System.out.println(c.prettifyDatalog(toRet.toString()));
     DatalogTokenizer tokenizer = new DatalogTokenizer(new StringReader(toRet.toString()));
     try {
-      Set<Clause> datalog_clauses = DatalogParser.parseProgram(tokenizer);
-      return datalog_clauses;
+      return DatalogParser.parseProgram(tokenizer);
     } catch (DatalogParseException e) {
       e.printStackTrace();
       return new HashSet<>();

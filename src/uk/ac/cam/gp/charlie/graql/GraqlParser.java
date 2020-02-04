@@ -19,8 +19,16 @@ import uk.ac.cam.gp.charlie.ast.queries.QueryInsertRelation;
 public class GraqlParser {
 
   public static List<Query> graqlToAST(String input) {
+    //TODO for testing only, remove
+    switch (input) {
+      case "test_schema":
+        return test_schema();
+      case "test_data":
+        return test_data();
+    }
+    //TODO********************* remove above
     //parse input into 0 or more graql statements, and return then
-    List<Query> queryList = new ArrayList<Query>();
+    List<Query> queryList = new ArrayList<>();
     String[] typeQuery = input.split("\n", 2);
     String[] queryBlocks = typeQuery[1].split(";");
     for(String q : queryBlocks) {
@@ -73,7 +81,7 @@ public class GraqlParser {
    *
    */
 
-  public static List<Query> test_data() {
+  private static List<Query> test_data() {
     List<Query> toRet = new ArrayList<>();
     //this returns an example list of inserts
     /**
@@ -126,7 +134,7 @@ public class GraqlParser {
     return toRet;
   }
 
-  public static List<Query> test_schema() {
+  private static List<Query> test_schema() {
     List<Query> toRet = new ArrayList<>();
     //this returns an example list of defines
     /**
