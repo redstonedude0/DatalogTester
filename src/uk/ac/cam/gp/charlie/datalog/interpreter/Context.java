@@ -7,7 +7,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import uk.ac.cam.gp.charlie.ast.Attribute;
+import uk.ac.cam.gp.charlie.ast.AttributeValue;
 import uk.ac.cam.gp.charlie.ast.Plays;
+import uk.ac.cam.gp.charlie.ast.Variable;
 import uk.ac.cam.gp.charlie.ast.queries.QueryDefine;
 
 /**
@@ -70,6 +72,29 @@ public class Context {
     return instanceNumber++;
   }
 
+  private int constNumber = 0;
+  private Map<Integer, AttributeValue> constDefinitions = new HashMap<>();
+  int getConstNumber(AttributeValue constant) {
+    for (Entry<Integer,AttributeValue> entry : constDefinitions.entrySet()) {
+      if (entry.getValue().value.equals(constant.value)) {
+        return entry.getKey();
+      }
+    }
+    constDefinitions.put(constNumber,constant);
+    return constNumber++;
+  }
 
+  //TODO only maps to things for now, need to map to constants, types, etc
+  private Map<Variable,Integer> scope = new HashMap<>();
+  public Integer resolveScope(Variable v) {
+    return scope.get(v);
+  }
+  public void addToScope(Variable v, Integer i) {
+    scope.put(v,i);
+  }
+
+  public void prettifyDatalog(String datalog) {
+
+  }
 
 }

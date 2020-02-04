@@ -6,9 +6,12 @@ import abcdatalog.parser.DatalogParser;
 import abcdatalog.parser.DatalogTokenizer;
 import java.io.StringReader;
 import java.util.HashSet;
+import java.util.Map.Entry;
 import java.util.Set;
 import uk.ac.cam.gp.charlie.ast.Attribute;
+import uk.ac.cam.gp.charlie.ast.AttributeValue;
 import uk.ac.cam.gp.charlie.ast.Plays;
+import uk.ac.cam.gp.charlie.ast.Variable;
 import uk.ac.cam.gp.charlie.ast.queries.Query;
 import uk.ac.cam.gp.charlie.ast.queries.QueryDefine;
 import uk.ac.cam.gp.charlie.ast.queries.QueryDefineEntity;
@@ -29,6 +32,15 @@ public class ASTInterpreter {
    * @return A string to pass into engine.init
    */
   public static Set<Clause> toDatalog(Query q, Context c) {
+    /*
+    t_ type definition
+    a_ attribute definition
+    r_ relation definiition (plays)
+
+    e_ thing instance
+    const_ constant instance
+
+     */
     StringBuilder toRet = new StringBuilder();
     if (q instanceof QueryDefine) {
       QueryDefine define = (QueryDefine) q;
@@ -58,15 +70,23 @@ public class ASTInterpreter {
       toRet.append("\n");
     } else if (q instanceof QueryInsert) {
       QueryInsert insert = (QueryInsert) q;
+      Integer iNum = c.getInstanceNumber();
       if (insert instanceof QueryInsertEntity) {
         QueryInsertEntity entity = (QueryInsertEntity) insert;
-        Integer iNum = c.getInstanceNumber();
-        toRet.append(String.format("instanceof(e_%d,t_%s).\n",iNum,c.getTypeNumber(entity.isa)));
+        toRet.append(String.format("instanceof(e_%d,t_%d).\n",iNum,c.getTypeNumber(entity.isa)));
+        for (Entry<Attribute, AttributeValue> entry : entity.attributes.entrySet()) {
+          toRet.append(String.format("instanceattr(e_%d,a_%d,const_%d).\n",iNum,c.getAttributeNumber(entry.getKey()),c.getConstNumber(entry.getValue())));
+        }
       } else if (insert instanceof QueryInsertRelation) {
-
+        QueryInsertRelation relation = (QueryInsertRelation) insert;
+        toRet.append(String.format("instanceof(e_%d,t_%d).\n",iNum,c.getTypeNumber(relation.isa)));
+        for (Entry<Plays, Variable> entry : relation.plays) {
+          toRet.append(String.format("instancerel(e_%d,e_%d,r_%d).\n",iNum,c.resolveScope(entry.getValue()),c.getPlaysNumber(entry.getKey())));
+        }
       } else {
         throw new RuntimeException("unknown insert type");
       }
+      c.addToScope(insert.returnVariable,iNum);
     } else {
       //todo test for match query
       //not a define
