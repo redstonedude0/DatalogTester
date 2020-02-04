@@ -7,9 +7,13 @@ Notes for anyone working on the graql executor (Gabriele):
 Notes for anyone working on the graql->ast transformation (Charles):
 - I've moved the AST stuff to uk.ac.cam.gp.charlie.ast
 - I think we need to tweak the AST stuff a bit, rather than having different ASTs for the schema, data,
-  and tests. I think it'd be good to have a generic AST which represents one Graql statement, that way
+  and tests. I think it'd be good to have a generic AST which represents one Graql query, that way
   when it comes to building an interactive interface it'll be much easier to handle that input, and the
-  tests are less constrained too.
+  tests are less constrained too. I've started to implement some AST structure, we'll need to work on this
+  together properly, your main task will be to work on the GraqlParser -
+    currently I'm thinking this should produce a list of Statements from a string, but I'm considering
+    making it take a character stream and return a statement stream instead so that we can have multiline
+    input easier in interactive mode? I'm not 100% sure what's best, the choice is up to you.
 
 
 Notes for all:
