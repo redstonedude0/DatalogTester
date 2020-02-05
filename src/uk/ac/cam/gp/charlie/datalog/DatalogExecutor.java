@@ -107,16 +107,13 @@ public class DatalogExecutor extends Executor {
   public static void main(String[] args) {
     //FOR TESTING ONLY!!!!! DELETE AFTER
 
-    if (false) {
-      //Test from raw datalog file
+    if (false) {//Test from raw datalog file (deprecated?)
       TestLoader.runTestsFromFile(DatalogExecutor.class, new File("tests/datalog2.test"));
     }
-    if (false) {
-      //Test AST->datalog
+    if (false) {//Test AST->datalog
       DatalogExecutor de = new DatalogExecutor(new TestEnvironment("test_schema", "test_data"));
     }
-    if (true) {
-      //Test graql->AST
+    if (false) {//Test graql->AST
       String schema_string = "define\n"
           + "person sub entity,\n"
           + "  has name,\n"
@@ -132,8 +129,7 @@ public class DatalogExecutor extends Executor {
       DebugHelper.printObjectTree(ast);
       System.out.println("EOT");
     }
-    if (false) {
-      //Test graql->AST->datalog
+    if (true) {//Test graql->AST->datalog
       String schema_string = "define\n"
           + "person sub entity,\n"
           + "  has name,\n"
@@ -146,6 +142,12 @@ public class DatalogExecutor extends Executor {
           + "  relates employer;";
       String data_string = "";
       DatalogExecutor de = new DatalogExecutor(new TestEnvironment(schema_string,"test_data"));
+      System.out.println("Coloring key:");
+      System.out.println("\u001b[31mtypes                     red\u001b[0m");
+      System.out.println("\u001b[32mroles(plays)              green\u001b[0m");
+      System.out.println("\u001b[33mconstants                 yellow\u001b[0m");
+      System.out.println("\u001b[34mattribute name            blue\u001b[0m");
+      System.out.println("\u001b[35mthing(instance/node)      magenta\u001b[0m");
     }
   }
 }

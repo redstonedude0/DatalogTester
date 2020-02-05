@@ -120,7 +120,6 @@ public class Context {
     //Reset: \u001b[0m
 
     return datalog;
-
   }
 
 }
