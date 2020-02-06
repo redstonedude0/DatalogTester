@@ -1,6 +1,7 @@
 package uk.ac.cam.gp.charlie;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.List;
 
 public class DebugHelper {
@@ -24,41 +25,48 @@ public class DebugHelper {
   private static void printObjectTree(Object o, int idnt) {
     try {
       if (o instanceof List) {
+        List l = (List) o;
+        if (l.size() == 0) {
+          System.out.println("[]");
+          return;
+        }
         System.out.println();
         idnt--;
         System.out.println(idnt(idnt) + "[");
         idnt++;
-        List l = (List) o;
         for (Object item : l) {
-          printObjectTree(item,idnt);
+          printObjectTree(item, idnt);
         }
         idnt--;
         System.out.println(idnt(idnt) + "]");
         return;
       }
       if (o instanceof String) {
-        System.out.println("{"+o+"}");
+        System.out.println("{" + o + "}");
         return;
       }
       if (o == null) {
-        System.out.println(idnt(idnt)+"[null]");
+        System.out.println(idnt(idnt) + "[null]");
         return;
       }
       Field[] fields = o.getClass().getFields();
       if (fields.length == 1) {
         if (fields[0].get(o) instanceof String) {
-          System.out.println(idnt(idnt) + o.getClass().getSimpleName() + "{" + ((String) fields[0].get(o)).replaceAll("\n","\\n") + "}");
+          System.out.println(
+              idnt(idnt) + o.getClass().getSimpleName() + "{" + ((String) fields[0].get(o))
+                  .replaceAll("\n", "\\n") + "}");
           return;
         }
       }
       System.out.println(idnt(idnt) + o.getClass().getSimpleName());
       idnt++;
       for (Field f : fields) {
-        System.out.print(idnt(idnt) + f.getName()+":");
-        idnt++;
-        printObjectTree(f.get(o), idnt);
-        idnt--;
-
+        if (!Modifier.isStatic(f.getModifiers()) || !Modifier.isFinal(f.getModifiers())) {
+          System.out.print(idnt(idnt) + f.getName() + ":");
+          idnt++;
+          printObjectTree(f.get(o), idnt);
+          idnt--;
+        }//else static final fields are ignored
       }
     } catch (IllegalAccessException e) {
       System.out.print("#");

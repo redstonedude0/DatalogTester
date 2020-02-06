@@ -215,7 +215,7 @@ public class DatalogExecutor extends Executor {
       if (false) {//Test AST->datalog
         DatalogExecutor de = new DatalogExecutor(new TestEnvironment("test_schema", "test_data"));
       }
-      if (false) {//Test graql->AST
+      if (true) {//Test graql->AST
         String schema_string = "define\n"
             + "person sub entity,\n"
             + "  has name,\n"
@@ -231,7 +231,7 @@ public class DatalogExecutor extends Executor {
         DebugHelper.printObjectTree(ast);
         System.out.println("EOT");
       }
-      if (true) {//Test graql->AST->datalog
+      if (false) {//Test graql->AST->datalog
         DatalogExecutor de = new DatalogExecutor(new TestEnvironment("test_schema", "test_data"));
         System.out.println("Coloring key:");
         System.out.println("\u001b[31mtypes                     red\u001b[0m");

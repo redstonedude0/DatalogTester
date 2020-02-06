@@ -9,10 +9,8 @@ import uk.ac.cam.gp.charlie.ast.ConstantValue;
 import uk.ac.cam.gp.charlie.ast.Plays;
 import uk.ac.cam.gp.charlie.ast.Variable;
 import uk.ac.cam.gp.charlie.ast.queries.Query;
-import uk.ac.cam.gp.charlie.ast.queries.QueryDefineEntity;
-import uk.ac.cam.gp.charlie.ast.queries.QueryDefineRelation;
-import uk.ac.cam.gp.charlie.ast.queries.QueryInsertEntity;
-import uk.ac.cam.gp.charlie.ast.queries.QueryInsertRelation;
+import uk.ac.cam.gp.charlie.ast.queries.QueryDefine;
+import uk.ac.cam.gp.charlie.ast.queries.QueryInsert;
 import uk.ac.cam.gp.charlie.ast.queries.match.ConditionIsa;
 import uk.ac.cam.gp.charlie.ast.queries.match.QueryMatch;
 
@@ -42,38 +40,34 @@ public class GraqlParser {
         words[i] = lines[i].split(" ");
       }
       if (typeQuery[0].equals("define")) {
-        if (words[0][2].equals("entity")) {
-          QueryDefineEntity entity = new QueryDefineEntity(words[0][0]);
-          for (int i = 1; i < words.length; i++) {
-            if (words[i][0].equals("has")) {
-              Attribute attribute = Attribute.fromIdentifier(words[i][1]);
-              entity.attributes.add(attribute);
-            }
-            if (words[i][0].equals("plays")) {
-              Plays role = Plays.fromIdentifier(words[i][1]);
-              entity.plays.add(role);
-            }
+        //TODO I changed how this works so that subbing works properly and we don't need to know if it's an entity or a relationship, please check this
+        QueryDefine define = new QueryDefine(words[0][0],QueryDefine.getFromIdentifier(words[0][2]));
+        for (int i = 1; i < words.length; i++) {
+          if (words[i][0].equals("has")) {
+            Attribute attribute = Attribute.fromIdentifier(words[i][1]);
+            define.attributes.add(attribute);
           }
-          queryList.add(entity);
-        }
-        if (words[0][2].equals("relation")) {
-          QueryDefineRelation relation = new QueryDefineRelation(words[0][0]);
-          for (int i = 1; i < words.length; i++) {
-            if (words[i][0].equals("relates")) {
-              Plays role = Plays.fromIdentifier(words[i][1]);
-              relation.relates.add(role);
-            }
+          if (words[i][0].equals("plays")) {
+            Plays role = Plays.fromIdentifier(words[i][1]);
+            define.plays.add(role);
           }
-          queryList.add(relation);
         }
+        for (int i = 1; i < words.length; i++) {
+          if (words[i][0].equals("relates")) {
+            Plays role = Plays.fromIdentifier(words[i][1]);
+            define.relates.add(role);
+          }
+        }
+        queryList.add(define);
       }
       if (typeQuery[0].equals("insert")) {
         if (words[0][1].equals("isa")) {
           //At this point we assume this to be an entity TODO:fix
+          //NOTE: We now just have QueryInsert.
           String name = words[0][0];
           String type = words[0][2];
           Variable var = Variable.fromIdentifier(name);
-          QueryInsertEntity entity = new QueryInsertEntity(var, type);
+          QueryInsert entity = new QueryInsert(var, type);
           for (int i = 1; i < words.length; i++) {
             if (words[i][0].equals("has")) {
               entity.attributes
@@ -103,7 +97,7 @@ public class GraqlParser {
               }
               relationList.add((new SimpleEntry<>(Plays.fromIdentifier(role2), var2)));
               if (reachedIsa) {
-                QueryInsertRelation relation = new QueryInsertRelation(
+                QueryInsert relation = new QueryInsert(
                     Variable.fromIdentifier(name), words[j][3]);
                 relation.plays.addAll(relationList);
                 break;
@@ -155,17 +149,17 @@ public class GraqlParser {
      */
 
     Variable var_y = Variable.fromIdentifier("y");
-    QueryInsertEntity uni = new QueryInsertEntity(var_y, "organisation");
+    QueryInsert uni = new QueryInsert(var_y, "organisation");
     uni.attributes.put(Attribute.fromIdentifier("name"), ConstantValue.fromValue("Uni"));
     toRet.add(uni);
 
     Variable var_x = Variable.fromIdentifier("x");
-    QueryInsertEntity bob = new QueryInsertEntity(var_x, "person");
+    QueryInsert bob = new QueryInsert(var_x, "person");
     bob.attributes.put(Attribute.fromIdentifier("name"), ConstantValue.fromValue("Bob"));
     toRet.add(bob);
 
     Variable var_z = Variable.fromIdentifier("z");
-    QueryInsertRelation z = new QueryInsertRelation(var_z, "employment");
+    QueryInsert z = new QueryInsert(var_z, "employment");
     z.plays.add(new SimpleEntry<>(Plays.fromIdentifier("employer"), var_y));
     z.plays.add(new SimpleEntry<>(Plays.fromIdentifier("employee"), var_x));
     toRet.add(z);
@@ -173,29 +167,29 @@ public class GraqlParser {
     //Redefinition of var_x isn't necessary - fromIdentifier will return the same object,
     //I've just included it here for consistency, it's up to you whether you do this or not
     var_x = Variable.fromIdentifier("x");
-    QueryInsertEntity alice = new QueryInsertEntity(var_x, "person");
+    QueryInsert alice = new QueryInsert(var_x, "person");
     alice.attributes.put(Attribute.fromIdentifier("name"), ConstantValue.fromValue("Alice"));
     toRet.add(alice);
 
     //Example without redefinition of var and new query obj.
-    z = new QueryInsertRelation(var_z, "employment");
+    z = new QueryInsert(var_z, "employment");
     z.plays.add(new SimpleEntry<>(Plays.fromIdentifier("employer"), var_y));
     z.plays.add(new SimpleEntry<>(Plays.fromIdentifier("employee"), var_x));
     toRet.add(z);
 
-    QueryInsertEntity person = new QueryInsertEntity(var_x, "person");
+    QueryInsert person = new QueryInsert(var_x, "person");
     person.attributes.put(Attribute.fromIdentifier("name"), ConstantValue.fromValue("Charlie"));
     toRet.add(person);
-    person = new QueryInsertEntity(var_x, "person");
+    person = new QueryInsert(var_x, "person");
     person.attributes.put(Attribute.fromIdentifier("name"), ConstantValue.fromValue("Dhruv"));
     toRet.add(person);
-    person = new QueryInsertEntity(var_x, "person");
+    person = new QueryInsert(var_x, "person");
     person.attributes.put(Attribute.fromIdentifier("name"), ConstantValue.fromValue("Ellie"));
     toRet.add(person);
 
 
     //Examples of match
-    QueryInsertRelation insertQuery = new QueryInsertRelation(var_z, "friendship");
+    QueryInsert insertQuery = new QueryInsert(var_z, "friendship");
     insertQuery.plays.add(new SimpleEntry<>(Plays.fromIdentifier("friend"), var_x));
     insertQuery.plays.add(new SimpleEntry<>(Plays.fromIdentifier("friend"), var_y));
     QueryMatch match = new QueryMatch();
@@ -209,7 +203,7 @@ public class GraqlParser {
     toRet.add(match);
 
     //Examples of match
-    insertQuery = new QueryInsertRelation(var_z, "coworkers");
+    insertQuery = new QueryInsert(var_z, "coworkers");
     insertQuery.plays.add(new SimpleEntry<>(Plays.fromIdentifier("employee"), var_x));
     insertQuery.plays.add(new SimpleEntry<>(Plays.fromIdentifier("employee"), var_y));
     match = new QueryMatch();
@@ -262,27 +256,27 @@ public class GraqlParser {
     Plays employer = Plays.fromIdentifier("employer");
     Plays friend = Plays.fromIdentifier("friend");
 
-    QueryDefineEntity person = new QueryDefineEntity("person");
+    QueryDefine person = new QueryDefine("person",QueryDefine.getFromIdentifier("entity"));
     person.attributes.add(nameAttribute);
     person.plays.add(employee);
     person.plays.add(friend);
     toRet.add(person);
 
-    QueryDefineEntity organisation = new QueryDefineEntity("organisation");
+    QueryDefine organisation = new QueryDefine("organisation",QueryDefine.getFromIdentifier("entity"));
     organisation.attributes.add(nameAttribute);
     organisation.plays.add(employer);
     toRet.add(organisation);
 
-    QueryDefineRelation employment = new QueryDefineRelation("employment");
+    QueryDefine employment = new QueryDefine("employment",QueryDefine.getFromIdentifier("relation"));
     employment.relates.add(employee);
     employment.relates.add(employer);
     toRet.add(employment);
 
-    QueryDefineRelation coworkers = new QueryDefineRelation("coworkers");
+    QueryDefine coworkers = new QueryDefine("coworkers",QueryDefine.getFromIdentifier("relation"));
     coworkers.relates.add(employee);
     toRet.add(coworkers);
 
-    QueryDefineRelation friendship = new QueryDefineRelation("friendship");
+    QueryDefine friendship = new QueryDefine("friendship",QueryDefine.getFromIdentifier("relation"));
     friendship.relates.add(friend);
     toRet.add(friendship);
     return toRet;
