@@ -127,6 +127,7 @@ public class ASTInterpreter {
               Integer i = c.resolveScope((Variable) attrval);
               if (i == null) {
                 attrval_s = "Var"+c.getVariableNumber((Variable) attrval);
+                vars.add(attrval_s);
               } else {
                 attrval_s = "e_"+i;
               }

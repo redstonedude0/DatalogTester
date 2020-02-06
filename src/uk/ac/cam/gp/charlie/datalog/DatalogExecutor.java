@@ -17,9 +17,12 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.StringReader;
 import java.security.InvalidParameterException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import uk.ac.cam.gp.charlie.DebugHelper;
 import uk.ac.cam.gp.charlie.Executor;
@@ -46,7 +49,7 @@ public class DatalogExecutor extends Executor {
    * @param q the query to execute
    * @return a map of variableName->e_XXX identifier, if this is a get query.
    */
-  private Map<Variable, String> executeQuery(Query q) {
+  private List<Map<Variable, String>> executeQuery(Query q) {
     try {
       /*
         This function will take the query, convert it to datalog and put in in to the context datalog clause set.
@@ -75,14 +78,41 @@ public class DatalogExecutor extends Executor {
 
         switch (((QueryMatch) q).getAction()) {
           case GET:
-            throw new RuntimeException("unimplemented");
-//            break;
+            List<Map<Variable,String>> toRet = new ArrayList<>();
+            for (PositiveAtom result : results) {
+              Map<Variable,String> resultMap = new HashMap<>();
+              //Get variables
+              Substitution s = result.unify(query);
+              for (int i = 0; i <= c.getMaxVariableNumber(); i++) {
+                Variable v = c.getVariableByNumber(i);
+                String boundValue = s.get(abcdatalog.ast.Variable.create("Var"+i)).toString();
+                //add to result map
+                Integer boundInt = Integer.parseInt(boundValue.split("_")[1]);
+                if (boundValue.startsWith("e_")) {
+                  resultMap.put(v,"\u001b[35m{"+boundInt+"}\u001b[0m");
+                } else if (boundValue.startsWith("const_")) {
+                  resultMap.put(v,"\u001b[33m"+c.getConstantFromID(boundInt).value+"\u001b[0m");
+                } else {
+                  throw new RuntimeException("Invalid returned object (unimplemented): " + boundValue);
+                }
+              }
+              toRet.add(resultMap);
+            }
+
+            System.out.println("\u001b[33;1mResults of query:\u001b[0m");
+            for (Map<Variable,String> map : toRet) {
+              System.out.println("Match:");
+              for (Entry<Variable,String> entry : map.entrySet()) {
+                System.out.println("  $" + entry.getKey().getIdentifier() + " => " + entry.getValue());
+              }
+            }
+            return toRet;
           case DELETE:
             throw new RuntimeException("unimplemented");
 //            break;
           case INSERT:
             //Insert as new inserts
-            System.out.println("\u001b[33;1m</RESULTS>\u001b[0m");
+            System.out.println("\u001b[33;1m<RESULTS>\u001b[0m");
             for (PositiveAtom result : results) {
               //Get variables
               Substitution s = result.unify(query);
@@ -146,7 +176,7 @@ public class DatalogExecutor extends Executor {
       throw new InvalidParameterException(
           "Test was " + tests.size() + " queries, expected 1: " + query);
     }
-    Map<Variable, String> resultMap = executeQuery(tests.get(0));
+    List<Map<Variable, String>> resultMap = executeQuery(tests.get(0));
     //TODO parse result map into Result obj using Context thing->const maps
 
     return null;
@@ -198,18 +228,7 @@ public class DatalogExecutor extends Executor {
         System.out.println("EOT");
       }
       if (true) {//Test graql->AST->datalog
-        String schema_string = "define\n"
-            + "person sub entity,\n"
-            + "  has name,\n"
-            + "  plays employee;"
-            + "organisation sub entity,\n"
-            + "  has name,\n"
-            + "  plays employer;"
-            + "employment sub relation,\n"
-            + "  relates employee,\n"
-            + "  relates employer;";
-        String data_string = "";
-        DatalogExecutor de = new DatalogExecutor(new TestEnvironment(schema_string, "test_data"));
+        DatalogExecutor de = new DatalogExecutor(new TestEnvironment("test_schema", "test_data"));
         System.out.println("Coloring key:");
         System.out.println("\u001b[31mtypes                     red\u001b[0m");
         System.out.println("\u001b[32mroles(plays)              green\u001b[0m");

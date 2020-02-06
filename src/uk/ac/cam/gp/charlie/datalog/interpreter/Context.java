@@ -84,6 +84,9 @@ public class Context {
     constDefinitions.put(constNumber,constant);
     return constNumber++;
   }
+  public ConstantValue getConstantFromID(Integer i) {
+    return constDefinitions.get(i);
+  }
 
   private int variableNumber = 0;//NOTE: Reset after each engine execution (should be)
   private Map<Integer,Variable> variableDefinitions = new HashMap<>();
@@ -99,7 +102,7 @@ public class Context {
   public Variable getVariableByNumber(Integer i) {
     return variableDefinitions.get(i);
   }
-  public void resetVariableNumber() {variableNumber = 0;}
+  public void resetVariableNumber() {variableNumber = 0;variableDefinitions.clear();}
   public int getMaxVariableNumber() {return variableNumber-1;}
 
 
@@ -117,7 +120,7 @@ public class Context {
     for (Integer i : constDefinitions.keySet()) {
       datalog = datalog.replaceAll("const_"+i,"\u001b[33m"+constDefinitions.get(i).value+"\u001b[0m");
     }
-    for (int i = 0; i < instanceNumber; i++) {
+    for (int i = instanceNumber-1; i >= 0; i--) {
       datalog = datalog.replaceAll("e_"+i,"\u001b[35m{"+i+"}\u001b[0m");
     }
     for (Integer i : playsDefinitions.keySet()) {

@@ -22,4 +22,8 @@ public class Variable extends AttributeValue{
     return new Variable(identifier);
   }
 
+  public String getIdentifier() {
+    return identifier;
+  }
+
 }
