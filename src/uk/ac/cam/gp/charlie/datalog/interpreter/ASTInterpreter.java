@@ -160,7 +160,6 @@ public class ASTInterpreter {
       toRet.append(String.join(",", vars));
       toRet.append(").\n");
     } else {
-      //todo test for non-executing query
       throw new RuntimeException(
           "Unsupported query type during datalog query execution: " + q.getClass());
     }

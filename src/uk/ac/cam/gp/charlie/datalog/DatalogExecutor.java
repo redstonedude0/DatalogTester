@@ -229,6 +229,10 @@ public class DatalogExecutor extends Executor {
         List<Query> ast = GraqlParser.graqlToAST(schema_string);
         System.out.print("AST:");
         DebugHelper.printObjectTree(ast);
+//        final String ANSI_CLS = "\u001b[2J";
+//        final String ANSI_HOME = "\u001b5n";
+//        System.out.print(ANSI_CLS + ANSI_HOME);
+//        System.out.flush();
         System.out.println("EOT");
       }
       if (false) {//Test graql->AST->datalog
