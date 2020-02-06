@@ -78,8 +78,10 @@ public class DatalogExecutor extends Executor {
 
         switch (((QueryMatch) q).getAction()) {
           case GET:
+            System.out.println("\u001b[33;1mResults of query:\u001b[0m");
             List<Map<Variable,String>> toRet = new ArrayList<>();
             for (PositiveAtom result : results) {
+              System.out.println("Match:");
               Map<Variable,String> resultMap = new HashMap<>();
               //Get variables
               Substitution s = result.unify(query);
@@ -89,26 +91,20 @@ public class DatalogExecutor extends Executor {
                 //add to result map
                 Integer boundInt = Integer.parseInt(boundValue.split("_")[1]);
                 if (boundValue.startsWith("e_")) {
-                  resultMap.put(v,"\u001b[35m{"+boundInt+"}\u001b[0m");
+                  //'Thing' -> not stored in resultMap
+                  System.out.println(" _$" + v.getIdentifier()+ " => \u001b[35m{"+boundInt+"}\u001b[0m");
                 } else if (boundValue.startsWith("const_")) {
-                  resultMap.put(v,"\u001b[33m"+c.getConstantFromID(boundInt).value+"\u001b[0m");
+                  resultMap.put(v,c.getConstantFromID(boundInt).value+"");
+                  System.out.println("  $" + v.getIdentifier()+ " => \u001b[33m"+c.getConstantFromID(boundInt).value+"\u001b[0m");
                 } else {
                   throw new RuntimeException("Invalid returned object (unimplemented): " + boundValue);
                 }
               }
               toRet.add(resultMap);
             }
-
-            System.out.println("\u001b[33;1mResults of query:\u001b[0m");
-            for (Map<Variable,String> map : toRet) {
-              System.out.println("Match:");
-              for (Entry<Variable,String> entry : map.entrySet()) {
-                System.out.println("  $" + entry.getKey().getIdentifier() + " => " + entry.getValue());
-              }
-            }
             return toRet;
           case DELETE:
-            throw new RuntimeException("unimplemented");
+            throw new RuntimeException("unimplemented for now");
 //            break;
           case INSERT:
             //Insert as new inserts
@@ -176,10 +172,18 @@ public class DatalogExecutor extends Executor {
       throw new InvalidParameterException(
           "Test was " + tests.size() + " queries, expected 1: " + query);
     }
-    List<Map<Variable, String>> resultMap = executeQuery(tests.get(0));
+    List<Map<Variable, String>> resultMaps = executeQuery(tests.get(0));
+    List<Map<String,String>> toRet = new ArrayList<>();
+    for(Map<Variable,String> resultMap: resultMaps) {
+      Map<String,String> newMap = new HashMap<>();
+      for (Entry<Variable,String> result: resultMap.entrySet()) {
+        newMap.put("$"+result.getKey().getIdentifier(),result.getValue());
+      }
+      toRet.add(newMap);
+    }
+    return new Result(toRet);
     //TODO parse result map into Result obj using Context thing->const maps
 
-    return null;
   }
 
   public static void main(String[] args) {
