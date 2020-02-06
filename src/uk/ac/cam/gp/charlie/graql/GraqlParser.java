@@ -25,6 +25,15 @@ import uk.ac.cam.gp.charlie.ast.queries.match.QueryMatch;
 public class GraqlParser {
 
   public static List<Query> graqlToAST(String input) {
+    //TODO for testing only, remove
+    switch (input) {
+      case "test_schema":
+        return test_schema();
+      case "test_data":
+        return test_data();
+    }
+    //TODO********************* remove above
+
     //parse input into 0 or more graql statements, and return then
     List<Query> queryList = new ArrayList<>();
     String[] typeQuery = input.split("\n", 2);
@@ -70,7 +79,7 @@ public class GraqlParser {
           QueryInsertEntity entity = new QueryInsertEntity(var, type);
           for (int i = 1; i < words.length; i++) {
             if (words[i][0].equals("has")) {
-              entity.attributes.put(Attribute.fromIdentifier(words[i][1]), new AttributeValue(words[i][2]));
+              entity.attributes.put(Attribute.fromIdentifier(words[i][1]), ConstantValue.fromValue(words[i][2]));
             }
           }
         }
