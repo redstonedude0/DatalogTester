@@ -1,12 +1,16 @@
 package uk.ac.cam.gp.charlie.graql;
 import static graql.lang.Graql.*;
 import grakn.client.GraknClient;
+import grakn.client.answer.ConceptMap;
+import graql.lang.query.GraqlGet;
 import graql.lang.query.GraqlInsert;
 import uk.ac.cam.gp.charlie.Executor;
 import uk.ac.cam.gp.charlie.Result;
 import uk.ac.cam.gp.charlie.TestEnvironment;
 
+import java.util.List;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 
 public class GraqlExecutor extends Executor {
@@ -35,7 +39,14 @@ public class GraqlExecutor extends Executor {
 
   @Override
   protected Result execute(String query) {
-    return null;
+    GraknClient.Transaction readTxn = session.transaction().read();
+    System.out.println("Executing Graql Queries: " + query);
+    List<List<ConceptMap>> results =
+            parseList(query).map(q -> readTxn.stream((GraqlGet) q).collect(Collectors.toList()))
+                    .collect(Collectors.toList());;
+    readTxn.close();
+
+    return new Result(results);
   }
 
   private String randomString() {
