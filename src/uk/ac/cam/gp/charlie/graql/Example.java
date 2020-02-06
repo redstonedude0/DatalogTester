@@ -19,7 +19,7 @@ import static graql.lang.Graql.*;
 
 public class Example {
 
-    private static String readLineByLineJava8(String filePath){
+    private static String readFile(String filePath){
         StringBuilder contentBuilder = new StringBuilder();
         try (Stream<String> stream = Files.lines( Paths.get(filePath), StandardCharsets.UTF_8)){
             stream.forEach(s -> contentBuilder.append(s).append("\n"));
@@ -43,13 +43,13 @@ public class Example {
         GraknClient.Session session = client.session("social_network4");
 
         /*GraknClient.Transaction schemaTxn = session.transaction().write();
-        String schema = readLineByLineJava8("schema.gql");
+        String schema = readFile("social_network_schema.gql");
         System.out.println("Executing schema Query ");
         parseList(schema).forEach(schemaTxn::execute);
         schemaTxn.commit();
 
         GraknClient.Transaction dataTxn = session.transaction().write();
-        String data = readLineByLineJava8("data.gql");
+        String data = readFile("social_network_data.gql");
         System.out.println("Executing insert Query ");
         parseList(data).forEach(dataTxn::execute);
         dataTxn.commit();*/

@@ -38,7 +38,7 @@ public class GraqlExecutor extends Executor {
   }
 
   @Override
-  protected Result execute(String query) {
+  public Result execute(String query) {
     GraknClient.Transaction readTxn = session.transaction().read();
     System.out.println("Executing Graql Queries: " + query);
     List<List<ConceptMap>> results =
