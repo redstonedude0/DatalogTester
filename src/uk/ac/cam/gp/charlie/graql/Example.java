@@ -5,6 +5,7 @@ import grakn.client.answer.ConceptMap;
 import graql.lang.Graql;
 import graql.lang.query.GraqlGet;
 import graql.lang.query.GraqlInsert;
+import graql.lang.query.GraqlQuery;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -28,28 +29,36 @@ public class Example {
         return contentBuilder.toString();
     }
 
+    private static void printResult(GraknClient.Transaction readTxn, GraqlQuery query){
+        if (query instanceof GraqlGet) {
+            Stream<ConceptMap> answers = readTxn.stream((GraqlGet) query);
+            answers.forEach(answer -> System.out.println(answer.get("fn").asAttribute().value()));
+        } else {
+            readTxn.execute(query);
+        }
+    }
+
     public static void main(String[] args) {
         GraknClient client = new GraknClient("localhost:48555");
-        GraknClient.Session session = client.session("social_network3");
+        GraknClient.Session session = client.session("social_network4");
 
-        GraknClient.Transaction schemaTxn = session.transaction().write();
+        /*GraknClient.Transaction schemaTxn = session.transaction().write();
         String schema = readLineByLineJava8("schema.gql");
-        System.out.println("Executing Graql Query: " + schema);
+        System.out.println("Executing schema Query ");
         parseList(schema).forEach(schemaTxn::execute);
         schemaTxn.commit();
 
         GraknClient.Transaction dataTxn = session.transaction().write();
-        String data = "insert $x isa person, has name \"Zoli\";";
-        System.out.println("Executing Graql Query: " + data);
-        parseList(schema).forEach(dataTxn::execute);
-        dataTxn.commit();
-
-        /*GraknClient.Transaction readTransaction = session.transaction().read();
-        String query = "match _ isa person, has name $name; get $name;";
-        System.out.println("Executing Graql Query: " + query);
+        String data = readLineByLineJava8("data.gql");
+        System.out.println("Executing insert Query ");
         parseList(data).forEach(dataTxn::execute);
-        Stream<ConceptMap> answers = readTransaction.stream(getQuery);
-        readTransaction.close();*/
+        dataTxn.commit();*/
+
+        GraknClient.Transaction readTxn = session.transaction().read();
+        String query = "match $tra (traveler: $per) isa travel; (located-travel: $tra, travel-location: $loc) isa location-of-travel; $loc has name \"French Lick\"; $per has full-name $fn; get $fn;";
+        System.out.println("Executing Graql Query: " + query);
+        parseList(query).forEach(q -> printResult(readTxn, (GraqlGet) q));
+        readTxn.close();
 
         // Insert a person using a WRITE transaction
         /*GraknClient.Transaction writeTransaction = session.transaction().write();
