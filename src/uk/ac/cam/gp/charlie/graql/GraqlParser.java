@@ -5,13 +5,17 @@ import java.util.ArrayList;
 import java.util.List;
 import uk.ac.cam.gp.charlie.ast.Attribute;
 import uk.ac.cam.gp.charlie.ast.AttributeValue;
+import uk.ac.cam.gp.charlie.ast.ConstantValue;
 import uk.ac.cam.gp.charlie.ast.Plays;
 import uk.ac.cam.gp.charlie.ast.Variable;
 import uk.ac.cam.gp.charlie.ast.queries.Query;
 import uk.ac.cam.gp.charlie.ast.queries.QueryDefineEntity;
 import uk.ac.cam.gp.charlie.ast.queries.QueryDefineRelation;
+import uk.ac.cam.gp.charlie.ast.queries.QueryInsert;
 import uk.ac.cam.gp.charlie.ast.queries.QueryInsertEntity;
 import uk.ac.cam.gp.charlie.ast.queries.QueryInsertRelation;
+import uk.ac.cam.gp.charlie.ast.queries.match.ConditionIsa;
+import uk.ac.cam.gp.charlie.ast.queries.match.QueryMatch;
 
 /**
  * Parse Graql into ASTs
@@ -100,16 +104,18 @@ public class GraqlParser {
      * insert
      *  $z (employee: $x, employee: $y) isa coworkers;
      *
+     *
+     *
      */
 
     Variable var_x = Variable.fromIdentifier("x");
     QueryInsertEntity bob = new QueryInsertEntity(var_x,"person");
-    bob.attributes.put(Attribute.fromIdentifier("name"),new AttributeValue("Bob"));
+    bob.attributes.put(Attribute.fromIdentifier("name"),ConstantValue.fromValue("Bob"));
     toRet.add(bob);
 
     Variable var_y = Variable.fromIdentifier("y");
     QueryInsertEntity uni = new QueryInsertEntity(var_y,"organisation");
-    uni.attributes.put(Attribute.fromIdentifier("name"),new AttributeValue("Uni"));
+    uni.attributes.put(Attribute.fromIdentifier("name"),ConstantValue.fromValue("Uni"));
     toRet.add(uni);
 
     Variable var_z = Variable.fromIdentifier("z");
@@ -122,7 +128,7 @@ public class GraqlParser {
     //I've just included it here for consistency, it's up to you whether you do this or not
     var_x = Variable.fromIdentifier("x");
     QueryInsertEntity alice = new QueryInsertEntity(var_x,"person");
-    alice.attributes.put(Attribute.fromIdentifier("name"),new AttributeValue("Alice"));
+    alice.attributes.put(Attribute.fromIdentifier("name"),ConstantValue.fromValue("Alice"));
     toRet.add(alice);
 
     //Example without redefinition of var and new query obj.
@@ -130,6 +136,20 @@ public class GraqlParser {
     z.plays.add(new SimpleEntry<>(Plays.fromIdentifier("employer"), var_y));
     z.plays.add(new SimpleEntry<>(Plays.fromIdentifier("employee"), var_x));
     toRet.add(z);
+
+    //Example of match
+    QueryInsertRelation insertQuery = new QueryInsertRelation(var_z,"coworkers");
+    insertQuery.plays.add(new SimpleEntry<>(Plays.fromIdentifier("employee"),var_x));
+    insertQuery.plays.add(new SimpleEntry<>(Plays.fromIdentifier("employee"),var_y));
+    QueryMatch match = new QueryMatch();
+    match.setActionInsert(insertQuery);
+    ConditionIsa cond_1 = new ConditionIsa(var_x,"person");
+    cond_1.has.put(Attribute.fromIdentifier("name"),ConstantValue.fromValue("Bob"));
+    ConditionIsa cond_2 = new ConditionIsa(var_y,"person");
+    cond_2.has.put(Attribute.fromIdentifier("name"),ConstantValue.fromValue("Alice"));
+    match.conditions.add(cond_1);
+    match.conditions.add(cond_2);
+    toRet.add(match);
 
     return toRet;
   }

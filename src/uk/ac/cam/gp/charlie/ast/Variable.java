@@ -3,7 +3,7 @@ package uk.ac.cam.gp.charlie.ast;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Variable {
+public class Variable extends AttributeValue{
 
   private final String identifier;
   private static List<Variable> instances = new ArrayList<>();

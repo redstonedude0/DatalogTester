@@ -1,57 +1,34 @@
-###Schema###
-###Data###
-t_subs(t_person,t_entity).
-t_subs(t_organisation,t_entity).
-t_subs(t_employment,t_relation).
-t_subs(t_coworkers,t_relation).
-
-t_hasattr(t_person,name).
-t_hasattr(t_organisation,name).
-
-t_playsrole(t_person,employee).
-t_playsrole(t_organisation,employer).
-
-t_relates(t_employment,employee).
-t_relates(t_employment,employer).
-
-instanceof(e_1,t_person).
-instanceattr(e_1,name,str_Bob).
-
-instanceof(e_2,t_person).
-instanceattr(e_2,name,str_Alice).
-
-instanceof(e_3,t_organisation).
-instanceattr(e_3,name,str_Uni).
-
-instanceof(e_4,t_employment).
-instancerel(e_4,e_1,employee).
-instancerel(e_4,e_3,employer).
-
-%instanceof(Ent,t_employment) :- instanceof(Org,t_organisation), instanceattr(Org,name,str_Uni), instanceof(Person,t_person).
-
-%lt(e_1,e_2).
-%lt(e_2,e_3).
-%lt(e_3,e_4).
-
-%lt(X,Y) :- lt(X,Z), lt(Z,Y).
-
-query1(X) :- instanceof(X,t_person), instanceattr(X,name,str_Bob).
-query2_b6hhds78adg8sa_8d7sga8da7s8_hsa8dsahday(X,Y,Z) :- instanceof(X,t_employment), instancerel(X,employee,Y), instancerel(X,employer,Z).
-query3(X) :- instanceof(X,t_employment).
-###Test###
-query1(X).
-query2_b6hhds78adg8sa_8d7sga8da7s8_hsa8dsahday(X,Y,Z).
-query3(X).
-
-%match(X,[(isa,t_person),(has,name,"Bob")]).
-%match(Var,[(isa,t_employment),(relates,employee,X),(relates,employer,Y)]).
+t_subs(t_0,t_entity).
+t_hasattr(t_0,a_0).
+t_playsrole(t_0,r_0).
 
 
+t_subs(t_1,t_entity).
+t_hasattr(t_1,a_0).
+t_playsrole(t_1,r_1).
 
-%
-% match
-%    $org isa organisation, has name "Uni";
-%    $person isa person, has name "Alice";
-% insert $new-employment (employer: $org, employee: $person) isa employment;
-%    $new-employment has reference-id "WGFTSH"; ///kinda won't work in this impl.
-%
+
+t_subs(t_2,t_relation).
+t_relates(t_2,r_0).
+t_relates(t_2,r_1).
+
+
+instanceof(e_0,t_0).
+instanceattr(e_0,a_0,const_0).
+
+instanceof(e_1,t_1).
+instanceattr(e_1,a_0,const_1).
+
+instanceof(e_2,t_2).
+instancerel(e_2,e_1,r_1).
+instancerel(e_2,e_0,r_0).
+
+instanceof(e_3,t_0).
+instanceattr(e_3,a_0,const_2).
+
+instanceof(e_4,t_2).
+instancerel(e_4,e_1,r_1).
+instancerel(e_4,e_3,r_0).
+
+query(Var0,Var1) :- instanceof(Var0,t_0), instanceattr(Var0,a_0,const_0), instanceof(Var1,t_0), instanceattr(Var1,a_0,const_2).
+

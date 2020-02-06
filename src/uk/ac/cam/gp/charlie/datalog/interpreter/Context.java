@@ -8,6 +8,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import uk.ac.cam.gp.charlie.ast.Attribute;
 import uk.ac.cam.gp.charlie.ast.AttributeValue;
+import uk.ac.cam.gp.charlie.ast.ConstantValue;
 import uk.ac.cam.gp.charlie.ast.Plays;
 import uk.ac.cam.gp.charlie.ast.Variable;
 import uk.ac.cam.gp.charlie.ast.queries.QueryDefine;
@@ -73,9 +74,9 @@ public class Context {
   }
 
   private int constNumber = 0;
-  private Map<Integer, AttributeValue> constDefinitions = new HashMap<>();
-  int getConstNumber(AttributeValue constant) {
-    for (Entry<Integer,AttributeValue> entry : constDefinitions.entrySet()) {
+  private Map<Integer, ConstantValue> constDefinitions = new HashMap<>();
+  int getConstNumber(ConstantValue constant) {
+    for (Entry<Integer,ConstantValue> entry : constDefinitions.entrySet()) {
       if (entry.getValue().value.equals(constant.value)) {
         return entry.getKey();
       }
@@ -83,6 +84,24 @@ public class Context {
     constDefinitions.put(constNumber,constant);
     return constNumber++;
   }
+
+  private int variableNumber = 0;//NOTE: Reset after each engine execution (should be)
+  private Map<Integer,Variable> variableDefinitions = new HashMap<>();
+  int getVariableNumber(Variable v) {
+    for (Entry<Integer,Variable> entry : variableDefinitions.entrySet()) {
+      if (entry.getValue().equals(v)) {
+        return entry.getKey();
+      }
+    }
+    variableDefinitions.put(variableNumber,v);
+    return variableNumber++;
+  }
+  public Variable getVariableByNumber(Integer i) {
+    return variableDefinitions.get(i);
+  }
+  public void resetVariableNumber() {variableNumber = 0;}
+  public int getMaxVariableNumber() {return variableNumber-1;}
+
 
   //TODO only maps to things for now, need to map to constants, types, etc
   private Map<Variable,Integer> scope = new HashMap<>();
@@ -92,6 +111,7 @@ public class Context {
   public void addToScope(Variable v, Integer i) {
     scope.put(v,i);
   }
+  public void removeFromScope(Variable v) {scope.remove(v);}
 
   public String prettifyDatalog(String datalog) {
     for (Integer i : constDefinitions.keySet()) {

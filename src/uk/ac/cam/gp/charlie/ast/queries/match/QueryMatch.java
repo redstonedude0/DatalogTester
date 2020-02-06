@@ -1,9 +1,10 @@
-package uk.ac.cam.gp.charlie.ast.queries;
+package uk.ac.cam.gp.charlie.ast.queries.match;
 
-import java.nio.channels.AlreadyBoundException;
 import java.util.ArrayList;
 import java.util.List;
 import uk.ac.cam.gp.charlie.ast.Variable;
+import uk.ac.cam.gp.charlie.ast.queries.Query;
+import uk.ac.cam.gp.charlie.ast.queries.QueryInsert;
 
 /**
  * Represents abstract definition of a Grakn Concept Type or Grakn Rule. See subtypes for definition
@@ -11,7 +12,7 @@ import uk.ac.cam.gp.charlie.ast.Variable;
  *
  * https://dev.grakn.ai/docs/schema/concepts#summary
  */
-public abstract class QueryMatch extends Query {
+public class QueryMatch extends Query {
 
   /**
    * If null then this subtypes the parent type directly (e.g. entity, relation...)
@@ -24,14 +25,22 @@ public abstract class QueryMatch extends Query {
     DELETE,
     INSERT
   }
-  public Action action = null;
-
+  private Action action = null;
   private List<Variable> DATA_GET;
   private Variable DATA_DELETE;
   private QueryInsert DATA_INSERT;
-
-  protected QueryMatch() {}
-
+  public Action getAction() {
+    return action;
+  }
+  public List<Variable> getDATA_GET() {
+    return DATA_GET;
+  }
+  public Variable getDATA_DELETE() {
+    return DATA_DELETE;
+  }
+  public QueryInsert getDATA_INSERT() {
+    return DATA_INSERT;
+  }
 
   /**
    * Set this to be a match...get query
@@ -41,6 +50,7 @@ public abstract class QueryMatch extends Query {
     if (action != null) {
       throw new RuntimeException("Match already " + action + " cannot be set to get");
     }
+    action = Action.GET;
     DATA_GET = v;
   }
 
@@ -52,6 +62,7 @@ public abstract class QueryMatch extends Query {
     if (action != null) {
       throw new RuntimeException("Match already " + action + " cannot be set to delete");
     }
+    action = Action.DELETE;
     DATA_DELETE = v;
   }
 
@@ -63,12 +74,8 @@ public abstract class QueryMatch extends Query {
     if (action != null) {
       throw new RuntimeException("Match already " + action + " cannot be set to insert");
     }
+    action = Action.INSERT;
     DATA_INSERT = query;
   }
-
-  public class MatchCondition {
-
-  }
-
 
 }
