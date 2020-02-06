@@ -3,6 +3,8 @@ package uk.ac.cam.gp.charlie.graql;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+
 import uk.ac.cam.gp.charlie.ast.Attribute;
 import uk.ac.cam.gp.charlie.ast.AttributeValue;
 import uk.ac.cam.gp.charlie.ast.Plays;
@@ -19,14 +21,6 @@ import uk.ac.cam.gp.charlie.ast.queries.QueryInsertRelation;
 public class GraqlParser {
 
   public static List<Query> graqlToAST(String input) {
-    //TODO for testing only, remove
-    switch (input) {
-      case "test_schema":
-        return test_schema();
-      case "test_data":
-        return test_data();
-    }
-    //TODO********************* remove above
     //parse input into 0 or more graql statements, and return then
     List<Query> queryList = new ArrayList<>();
     String[] typeQuery = input.split("\n", 2);
@@ -37,7 +31,7 @@ public class GraqlParser {
       for(int i = 0; i < lines.length; i++){
         words[i] = lines[i].split(" ");
       }
-      if (typeQuery[0].equals("define")){
+      if(typeQuery[0].equals("define")){
         if(words[0][2].equals("entity")){
           QueryDefineEntity entity = new QueryDefineEntity(words[0][0]);
           for(int i = 1; i < words.length; i++){
@@ -63,10 +57,58 @@ public class GraqlParser {
           queryList.add(relation);
         }
       }
+      if(typeQuery[0].equals("insert")) {
+        if (words[0][1].equals("isa")) {
+          //At this point we assume this to be an entity TODO:fix
+          String name = words[0][0];
+          String type = words[0][2];
+          Variable var = Variable.fromIdentifier(name);
+          QueryInsertEntity entity = new QueryInsertEntity(var, type);
+          for (int i = 1; i < words.length; i++) {
+            if (words[i][0].equals("has")) {
+              entity.attributes.put(Attribute.fromIdentifier(words[i][1]), new AttributeValue(words[i][2]));
+            }
+          }
+        }
+        //TODO: make this less hideous and work for more than 1 case
+        for(int i = 0; i < words[0].length; i++){
+          if(words[0][i].startsWith("(")){
+            String name = (i == 0) ? "" : words[0][i - 1].substring(1, words[0][i - 1].length());
+            List<Map.Entry<Plays,Variable>> relationList = new ArrayList<>();
+            Variable var = Variable.fromIdentifier(words[0][i+1].substring(1, words[0][i+1].length()));
+            String role = words[0][i].substring(1, words[0][i].length() - 1);
+            relationList.add((new SimpleEntry<>(Plays.fromIdentifier(role), var)));
+            boolean reachedIsa = false;
+            for (int j = 1; j < words.length; j++){
+              Variable var2 = Variable.fromIdentifier(words[j][0].substring(0, words[j][0].length()));
+              String role2 = "";
+              if(words[j][1].endsWith(")")){
+                role2 = words[j][1].substring(1, words[j][1].length() - 1);
+                reachedIsa = true;
+              }
+              else {
+                role2 = words[j][1].substring(1, words[j][1].length());
+              }
+              relationList.add((new SimpleEntry<>(Plays.fromIdentifier(role2), var2)));
+              if(reachedIsa){
+                QueryInsertRelation relation = new QueryInsertRelation(Variable.fromIdentifier(name),words[j][3]);
+                relation.plays.addAll(relationList);
+                break;
+                //we need to do more stuff here
+              }
+            }
+            break;
+          }
+        }
+      }
       System.out.println("breakpoint");
-
     }
     return queryList;
+  }
+
+  public static void main(String[] args) {
+    String test = "insert\n$z (employee: $x, employee: $y) isa coworkers;";
+    GraqlParser.graqlToAST(test);
   }
 
   /**
