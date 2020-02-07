@@ -80,6 +80,7 @@ public class ASTInterpreter {
         toRet.append(String
             .format("instancerel(e_%d,e_%d,r_%d).\n", iNum, c.resolveScope(entry.getValue()),
                 c.getPlaysNumber(entry.getKey())));
+        c.bindInstanceToInstance(c.resolveScope(entry.getValue()),iNum);
       }
       c.addToScope(insert.returnVariable, iNum);
       toRet.append("\n");
@@ -118,7 +119,16 @@ public class ASTInterpreter {
                     attrval_s));
           }
           for (Entry<Plays, Variable> entry : cond.relates) {
-            throw new RuntimeException("unimplemented");
+            Integer i = c.resolveScope(entry.getValue());
+            String relates_s;
+            if (i == null) {
+              relates_s = "Var" + c.getVariableNumber(entry.getValue());
+              vars.add(relates_s);
+            } else {
+              relates_s = "e_" + i;
+            }
+            conditions.add(String
+                .format("instancerel(%s,%s,r_%d)", varString,relates_s,c.getPlaysNumber(entry.getKey())));
           }
         } else {
           throw new RuntimeException(
@@ -138,7 +148,11 @@ public class ASTInterpreter {
     System.out.print(c.prettifyDatalog(toRet.toString()));
     DatalogTokenizer tokenizer = new DatalogTokenizer(new StringReader(toRet.toString()));
     try {
-      return DatalogParser.parseProgram(tokenizer);
+      Set<Clause> clauses = DatalogParser.parseProgram(tokenizer);
+      if (q instanceof QueryInsert) {
+        c.bindInstanceClauses(c.getMaxInstanceNumber(),clauses);
+      }
+      return clauses;
     } catch (DatalogParseException e) {
       e.printStackTrace();
       return new HashSet<>();

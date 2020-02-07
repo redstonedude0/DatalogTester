@@ -4,6 +4,7 @@ import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import org.w3c.dom.Attr;
 import uk.ac.cam.gp.charlie.ast.Attribute;
 import uk.ac.cam.gp.charlie.ast.ConstantValue;
 import uk.ac.cam.gp.charlie.ast.Plays;
@@ -214,13 +215,38 @@ public class GraqlParser {
     match.conditions.add(cond_2);
     toRet.add(match);
 
+    //match get
     Variable var_n = Variable.fromIdentifier("n");
-    match = new QueryMatch();
-    match.setActionGet(List.of(var_n));
+    QueryMatch matchget = new QueryMatch();
+    matchget.setActionGet(List.of(var_n));
     cond_1 = new ConditionIsa(var_x,"person");
     cond_1.has.put(Attribute.fromIdentifier("name"),var_n);
-    match.conditions.add(cond_1);
-    toRet.add(match);
+    matchget.conditions.add(cond_1);
+    toRet.add(matchget);
+
+    //match delete  match $x isa person, has name "Alice"; $y (employee:$x) isa employment; delete $y;
+    QueryMatch matchdel = new QueryMatch();
+    matchdel.setActionDelete(var_y);
+    cond_1 = new ConditionIsa(var_x, "person");
+    cond_1.has.put(Attribute.fromIdentifier("name"),ConstantValue.fromValue("Alice"));
+    cond_2 = new ConditionIsa(var_y,"employment");
+    cond_2.relates.add(new SimpleEntry<>(Plays.fromIdentifier("employee"),var_x));
+    matchdel.conditions.add(cond_1);
+    matchdel.conditions.add(cond_2);
+    //toRet.add(matchdel);
+
+
+    //match delete  match $x isa person, has name "Alice"; delete $x;
+    matchdel = new QueryMatch();
+    matchdel.setActionDelete(var_x);
+    cond_1 = new ConditionIsa(var_x, "person");
+    cond_1.has.put(Attribute.fromIdentifier("name"),ConstantValue.fromValue("Alice"));
+    matchdel.conditions.add(cond_1);
+    toRet.add(matchdel);
+
+
+    //match get again
+    toRet.add(matchget);
 
     return toRet;
   }

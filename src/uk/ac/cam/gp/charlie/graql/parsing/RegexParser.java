@@ -24,7 +24,7 @@ public class RegexParser {
    */
 
   public static void main(String[] args) {
-    String test = "define person sub entity,  has name  , has nickname;";
+    String test = "define person sub entity,  has name  , has nickname;  \n \n organisation sub\nentity\n, has \nname   \n;";
     List<Query> res = parse(test);
     System.out.println("RESULT OF PARSING:");
     DebugHelper.printObjectTree(res);

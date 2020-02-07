@@ -72,6 +72,41 @@ public class Context {
   int getInstanceNumber() {
     return instanceNumber++;
   }
+  int getMaxInstanceNumber() { return instanceNumber-1;}
+  private Map<Integer,Set<Clause>> instanceClauseBindings = new HashMap<>();
+  private Map<Integer,Set<Integer>> instanceInstanceBindings = new HashMap<>();
+  public void bindInstanceClauses(Integer iNum, Set<Clause> clauses) {
+    instanceClauseBindings.put(iNum,clauses);
+  }
+  public void bindInstanceToInstance(Integer ifDeleted, Integer thenDelete) {
+    if (!instanceInstanceBindings.keySet().contains(ifDeleted)) {
+      instanceInstanceBindings.put(ifDeleted,new HashSet<>());
+    }
+    instanceInstanceBindings.get(ifDeleted).add(thenDelete);
+  }
+  private Set<Clause> getInstanceBoundClauses(Integer i) {
+    return instanceClauseBindings.get(i);
+  }
+  private Set<Integer> getInstanceBoundInstances(Integer i) {
+    if (instanceInstanceBindings.keySet().contains(i)) {
+      return instanceInstanceBindings.get(i);
+    } else {
+      return new HashSet<>();
+    }
+  }
+
+  /**
+   * Unsafe if cyclical
+   * @param i
+   * @return
+   */
+  public Set<Clause> getInstanceBoundClauses_TRANSITIVE(Integer i) {
+    Set<Clause> toRet = new HashSet<>(instanceClauseBindings.get(i));
+    for (Integer j : getInstanceBoundInstances(i)) {
+      toRet.addAll(getInstanceBoundClauses_TRANSITIVE(j));
+    }
+    return toRet;
+  }
 
   private int constNumber = 0;
   private Map<Integer, ConstantValue> constDefinitions = new HashMap<>();

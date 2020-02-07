@@ -104,8 +104,34 @@ public class DatalogExecutor extends Executor {
             }
             return toRet;
           case DELETE:
-            throw new RuntimeException("unimplemented for now");
-//            break;
+            System.out.println("\u001b[33;1mDeleting:\u001b[0m");
+            Variable variableToDelete = ((QueryMatch) q).getDATA_DELETE();
+            for (PositiveAtom result : results) {
+              System.out.println("Match:");
+              //Get variable
+              Substitution s = result.unify(query);
+              for (int i = 0; i <= c.getMaxVariableNumber(); i++) {
+                Variable v = c.getVariableByNumber(i);
+                if (v.equals(variableToDelete)) {
+                  String boundValue = s.get(abcdatalog.ast.Variable.create("Var"+i)).toString();
+                  Integer boundInt = Integer.parseInt(boundValue.split("_")[1]);
+                  if (boundValue.startsWith("e_")) {
+                    //'Thing' -> can be deleted
+                    System.out.println("  $" + v.getIdentifier()+ " => \u001b[35m{"+boundInt+"}\u001b[0m");
+                  } else {
+                    throw new RuntimeException("Attemped to delete non-thing object " + boundValue);
+                  }
+                  Set<Clause> clausesToDelete = c.getInstanceBoundClauses_TRANSITIVE(boundInt);
+                  System.out.println("    Clauses:");
+                  for (Clause clause : clausesToDelete) {
+                    System.out.println("      "+c.prettifyDatalog(clause.toString()));
+                  }
+                  c.datalog.removeAll(clausesToDelete);
+                }
+              }
+            }
+            System.out.println("\u001b[33;1m</RESULTS>\u001b[0m\n");
+            break;
           case INSERT:
             //Insert as new inserts
             System.out.println("\u001b[33;1m<RESULTS>\u001b[0m");
@@ -212,10 +238,10 @@ public class DatalogExecutor extends Executor {
         System.out.println(res);
 
       }
-      if (false) {//Test AST->datalog
+      if (true) {//Test AST->datalog
         DatalogExecutor de = new DatalogExecutor(new TestEnvironment("test_schema", "test_data"));
       }
-      if (true) {//Test graql->AST
+      if (false) {//Test graql->AST
         String schema_string = "define\n"
             + "person sub entity,\n"
             + "  has name,\n"
@@ -229,10 +255,6 @@ public class DatalogExecutor extends Executor {
         List<Query> ast = GraqlParser.graqlToAST(schema_string);
         System.out.print("AST:");
         DebugHelper.printObjectTree(ast);
-//        final String ANSI_CLS = "\u001b[2J";
-//        final String ANSI_HOME = "\u001b5n";
-//        System.out.print(ANSI_CLS + ANSI_HOME);
-//        System.out.flush();
         System.out.println("EOT");
       }
       if (false) {//Test graql->AST->datalog
