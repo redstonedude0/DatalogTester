@@ -108,7 +108,7 @@ public class GraqlParser {
           }
         }
       }
-      System.out.println("breakpoint");
+//      System.out.println("breakpoint");
     }
     return queryList;
   }
