@@ -46,7 +46,7 @@ public class GraqlExecutor extends Executor {
                     .collect(Collectors.toList());;
     readTxn.close();
 
-    return new Result(results);
+    return Result.fromGrakn(results);
   }
 
   private String randomString() {

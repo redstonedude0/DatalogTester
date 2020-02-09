@@ -2,19 +2,16 @@ package uk.ac.cam.gp.charlie;
 
 //import grakn.client.answer.ConceptMap;
 
+import grakn.client.answer.ConceptMap;
+import grakn.client.concept.Concept;
+import graql.lang.statement.Variable;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 public class Result {
-
-  /**
-   * NOTE: Removed as this wasn't compiling for me, also this should be an
-   * implementation-independent class IMO?
-   */
-
-//    public Result(List<List<ConceptMap>> graqlResult) {
-//        // TODO: transform in a common format used to then compare graql and datalog results
-//    }
 
   /**
    * List of possible variable mappings, only returns variables which do not refer to things,
@@ -38,6 +35,20 @@ public class Result {
    */
   public Result(List<Map<String, String>> results) {
     this.results = results;
+  }
+
+  public static Result fromGrakn(List<List<ConceptMap>> graknResults) {
+    List<Map<String,String>> results = new ArrayList<>();
+    for(List<ConceptMap> mapList: graknResults) {
+      for (ConceptMap map : mapList) {
+        Map<String,String> result = new HashMap<>();
+        for (Entry<Variable, Concept> entry : map.map().entrySet()) {
+          result.put(entry.getKey().name(),entry.getValue().toString());
+        }
+        results.add(result);
+      }
+    }
+    return new Result(results);
   }
 
   public final List<Map<String, String>> results;
