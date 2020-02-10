@@ -16,7 +16,10 @@ import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.junit.internal.TextListener;
 import org.junit.runner.JUnitCore;
@@ -39,35 +42,42 @@ public class Workbench {
       System.out.println("# GraQL Basic Test Workbench CLI #");
       System.out.println("##################################");
       System.out.println("Select Task:");
-      System.out.println("(1) Run TESTASTInterpreter for JUnit tests of AST->Datalog");
-      System.out.println("(2) Interactive Graql->AST->Datalog input [ONLY SCHEMA]");
-      System.out.println("(3) Interactive Graql Testing [TO BE ADDED]");
-      System.out.println("(4) Run raw datalog from datalog.test");
-      System.out.println("(5) Interactive Graql->Datalog input w/ preloaded AST");
+      System.out.println("  Interactive Interface:");
+      System.out.println("    (1) Interactive Graql->AST->Datalog input [ONLY SCHEMA]");
+      System.out.println("    (2) Interactive Graql->Datalog input w/ preloaded AST");
+      System.out.println("    (3) Interactive Graql/Datalog Testing w/ result comparison [TO BE ADDED]");
+      System.out.println("  Static Tests:");
+      System.out.println("    (4) Run TESTASTInterpreter for JUnit tests of AST->Datalog");
+      System.out.println("    (5) Run raw datalog from datalog.test");
+      System.out.println("    (6) Run stock Graql->AST test");
 
       String input = br.readLine();
       switch (input) {
         case "1":
-          TESTASTInterpreter();
+          interactive_basic();
           break;
         case "2":
-          graqlLoop();
+          interactive_datalogPreloaded();
           break;
         case "3":
           System.out.println("Unimplemented.");
           break;
         case "4":
-          rawDatalog();
+          static_TESTASTInterpreter();
           break;
         case "5":
-          testDatalog();
+          static_datalogFile();
+          break;
+        case "6":
+          static_graqlAST();
+          break;
         default:
           System.out.println("Unknown input " + input);
       }
     }
   }
 
-  public static void testDatalog()
+  public static void interactive_datalogPreloaded()
       throws IOException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
     //TODO: does not work for now as graqlparser does not parse properly
     BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
@@ -83,13 +93,52 @@ public class Workbench {
       m.invoke(de,q);
     }
     DatalogExecutor.parser = new RegexParser();
+//    Map<String,Query> shortcuts = new HashMap();
     interactiveLoop(de);
     DebugHelper.VERBOSE_DATALOG = false;
     DebugHelper.VERBOSE_RESULTS = false;
 
   }
 
-  public static void rawDatalog()
+
+  public static void interactive_basic() throws IOException {
+    //TODO: does not work for now as graqlparser does not parse properly
+    TestEnvironment te = new TestEnvironment("\n", "\n");
+    DatalogExecutor de = new DatalogExecutor(te);
+    DatalogExecutor.parser = new RegexParser();
+    DebugHelper.VERBOSE_AST = true;
+    DebugHelper.VERBOSE_DATALOG = true;
+    DebugHelper.VERBOSE_RESULTS = true;
+    interactiveLoop(de);
+    DatalogExecutor.parser = new GraqlParser();
+    DebugHelper.VERBOSE_AST = false;
+    DebugHelper.VERBOSE_DATALOG = false;
+    DebugHelper.VERBOSE_RESULTS = false;
+  }
+
+  private static void interactiveLoop(DatalogExecutor de) throws IOException {
+    System.out.println("Enter graql query to be completed, terminate with blank line to execute");
+    System.out.println("Enter \"exit\" to exit to menu");
+    BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+    while (true) {
+      String input = "";
+      while (true) {
+        String line = br.readLine();
+        input += line + "\n";
+        if (line.equals("")) {
+          break;
+        }
+      }
+      if (input.equals("exit\n\n")) {
+        break;
+      }
+      Result r = de.execute(input);
+      System.out.println("Result");
+      System.out.println(r);
+    }
+  }
+
+  public static void static_datalogFile()
       throws IOException, DatalogParseException, DatalogValidationException {
     File f = new File("tests/datalog.test");
     BufferedReader br = new BufferedReader(new FileReader(f));
@@ -114,46 +163,29 @@ public class Workbench {
     System.out.println(res);
   }
 
-  public static void TESTASTInterpreter() {
+  public static void static_TESTASTInterpreter() {
     JUnitCore junit = new JUnitCore();
     junit.addListener(new TextListener(System.out));
     junit.run(TESTAstInterpreter.class);
   }
 
-  public static void graqlLoop() throws IOException {
-    System.out.println("Enter graql query to be completed, terminate with blank line to execute");
-    System.out.println("Enter \"exit\" to exit to menu");
-    //TODO: does not work for now as graqlparser does not parse properly
-    TestEnvironment te = new TestEnvironment("\n", "\n");
-    DatalogExecutor de = new DatalogExecutor(te);
-    DatalogExecutor.parser = new RegexParser();
-    DebugHelper.VERBOSE_AST = true;
-    DebugHelper.VERBOSE_DATALOG = true;
-    DebugHelper.VERBOSE_RESULTS = true;
-    interactiveLoop(de);
-    DebugHelper.VERBOSE_AST = false;
-    DebugHelper.VERBOSE_DATALOG = false;
-    DebugHelper.VERBOSE_RESULTS = false;
-  }
 
-  private static void interactiveLoop(DatalogExecutor de) throws IOException {
-    BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-    while (true) {
-      String input = "";
-      while (true) {
-        String line = br.readLine();
-        input += line + "\n";
-        if (line.equals("")) {
-          break;
-        }
-      }
-      if (input.equals("exit\n\n")) {
-        break;
-      }
-      Result r = de.execute(input);
-      System.out.println("Result");
-      System.out.println(r);
-    }
+  public static void static_graqlAST() {
+    //Test Graql->AST
+    String schema_string = "define\n"
+        + "person sub entity,\n"
+        + "  has name,\n"
+        + "  plays employee;"
+        + "organisation sub entity,\n"
+        + "  has name,\n"
+        + "  plays employer;"
+        + "employment sub relation,\n"
+        + "  relates employee,\n"
+        + "  relates employer;";
+    List<Query> ast = DatalogExecutor.parser.graqlToAST(schema_string);
+    System.out.print("AST:");
+    DebugHelper.printObjectTree(ast);
+    System.out.println("EOT");
   }
 
 
