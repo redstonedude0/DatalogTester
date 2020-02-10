@@ -41,12 +41,14 @@ public class GraqlExecutor extends Executor {
   public Result execute(String query) {
     GraknClient.Transaction readTxn = session.transaction().read();
     System.out.println("Executing Graql Queries: " + query);
-    List<List<ConceptMap>> results =
+    List<List<ConceptMap>> graqlResults =
             parseList(query).map(q -> readTxn.stream((GraqlGet) q).collect(Collectors.toList()))
-                    .collect(Collectors.toList());;
+                    .collect(Collectors.toList());
+
+    Result result = Result.fromGrakn(graqlResults);
     readTxn.close();
 
-    return Result.fromGrakn(results);
+    return result;
   }
 
   private String randomString() {

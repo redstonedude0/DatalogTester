@@ -43,7 +43,8 @@ public class Result {
       for (ConceptMap map : mapList) {
         Map<String,String> result = new HashMap<>();
         for (Entry<Variable, Concept> entry : map.map().entrySet()) {
-          result.put(entry.getKey().name(),entry.getValue().toString());
+          result.put(entry.getKey().name(), entry.getValue().asAttribute().value().toString());
+          System.out.println(entry.getKey().name() + " : " + entry.getValue().asAttribute().value());
         }
         results.add(result);
       }
