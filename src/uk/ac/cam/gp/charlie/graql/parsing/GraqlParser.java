@@ -1,4 +1,4 @@
-package uk.ac.cam.gp.charlie.graql;
+package uk.ac.cam.gp.charlie.graql.parsing;
 
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
@@ -17,9 +17,12 @@ import uk.ac.cam.gp.charlie.ast.queries.QueryInsert;
  */
 public class GraqlParser {
 
-  public static List<Query> graqlToAST(String input) {
+  public List<Query> graqlToAST(String input) {
     //parse input into 0 or more graql statements, and return then
     List<Query> queryList = new ArrayList<>();
+    if (input.equals("")) {
+      return queryList;
+    }
     String[] typeQuery = input.split("\n", 2);
     String[] queryBlocks = typeQuery[1].split(";");
     for (String q : queryBlocks) {
@@ -104,7 +107,7 @@ public class GraqlParser {
 
   public static void main(String[] args) {
     String test = "insert\n$z (employee: $x, employee: $y) isa coworkers;";
-    GraqlParser.graqlToAST(test);
+    //GraqlParser.graqlToAST(test);
   }
 
 }

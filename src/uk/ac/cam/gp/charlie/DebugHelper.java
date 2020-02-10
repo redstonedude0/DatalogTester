@@ -6,6 +6,10 @@ import java.util.List;
 
 public class DebugHelper {
 
+  public static boolean VERBOSE_AST = false;
+  public static boolean VERBOSE_DATALOG = false;
+  public static boolean VERBOSE_RESULTS = false;
+
   /**
    * If there's cycles this'll break horrendously, use this to print an AST in a (nice enough) way
    */

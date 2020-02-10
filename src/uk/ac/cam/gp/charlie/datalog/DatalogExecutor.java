@@ -2,19 +2,10 @@ package uk.ac.cam.gp.charlie.datalog;
 
 import abcdatalog.ast.Clause;
 import abcdatalog.ast.PositiveAtom;
-import abcdatalog.ast.Term;
 import abcdatalog.ast.validation.DatalogValidationException;
 import abcdatalog.engine.DatalogEngine;
 import abcdatalog.engine.bottomup.sequential.SemiNaiveEngine;
-import abcdatalog.parser.DatalogParseException;
-import abcdatalog.parser.DatalogParser;
-import abcdatalog.parser.DatalogTokenizer;
 import abcdatalog.util.substitution.Substitution;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.StringReader;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -34,12 +25,13 @@ import uk.ac.cam.gp.charlie.ast.queries.QueryInsert;
 import uk.ac.cam.gp.charlie.ast.queries.match.QueryMatch;
 import uk.ac.cam.gp.charlie.datalog.interpreter.ASTInterpreter;
 import uk.ac.cam.gp.charlie.datalog.interpreter.Context;
-import uk.ac.cam.gp.charlie.graql.GraqlParser;
+import uk.ac.cam.gp.charlie.graql.parsing.GraqlParser;
 
 public class DatalogExecutor extends Executor {
 
   private DatalogEngine engine; //The engine to use for datalog interpretation
   private Context c = new Context(); //The context of the test environment, contains the ASTs representing the environment
+  public static GraqlParser parser = new GraqlParser();
 
   /**
    * Execute a query using the context and engine.
@@ -62,90 +54,123 @@ public class DatalogExecutor extends Executor {
         //Need to match into scope(s), then perform insertions
         //engine = new RecursiveQsqEngine(); //doesn't allow disunification
         engine = new SemiNaiveEngine(); //allows disunification
-        System.out.println("\u001b[33;1m<EXECUTING>\u001b[0m");
+        if (DebugHelper.VERBOSE_DATALOG) {
+          System.out.println("\u001b[33;1m<EXECUTING>\u001b[0m");
+        }
         Set<Clause> clauses = new HashSet<>(c.datalog);
-        clauses.addAll(ASTInterpreter.toDatalog(q,c));
+        clauses.addAll(ASTInterpreter.toDatalog(q, c));
         engine.init(clauses);
 
         //Tokenize, parse, and query(execute)
-        System.out.print("\u001b[33;1mResults of \u001b[0m");
+        if (DebugHelper.VERBOSE_DATALOG) {
+          System.out.print("\u001b[33;1mResults of \u001b[0m");
+        }
         PositiveAtom query = ASTInterpreter.toExecutableDatalog(q, c);
         Set<PositiveAtom> results = engine.query(query);
         System.out.println(results);
-        System.out.println("\u001b[33;1m</EXECUTING>\u001b[0m\n");
+        if (DebugHelper.VERBOSE_DATALOG) {
+          System.out.println("\u001b[33;1m</EXECUTING>\u001b[0m\n");
+        }
 
         switch (((QueryMatch) q).getAction()) {
           case GET:
-            System.out.println("\u001b[33;1mResults of query:\u001b[0m");
-            List<Map<Variable,String>> toRet = new ArrayList<>();
+            if (DebugHelper.VERBOSE_DATALOG) {
+              System.out.println("\u001b[33;1mResults of query:\u001b[0m");
+            }
+            List<Map<Variable, String>> toRet = new ArrayList<>();
             for (PositiveAtom result : results) {
-              System.out.println("Match:");
-              Map<Variable,String> resultMap = new HashMap<>();
+              if (DebugHelper.VERBOSE_DATALOG) {
+                System.out.println("Match:");
+              }
+              Map<Variable, String> resultMap = new HashMap<>();
               //Get variables
               Substitution s = result.unify(query);
               for (int i = 0; i <= c.getMaxVariableNumber(); i++) {
                 Variable v = c.getVariableByNumber(i);
-                String boundValue = s.get(abcdatalog.ast.Variable.create("Var"+i)).toString();
+                String boundValue = s.get(abcdatalog.ast.Variable.create("Var" + i)).toString();
                 //add to result map
                 Integer boundInt = Integer.parseInt(boundValue.split("_")[1]);
                 if (boundValue.startsWith("e_")) {
                   //'Thing' -> not stored in resultMap
-                  System.out.println(" _$" + v.getIdentifier()+ " => \u001b[35m{"+boundInt+"}\u001b[0m");
+                  if (DebugHelper.VERBOSE_DATALOG) {
+                    System.out.println(
+                        " _$" + v.getIdentifier() + " => \u001b[35m{" + boundInt + "}\u001b[0m");
+                  }
                 } else if (boundValue.startsWith("const_")) {
-                  resultMap.put(v,c.getConstantFromID(boundInt).value+"");
-                  System.out.println("  $" + v.getIdentifier()+ " => \u001b[33m"+c.getConstantFromID(boundInt).value+"\u001b[0m");
+                  resultMap.put(v, c.getConstantFromID(boundInt).value + "");
+                  if (DebugHelper.VERBOSE_DATALOG) {
+                    System.out.println("  $" + v.getIdentifier() + " => \u001b[33m" + c
+                        .getConstantFromID(boundInt).value + "\u001b[0m");
+                  }
                 } else {
-                  throw new RuntimeException("Invalid returned object (unimplemented): " + boundValue);
+                  throw new RuntimeException(
+                      "Invalid returned object (unimplemented): " + boundValue);
                 }
               }
               toRet.add(resultMap);
             }
             return toRet;
           case DELETE:
-            System.out.println("\u001b[33;1mDeleting:\u001b[0m");
+            if (DebugHelper.VERBOSE_DATALOG) {
+              System.out.println("\u001b[33;1mDeleting:\u001b[0m");
+            }
             Variable variableToDelete = ((QueryMatch) q).getDATA_DELETE();
             for (PositiveAtom result : results) {
-              System.out.println("Match:");
+              if (DebugHelper.VERBOSE_DATALOG) {
+                System.out.println("Match:");
+              }
               //Get variable
               Substitution s = result.unify(query);
               for (int i = 0; i <= c.getMaxVariableNumber(); i++) {
                 Variable v = c.getVariableByNumber(i);
                 if (v.equals(variableToDelete)) {
-                  String boundValue = s.get(abcdatalog.ast.Variable.create("Var"+i)).toString();
+                  String boundValue = s.get(abcdatalog.ast.Variable.create("Var" + i)).toString();
                   Integer boundInt = Integer.parseInt(boundValue.split("_")[1]);
                   if (boundValue.startsWith("e_")) {
                     //'Thing' -> can be deleted
-                    System.out.println("  $" + v.getIdentifier()+ " => \u001b[35m{"+boundInt+"}\u001b[0m");
+                    if (DebugHelper.VERBOSE_DATALOG) {
+                      System.out.println(
+                          "  $" + v.getIdentifier() + " => \u001b[35m{" + boundInt + "}\u001b[0m");
+                    }
                   } else {
                     throw new RuntimeException("Attemped to delete non-thing object " + boundValue);
                   }
                   Set<Clause> clausesToDelete = c.getInstanceBoundClauses_TRANSITIVE(boundInt);
-                  System.out.println("    Clauses:");
+                  if (DebugHelper.VERBOSE_DATALOG) {
+                    System.out.println("    Clauses:");
+                  }
                   for (Clause clause : clausesToDelete) {
-                    System.out.println("      "+c.prettifyDatalog(clause.toString()));
+                    if (DebugHelper.VERBOSE_DATALOG) {
+                      System.out.println("      " + c.prettifyDatalog(clause.toString()));
+                    }
                   }
                   c.datalog.removeAll(clausesToDelete);
                 }
               }
             }
-            System.out.println("\u001b[33;1m</RESULTS>\u001b[0m\n");
+            if (DebugHelper.VERBOSE_DATALOG) {
+              System.out.println("\u001b[33;1m</RESULTS>\u001b[0m\n");
+            }
             break;
           case INSERT:
             //Insert as new inserts
-            System.out.println("\u001b[33;1m<RESULTS>\u001b[0m");
+            if (DebugHelper.VERBOSE_DATALOG) {
+              System.out.println("\u001b[33;1m<RESULTS>\u001b[0m");
+            }
             for (PositiveAtom result : results) {
               //Get variables
               Substitution s = result.unify(query);
               Set<Variable> variables = new HashSet<>();
               for (int i = 0; i <= c.getMaxVariableNumber(); i++) {
                 Variable v = c.getVariableByNumber(i);
-                String boundValue = s.get(abcdatalog.ast.Variable.create("Var"+i)).toString();
+                String boundValue = s.get(abcdatalog.ast.Variable.create("Var" + i)).toString();
                 Integer boundInt = Integer.parseInt(boundValue.substring(2));
-                if (!boundValue.equals("e_"+boundInt)) {
-                  throw new RuntimeException("Invalid returned object (unimplemented): " + boundValue);
+                if (!boundValue.equals("e_" + boundInt)) {
+                  throw new RuntimeException(
+                      "Invalid returned object (unimplemented): " + boundValue);
                 }
                 //bind scope
-                c.addToScope(v,boundInt);
+                c.addToScope(v, boundInt);
                 variables.add(v);
               }
               //insert
@@ -155,7 +180,9 @@ public class DatalogExecutor extends Executor {
                 c.removeFromScope(v);
               }
             }
-            System.out.println("\u001b[33;1m</RESULTS>\u001b[0m\n");
+            if (DebugHelper.VERBOSE_DATALOG) {
+              System.out.println("\u001b[33;1m</RESULTS>\u001b[0m\n");
+            }
         }
         c.resetVariableNumber();
       } else {
@@ -175,8 +202,8 @@ public class DatalogExecutor extends Executor {
    */
   public DatalogExecutor(TestEnvironment environment) {
     //Convert the Graql environment to a Context
-    List<Query> schema = GraqlParser.graqlToAST(environment.schema);
-    List<Query> data = GraqlParser.graqlToAST(environment.data);
+    List<Query> schema = parser.graqlToAST(environment.schema);
+    List<Query> data = parser.graqlToAST(environment.data);
 
     for (Query q : schema) {
       executeQuery(q);
@@ -189,19 +216,41 @@ public class DatalogExecutor extends Executor {
   @Override
   public Result execute(String query) {
     //Parse to AST
-    List<Query> tests = GraqlParser.graqlToAST(query);
+    List<Query> tests = parser.graqlToAST(query);
     //ASSERT length(tests) == 1;
     if (tests.size() != 1) {
       //TODO note: having multiple here may be fine, I've restricted to just 1 for safety
       throw new InvalidParameterException(
           "Test was " + tests.size() + " queries, expected 1: " + query);
     }
+    if (DebugHelper.VERBOSE_AST) {
+      System.out.println("\u001b[35;1mAST:\u001b[0m");
+      DebugHelper.printObjectTree(tests.get(0));
+    }
+    if (DebugHelper.VERBOSE_AST) {
+      System.out.println("\u001b[35;1mDATALOG:\u001b[0m");
+    }
     List<Map<Variable, String>> resultMaps = executeQuery(tests.get(0));
-    List<Map<String,String>> toRet = new ArrayList<>();
-    for(Map<Variable,String> resultMap: resultMaps) {
-      Map<String,String> newMap = new HashMap<>();
-      for (Entry<Variable,String> result: resultMap.entrySet()) {
-        newMap.put("$"+result.getKey().getIdentifier(),result.getValue());
+    List<Map<String, String>> toRet = new ArrayList<>();
+    if (DebugHelper.VERBOSE_RESULTS) {
+      System.out.println("\u001b[35;1mRESULTS:\u001b[0m");
+    }
+    if (resultMaps == null) {
+      if (DebugHelper.VERBOSE_RESULTS) {
+        System.out.println("\u001b[30;1m  [NONE]\u001b[0m");
+      }
+      return null;
+    }
+    for (Map<Variable, String> resultMap : resultMaps) {
+      Map<String, String> newMap = new HashMap<>();
+      if (DebugHelper.VERBOSE_RESULTS) {
+        System.out.println("\u001b[35;1m  RESULT:\u001b[0m");
+      }
+      for (Entry<Variable, String> result : resultMap.entrySet()) {
+        newMap.put("$" + result.getKey().getIdentifier(), result.getValue());
+        if (DebugHelper.VERBOSE_AST) {
+          System.out.println("\u001b[35;1m    $" + result.getKey().getIdentifier() + " -> " + result.getValue() + "\u001b[0m");
+        }
       }
       toRet.add(newMap);
     }
@@ -211,31 +260,8 @@ public class DatalogExecutor extends Executor {
   }
 
   public static void main(String[] args) {
-    try {
+
       //FOR TESTING ONLY!!!!! DELETE AFTER
-
-      if (false) {//Test from raw datalog file (deprecated?)
-        File f = new File("tests/datalog2.test");
-        BufferedReader br = new BufferedReader(new FileReader(f));
-        String line;
-        StringBuilder schema = new StringBuilder();
-        while ((line = br.readLine()) != null) {
-          schema.append(line);
-        }
-        DatalogEngine engine = new SemiNaiveEngine(); //allows disunification
-        System.out.println("Executing test datalog:");
-        engine.init(DatalogParser.parseProgram(new DatalogTokenizer(new StringReader(schema.toString()))));
-        String query = "query(X,Y).";
-        Set<PositiveAtom> res = engine.query(DatalogParser.parseClauseAsPositiveAtom(new DatalogTokenizer(new StringReader(query))));
-        for(PositiveAtom pa : res) {
-          System.out.println(pa.getPred());
-          for(Term t : pa.getArgs()) {
-            System.out.println(t.toString());
-          }
-        }
-        System.out.println(res);
-
-      }
       if (true) {//Test AST->datalog
         DatalogExecutor de = new DatalogExecutor(new TestEnvironment("test_schema", "test_data"));
       }
@@ -250,7 +276,7 @@ public class DatalogExecutor extends Executor {
             + "employment sub relation,\n"
             + "  relates employee,\n"
             + "  relates employer;";
-        List<Query> ast = GraqlParser.graqlToAST(schema_string);
+        List<Query> ast = parser.graqlToAST(schema_string);
         System.out.print("AST:");
         DebugHelper.printObjectTree(ast);
         System.out.println("EOT");
@@ -264,8 +290,6 @@ public class DatalogExecutor extends Executor {
         System.out.println("\u001b[34mattribute name            blue\u001b[0m");
         System.out.println("\u001b[35mthing(instance/node)      magenta\u001b[0m");
       }
-    } catch (IOException | DatalogParseException | DatalogValidationException e) {
-      e.printStackTrace();
-    }
+
   }
 }

@@ -11,6 +11,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
+import uk.ac.cam.gp.charlie.DebugHelper;
 import uk.ac.cam.gp.charlie.ast.Attribute;
 import uk.ac.cam.gp.charlie.ast.AttributeValue;
 import uk.ac.cam.gp.charlie.ast.ConstantValue;
@@ -145,7 +146,9 @@ public class ASTInterpreter {
       throw new RuntimeException(
           "Unsupported query type during datalog query execution: " + q.getClass());
     }
-    System.out.print(c.prettifyDatalog(toRet.toString()));
+    if (DebugHelper.VERBOSE_DATALOG) {
+      System.out.print(c.prettifyDatalog(toRet.toString()));
+    }
     DatalogTokenizer tokenizer = new DatalogTokenizer(new StringReader(toRet.toString()));
     try {
       Set<Clause> clauses = DatalogParser.parseProgram(tokenizer);
@@ -165,7 +168,6 @@ public class ASTInterpreter {
   public static PositiveAtom toExecutableDatalog(Query q, Context c) {
     StringBuilder toRet = new StringBuilder();
     if (q instanceof QueryMatch) {
-      QueryMatch match = (QueryMatch) q;
       Set<String> vars = new HashSet<>();
       for (int i = 0; i <= c.getMaxVariableNumber(); i++) {
         vars.add("Var" + i);
@@ -177,7 +179,9 @@ public class ASTInterpreter {
       throw new RuntimeException(
           "Unsupported query type during datalog query execution: " + q.getClass());
     }
-    System.out.print(c.prettifyDatalog(toRet.toString()));
+    if (DebugHelper.VERBOSE_DATALOG) {
+      System.out.print(c.prettifyDatalog(toRet.toString()));
+    }
     DatalogTokenizer tokenizer = new DatalogTokenizer(new StringReader(toRet.toString()));
     try {
       return DatalogParser.parseClauseAsPositiveAtom(tokenizer);

@@ -157,7 +157,7 @@ public class TESTAstInterpreter {
     assertDatalogEqual(s1,datalog);
   }
 
-  private Context setupTestEnv1() {
+  public static List<Query> getTestEnv1() {
     List<Query> toRun = new ArrayList<>();
 
     //
@@ -256,6 +256,12 @@ public class TESTAstInterpreter {
     match.conditions.add(cond_1);
     match.conditions.add(cond_2);
     toRun.add(match);
+
+    return toRun;
+  }
+
+  private Context setupTestEnv1() {
+    List<Query> toRun = getTestEnv1();
 
     Context c = new Context();
     for(Query q : toRun) {

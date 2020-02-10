@@ -11,7 +11,7 @@ import uk.ac.cam.gp.charlie.ast.Attribute;
 import uk.ac.cam.gp.charlie.ast.queries.Query;
 import uk.ac.cam.gp.charlie.ast.queries.QueryDefine;
 
-public class RegexParser {
+public class RegexParser extends GraqlParser {
 
   /**
    * Hi Charles
@@ -24,10 +24,10 @@ public class RegexParser {
    */
 
   public static void main(String[] args) {
-    String test = "define person sub entity,  has name  , has nickname;  \n \n organisation sub\nentity\n, has \nname   \n;";
-    List<Query> res = parse(test);
-    System.out.println("RESULT OF PARSING:");
-    DebugHelper.printObjectTree(res);
+//    String test = "define person sub entity,  has name  , has nickname;  \n \n organisation sub\nentity\n, has \nname   \n;";
+//    List<Query> res = parse(test);
+//    System.out.println("RESULT OF PARSING:");
+//    DebugHelper.printObjectTree(res);
   }
 
   private static String regex(String regex) {
@@ -58,7 +58,8 @@ public class RegexParser {
     return matches.iterator();
   }
 
-  public static List<Query> parse(String graql) {
+  @Override
+  public List<Query> graqlToAST(String graql) {
     List<Query> toRet = new ArrayList<>();
     Iterator<MatchResult> s = iterate(matcher(graql,"<define_block>"));
     s.forEachRemaining(matchResult -> toRet.addAll(parseDefineBlock(graql.substring(matchResult.start(), matchResult.end()))));
