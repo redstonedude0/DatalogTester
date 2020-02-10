@@ -28,7 +28,7 @@ public class Result {
    *  {
    *    "n1"=>"Alice",
    *    "n2"=>"Bob"
-   *  }
+   *  },...
    * ]
    *
    * @param results a

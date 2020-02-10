@@ -1,11 +1,11 @@
 package uk.ac.cam.gp.charlie.graql.parsing;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
 import uk.ac.cam.gp.charlie.DebugHelper;
 import uk.ac.cam.gp.charlie.ast.Attribute;
 import uk.ac.cam.gp.charlie.ast.queries.Query;
@@ -46,21 +46,30 @@ public class RegexParser {
   }
 
   private static Matcher matcher(String graql, String regex) {
-    return Pattern.compile(regex(regex)).matcher(graql);
+    Matcher m = Pattern.compile(regex(regex)).matcher(graql);
+    return m;
+  }
+
+  private static Iterator<MatchResult> iterate(Matcher m) {
+    List<MatchResult> matches = new ArrayList<>();
+    while (m.find()) {
+      matches.add(m.toMatchResult());
+    }
+    return matches.iterator();
   }
 
   public static List<Query> parse(String graql) {
     List<Query> toRet = new ArrayList<>();
-    Stream<MatchResult> s = matcher(graql,"<define_block>").results();
-    s.forEach(matchResult -> toRet.addAll(parseDefineBlock(graql.substring(matchResult.start(), matchResult.end()))));
+    Iterator<MatchResult> s = iterate(matcher(graql,"<define_block>"));
+    s.forEachRemaining(matchResult -> toRet.addAll(parseDefineBlock(graql.substring(matchResult.start(), matchResult.end()))));
 
     return toRet;
   }
 
   private static List<QueryDefine> parseDefineBlock(String graql) {
     List<QueryDefine> toRet = new ArrayList<>();
-    Stream<MatchResult> s = matcher(graql,"<define>").results();
-    s.forEach(matchResult -> toRet.add(parseDefine(graql.substring(matchResult.start(),matchResult.end()))));
+    Iterator<MatchResult> s = iterate(matcher(graql,"<define>"));
+    s.forEachRemaining(matchResult -> toRet.add(parseDefine(graql.substring(matchResult.start(),matchResult.end()))));
     return toRet;
   }
 
@@ -70,8 +79,8 @@ public class RegexParser {
     String ident = m.group("DEFINEHEADIDENT");
     String subs = m.group("DEFINEHEADSUBS");
     QueryDefine q = new QueryDefine(ident,QueryDefine.getFromIdentifier(subs));
-    Stream<MatchResult> s = matcher(graql,"<define_has>").results();
-    s.forEach(matchResult -> q.attributes.add(parseDefineHas(graql.substring(matchResult.start(),matchResult.end()))));
+    Iterator<MatchResult> s = iterate(matcher(graql,"<define_has>"));
+    s.forEachRemaining(matchResult -> q.attributes.add(parseDefineHas(graql.substring(matchResult.start(),matchResult.end()))));
     return q;
   }
 

@@ -1,5 +1,7 @@
 package uk.ac.cam.gp.charlie.graql;
 
+import com.google.common.collect.Lists;
+import com.google.errorprone.annotations.Var;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.List;
@@ -218,7 +220,7 @@ public class GraqlParser {
     //match get
     Variable var_n = Variable.fromIdentifier("n");
     QueryMatch matchget = new QueryMatch();
-    matchget.setActionGet(List.of(var_n));
+    matchget.setActionGet(Lists.asList(var_n,new Variable[0]));
     cond_1 = new ConditionIsa(var_x,"person");
     cond_1.has.put(Attribute.fromIdentifier("name"),var_n);
     matchget.conditions.add(cond_1);

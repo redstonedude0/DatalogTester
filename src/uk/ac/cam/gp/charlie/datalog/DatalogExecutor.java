@@ -12,7 +12,6 @@ import abcdatalog.parser.DatalogTokenizer;
 import abcdatalog.util.substitution.Substitution;
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.StringReader;
@@ -28,7 +27,6 @@ import uk.ac.cam.gp.charlie.DebugHelper;
 import uk.ac.cam.gp.charlie.Executor;
 import uk.ac.cam.gp.charlie.Result;
 import uk.ac.cam.gp.charlie.TestEnvironment;
-import uk.ac.cam.gp.charlie.TestLoader;
 import uk.ac.cam.gp.charlie.ast.Variable;
 import uk.ac.cam.gp.charlie.ast.queries.Query;
 import uk.ac.cam.gp.charlie.ast.queries.QueryDefine;
@@ -269,6 +267,5 @@ public class DatalogExecutor extends Executor {
     } catch (IOException | DatalogParseException | DatalogValidationException e) {
       e.printStackTrace();
     }
-
   }
 }
