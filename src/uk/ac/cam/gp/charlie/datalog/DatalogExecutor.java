@@ -218,60 +218,35 @@ public class DatalogExecutor extends Executor {
     //Parse to AST
     List<Query> tests = parser.graqlToAST(query);
     //ASSERT length(tests) == 1;
-    if (tests.size() != 1) {
-      //TODO note: having multiple here may be fine, I've restricted to just 1 for safety
-      throw new InvalidParameterException(
-          "Test was " + tests.size() + " queries, expected 1: " + query);
+    if (tests.size() == 0) {
+      System.out.println("No query found (parsing error?)");
     }
-    if (DebugHelper.VERBOSE_AST) {
-      System.out.println("\u001b[35;1mAST:\u001b[0m");
-      DebugHelper.printObjectTree(tests.get(0));
-    }
-    if (DebugHelper.VERBOSE_AST) {
-      System.out.println("\u001b[35;1mDATALOG:\u001b[0m");
-    }
-    List<Map<Variable, String>> resultMaps = executeQuery(tests.get(0));
-    List<Map<String, String>> toRet = new ArrayList<>();
-    if (DebugHelper.VERBOSE_RESULTS) {
-      System.out.println("\u001b[35;1mRESULTS:\u001b[0m");
-    }
-    if (resultMaps == null) {
-      if (DebugHelper.VERBOSE_RESULTS) {
-        System.out.println("\u001b[30;1m  [NONE]\u001b[0m");
+    Result r = new Result(new ArrayList<>());
+    for (Query test : tests) {
+      if (DebugHelper.VERBOSE_AST) {
+        System.out.println("\u001b[35;1mAST:\u001b[0m");
+        DebugHelper.printObjectTree(test);
       }
-      return null;
-    }
-    for (Map<Variable, String> resultMap : resultMaps) {
-      Map<String, String> newMap = new HashMap<>();
-      if (DebugHelper.VERBOSE_RESULTS) {
-        System.out.println("\u001b[35;1m  RESULT:\u001b[0m");
+      if (DebugHelper.VERBOSE_AST) {
+        System.out.println("\u001b[35;1mDATALOG:\u001b[0m");
       }
-      for (Entry<Variable, String> result : resultMap.entrySet()) {
-        newMap.put("$" + result.getKey().getIdentifier(), result.getValue());
-        if (DebugHelper.VERBOSE_AST) {
-          System.out.println("\u001b[35;1m    $" + result.getKey().getIdentifier() + " -> " + result.getValue() + "\u001b[0m");
+      List<Map<Variable, String>> resultMaps = executeQuery(test);
+      List<Map<String, String>> toRet = new ArrayList<>();
+      if (resultMaps != null) {
+        for (Map<Variable, String> resultMap : resultMaps) {
+          Map<String, String> newMap = new HashMap<>();
+          for (Entry<Variable, String> result : resultMap.entrySet()) {
+            newMap.put(result.getKey().getIdentifier(), result.getValue());
+          }
+          toRet.add(newMap);
         }
       }
-      toRet.add(newMap);
+      r = new Result(toRet);
+      if (DebugHelper.VERBOSE_RESULTS) {
+        r.print();
+      }
+
     }
-    return new Result(toRet);
-    //TODO parse result map into Result obj using Context thing->const maps
-
-  }
-
-  public static void main(String[] args) {
-
-      if (true) {//Test graql->AST
-      }
-      if (true) {//Test graql->AST->datalog
-        DatalogExecutor de = new DatalogExecutor(new TestEnvironment("test_schema", "test_data"));
-        System.out.println("Coloring key:");
-        System.out.println("\u001b[31mtypes                     red\u001b[0m");
-        System.out.println("\u001b[32mroles(plays)              green\u001b[0m");
-        System.out.println("\u001b[33mconstants                 yellow\u001b[0m");
-        System.out.println("\u001b[34mattribute name            blue\u001b[0m");
-        System.out.println("\u001b[35mthing(instance/node)      magenta\u001b[0m");
-      }
-
+    return r;
   }
 }

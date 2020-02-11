@@ -1,7 +1,6 @@
 package uk.ac.cam.gp.charlie.datalog.tests;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
 
 import abcdatalog.ast.Clause;
 import abcdatalog.ast.PositiveAtom;
@@ -12,7 +11,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.junit.Test;
-import uk.ac.cam.gp.charlie.TestEnvironment;
 import uk.ac.cam.gp.charlie.ast.Attribute;
 import uk.ac.cam.gp.charlie.ast.ConstantValue;
 import uk.ac.cam.gp.charlie.ast.Plays;
@@ -291,40 +289,5 @@ public class TESTAstInterpreter {
     assertDatalogEqual(s,datalog);
     assertEquals(pa.toString(),"query(Var0, Var1)");
   }
-
-  /*
-  //match get
-  Variable var_n = Variable.fromIdentifier("n");
-  QueryMatch matchget = new QueryMatch();
-    matchget.setActionGet(Lists.asList(var_n,new Variable[0]));
-  cond_1 = new ConditionIsa(var_x,"person");
-    cond_1.has.put(Attribute.fromIdentifier("name"),var_n);
-    matchget.conditions.add(cond_1);
-    toRun.add(matchget);
-
-  //match delete  match $x isa person, has name "Alice"; $y (employee:$x) isa employment; delete $y;
-  QueryMatch matchdel = new QueryMatch();
-    matchdel.setActionDelete(var_y);
-  cond_1 = new ConditionIsa(var_x, "person");
-    cond_1.has.put(Attribute.fromIdentifier("name"),ConstantValue.fromValue("Alice"));
-  cond_2 = new ConditionIsa(var_y,"employment");
-    cond_2.relates.add(new SimpleEntry<>(Plays.fromIdentifier("employee"),var_x));
-    matchdel.conditions.add(cond_1);
-    matchdel.conditions.add(cond_2);
-  //toRet.add(matchdel);
-
-
-  //match delete  match $x isa person, has name "Alice"; delete $x;
-  matchdel = new QueryMatch();
-    matchdel.setActionDelete(var_x);
-  cond_1 = new ConditionIsa(var_x, "person");
-    cond_1.has.put(Attribute.fromIdentifier("name"),ConstantValue.fromValue("Alice"));
-    matchdel.conditions.add(cond_1);
-    toRun.add(matchdel);
-
-
-  //match get again
-    toRun.add(matchget);
-*/
 
 }

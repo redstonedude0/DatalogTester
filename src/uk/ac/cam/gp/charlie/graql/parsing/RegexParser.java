@@ -6,29 +6,11 @@ import java.util.List;
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import uk.ac.cam.gp.charlie.DebugHelper;
 import uk.ac.cam.gp.charlie.ast.Attribute;
 import uk.ac.cam.gp.charlie.ast.queries.Query;
 import uk.ac.cam.gp.charlie.ast.queries.QueryDefine;
 
 public class RegexParser extends GraqlParser {
-
-  /**
-   * Hi Charles
-   *
-   * I noticed that the Graql parser file wasn't working for some inputs, I thought it might be worth trying it in regex?
-   * I've written a basic Regex parser for parsing simple define statements which define entities and relations with 'has' attributes only (for now)
-   *
-   * If you think this is a better route feel free to use it, idm which one we use as long as it parses well
-   * @param args
-   */
-
-  public static void main(String[] args) {
-//    String test = "define person sub entity,  has name  , has nickname;  \n \n organisation sub\nentity\n, has \nname   \n;";
-//    List<Query> res = parse(test);
-//    System.out.println("RESULT OF PARSING:");
-//    DebugHelper.printObjectTree(res);
-  }
 
   private static String regex(String regex) {
     regex = regex.replaceAll("<define_block>","(<wso>define(<ws><define>)+)");
@@ -77,8 +59,8 @@ public class RegexParser extends GraqlParser {
   private static QueryDefine parseDefine(String graql) {
     Matcher m = matcher(graql,"<define>");
     m.matches();
-    String ident = m.group("DEFINEHEADIDENT");
-    String subs = m.group("DEFINEHEADSUBS");
+    String ident = m.group("DEFINEHEADIDENT");//"person"
+    String subs = m.group("DEFINEHEADSUBS");//"entity"
     QueryDefine q = new QueryDefine(ident,QueryDefine.getFromIdentifier(subs));
     Iterator<MatchResult> s = iterate(matcher(graql,"<define_has>"));
     s.forEachRemaining(matchResult -> q.attributes.add(parseDefineHas(graql.substring(matchResult.start(),matchResult.end()))));
@@ -88,14 +70,8 @@ public class RegexParser extends GraqlParser {
   private static Attribute parseDefineHas(String graql) {
     Matcher m = matcher(graql,"<define_has>");
     m.matches();
-    String ident = m.group("DEFINEHASIDENT");
+    String ident = m.group("DEFINEHASIDENT");//"name"
     return Attribute.fromIdentifier(ident);
   }
-
-
-
-
-
-//    s.forEach(matchResult -> System.out.println("match: "+graql.substring(matchResult.start(),matchResult.end())));
 
 }

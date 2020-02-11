@@ -105,9 +105,4 @@ public class GraqlParser {
     return queryList;
   }
 
-  public static void main(String[] args) {
-    String test = "insert\n$z (employee: $x, employee: $y) isa coworkers;";
-    //GraqlParser.graqlToAST(test);
-  }
-
 }
