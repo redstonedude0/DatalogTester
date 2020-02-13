@@ -34,6 +34,7 @@ import uk.ac.cam.gp.charlie.ast.ConstantValue;
 import uk.ac.cam.gp.charlie.ast.Plays;
 import uk.ac.cam.gp.charlie.ast.Variable;
 import uk.ac.cam.gp.charlie.ast.queries.Query;
+import uk.ac.cam.gp.charlie.ast.queries.QueryDefineRule;
 import uk.ac.cam.gp.charlie.ast.queries.match.ConditionIsa;
 import uk.ac.cam.gp.charlie.ast.queries.match.QueryMatch;
 import uk.ac.cam.gp.charlie.datalog.DatalogExecutor;
@@ -296,7 +297,7 @@ public class Workbench {
     Variable var_x = Variable.fromIdentifier("x");
     QueryMatch matchget = new QueryMatch();
     matchget.setActionGet(Lists.asList(var_n, new Variable[0]));
-    ConditionIsa cond = new ConditionIsa(var_x, "person");
+    ConditionIsa cond = new ConditionIsa(null, "person");
     cond.has.put(Attribute.fromIdentifier("name"), var_n);
     matchget.conditions.add(cond);
     return matchget;
@@ -324,6 +325,14 @@ public class Workbench {
     cond.has.put(Attribute.fromIdentifier("name"), ConstantValue.fromValue("Alice"));
     matchdel.conditions.add(cond);
     return matchdel;
+  }
+
+  private static Query query_insertRule_coworkers() {
+    QueryDefineRule rule = new QueryDefineRule("people-with-same-workplace-are-coworkers",QueryDefineRule.getFromIdentifier("rule"));
+    ConditionIsa cond_1 = new ConditionIsa(null,"person");
+
+    rule.when.add(cond_1);
+    return rule;
   }
 
 

@@ -6,7 +6,6 @@ import abcdatalog.ast.validation.DatalogValidationException;
 import abcdatalog.engine.DatalogEngine;
 import abcdatalog.engine.bottomup.sequential.SemiNaiveEngine;
 import abcdatalog.util.substitution.Substitution;
-import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -95,12 +94,12 @@ public class DatalogExecutor extends Executor {
                   //'Thing' -> not stored in resultMap
                   if (DebugHelper.VERBOSE_DATALOG) {
                     System.out.println(
-                        " _$" + v.getIdentifier() + " => \u001b[35m{" + boundInt + "}\u001b[0m");
+                        " _$" + Variable.getIdentifier(v) + " => \u001b[35m{" + boundInt + "}\u001b[0m");
                   }
                 } else if (boundValue.startsWith("const_")) {
                   resultMap.put(v, c.getConstantFromID(boundInt).value + "");
                   if (DebugHelper.VERBOSE_DATALOG) {
-                    System.out.println("  $" + v.getIdentifier() + " => \u001b[33m" + c
+                    System.out.println("  $" + Variable.getIdentifier(v) + " => \u001b[33m" + c
                         .getConstantFromID(boundInt).value + "\u001b[0m");
                   }
                 } else {
@@ -131,7 +130,7 @@ public class DatalogExecutor extends Executor {
                     //'Thing' -> can be deleted
                     if (DebugHelper.VERBOSE_DATALOG) {
                       System.out.println(
-                          "  $" + v.getIdentifier() + " => \u001b[35m{" + boundInt + "}\u001b[0m");
+                          "  $" + Variable.getIdentifier(v) + " => \u001b[35m{" + boundInt + "}\u001b[0m");
                     }
                   } else {
                     throw new RuntimeException("Attemped to delete non-thing object " + boundValue);
@@ -237,7 +236,7 @@ public class DatalogExecutor extends Executor {
         for (Map<Variable, String> resultMap : resultMaps) {
           Map<String, String> newMap = new HashMap<>();
           for (Entry<Variable, String> result : resultMap.entrySet()) {
-            newMap.put(result.getKey().getIdentifier(), result.getValue());
+            newMap.put(Variable.getIdentifier(result.getKey()), result.getValue());
           }
           toRet.add(newMap);
         }

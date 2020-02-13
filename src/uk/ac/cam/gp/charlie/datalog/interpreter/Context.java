@@ -1,17 +1,20 @@
 package uk.ac.cam.gp.charlie.datalog.interpreter;
 
 import abcdatalog.ast.Clause;
+import abcdatalog.parser.DatalogParseException;
+import abcdatalog.parser.DatalogParser;
+import abcdatalog.parser.DatalogTokenizer;
+import java.io.StringReader;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import uk.ac.cam.gp.charlie.ast.Attribute;
-import uk.ac.cam.gp.charlie.ast.AttributeValue;
 import uk.ac.cam.gp.charlie.ast.ConstantValue;
 import uk.ac.cam.gp.charlie.ast.Plays;
 import uk.ac.cam.gp.charlie.ast.Variable;
-import uk.ac.cam.gp.charlie.ast.queries.QueryDefine;
 
 /**
  * Represents a schema and data (test environment) in AST form
@@ -19,6 +22,14 @@ import uk.ac.cam.gp.charlie.ast.queries.QueryDefine;
 public class Context {
 
   public Context() {
+    //Prepop datalog
+    String precode = "instanceof(Thing,Supertype) :- instanceof(Thing,Subtype), t_subs(Subtype,Supertype)."; //subtyping relation
+    try {
+      datalog.addAll(DatalogParser.parseProgram(new DatalogTokenizer(new StringReader(precode))));
+    } catch (DatalogParseException e) {
+      e.printStackTrace();
+      throw new RuntimeException("Error initialising basic datalog");
+    }
   }
 
   /**
@@ -127,7 +138,7 @@ public class Context {
   private Map<Integer,Variable> variableDefinitions = new HashMap<>();
   int getVariableNumber(Variable v) {
     for (Entry<Integer,Variable> entry : variableDefinitions.entrySet()) {
-      if (entry.getValue().equals(v)) {
+      if (Objects.equals(entry.getValue(),v)) {
         return entry.getKey();
       }
     }
@@ -150,6 +161,11 @@ public class Context {
     scope.put(v,i);
   }
   public void removeFromScope(Variable v) {scope.remove(v);}
+
+  //Keeps track of rules, and what they've done
+  private Map<Integer,Set<Clause>> ruleClausesMap = new HashMap<>();
+
+
 
   public String prettifyDatalog(String datalog) {
     for (Integer i : constDefinitions.keySet()) {

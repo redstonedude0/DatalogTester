@@ -22,8 +22,11 @@ public class Variable extends AttributeValue{
     return new Variable(identifier);
   }
 
-  public String getIdentifier() {
-    return identifier;
+  public static String getIdentifier(Variable v) {
+    if (v == null) {
+      return "_";
+    }
+    return v.identifier;
   }
 
 }
