@@ -18,6 +18,7 @@ import uk.ac.cam.gp.charlie.DebugHelper;
 import uk.ac.cam.gp.charlie.Executor;
 import uk.ac.cam.gp.charlie.Result;
 import uk.ac.cam.gp.charlie.TestEnvironment;
+import uk.ac.cam.gp.charlie.Workbench;
 import uk.ac.cam.gp.charlie.ast.Variable;
 import uk.ac.cam.gp.charlie.ast.queries.Query;
 import uk.ac.cam.gp.charlie.ast.queries.QueryDefine;
@@ -249,4 +250,9 @@ public class DatalogExecutor extends Executor {
     }
     return r;
   }
+
+  public static void main(String[] args) throws Exception {
+    Workbench.interactive_datalog();
+  }
+
 }

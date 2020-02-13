@@ -48,7 +48,7 @@ import uk.ac.cam.gp.charlie.graql.parsing.RegexParser;
 public class Workbench {
 
   public static void main(String[] args)
-      throws IOException, DatalogParseException, DatalogValidationException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InterruptedException {
+      throws Exception {
     BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
     while (true) {
       System.out.println("##################################");
@@ -58,12 +58,14 @@ public class Workbench {
       System.out.println("  Interactive Interface:");
       System.out.println("    (1) Interactive Graql->AST->Datalog input [ONLY SCHEMA]");
       System.out.println("    (2) Interactive Graql->Datalog input w/ preloaded AST");
-      System.out.println("    (3) Interactive Graql/Datalog Testing w/ result comparison [TO BE ADDED]");
+      System.out
+          .println("    (3) Interactive Graql/Datalog Testing w/ result comparison [TO BE ADDED]");
       System.out.println("  Static Tests:");
       System.out.println("    (4) Run TESTASTInterpreter for JUnit tests of AST->Datalog");
       System.out.println("    (5) Run raw datalog from datalog.test");
       System.out.println("    (6) Run stock Graql->AST test");
       System.out.println("    (7) Run GRAKN graql test");
+      System.out.println("    [8] Interactive Datalog Interface");
 
       String input = br.readLine();
       switch (input) {
@@ -88,6 +90,9 @@ public class Workbench {
         case "7":
           static_graknconnection();
           break;
+        case "8":
+          interactive_datalog();
+          break;
         default:
           System.out.println("Unknown input " + input);
       }
@@ -104,22 +109,57 @@ public class Workbench {
     DebugHelper.VERBOSE_RESULTS = true;
     DatalogExecutor.parser = new GraqlParser();
     List<Query> data = TESTAstInterpreter.getTestEnv1();
-    for (Query q: data) {
+    for (Query q : data) {
       Method m = de.getClass().getDeclaredMethod("executeQuery", Query.class);
       m.setAccessible(true);
-      m.invoke(de,q);
+      m.invoke(de, q);
     }
     DatalogExecutor.parser = new RegexParser();
-    Map<String,Query> shortcuts = new HashMap();
-    shortcuts.put("match_names",query_matchNames());
-    shortcuts.put("match_del_alice",query_matchDelAlice());
-    shortcuts.put("match_del_alice_e",query_matchDelAliceEmployment());
-    interactiveLoop(de,shortcuts);
+    Map<String, Query> shortcuts = new HashMap();
+    shortcuts.put("match_names", query_matchNames());
+    shortcuts.put("match_del_alice", query_matchDelAlice());
+    shortcuts.put("match_del_alice_e", query_matchDelAliceEmployment());
+    interactiveLoop(de, shortcuts);
     DebugHelper.VERBOSE_DATALOG = false;
     DebugHelper.VERBOSE_RESULTS = false;
 
   }
 
+  public static void interactive_datalog()
+      throws Exception {
+    //TODO: does not work for now as graqlparser does not parse properly
+    BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+    TestEnvironment te = new TestEnvironment("", "");
+    DatalogEngine de = new SemiNaiveEngine();
+    String init = "";
+    init += "isa(e_1,person).";
+    init += "isa(e_2,person).";
+    init += "isa(e_3,person).";
+    init += "isa(e_1,e_1,friendship).";
+    init += "isa(e_2,e_1,friendship).";
+    init += "isa(e_3,e_1,friendship).";
+    init += "isa(e_1,e_2,friendship).";
+    init += "isa(e_2,e_2,friendship).";
+    init += "isa(e_3,e_2,friendship).";
+    init += "isa(e_1,e_3,friendship).";
+    init += "isa(e_2,e_3,friendship).";
+    init += "isa(e_3,e_3,friendship).";
+//    init += "friends(X,Y) :- isa(X,person), isa(Y,person).";
+//    String query = "friends(X,Y).";
+//    init += "agg(C,A,B) :- C = dl_concat(A,B).";
+//    init += "isa(D,friends) :- D = .";
+//    String query = "isa(D,friends).";
+//    init += "isa(e_1,e_2,employment).";
+//    String query = "isa.";
+    init += "query1(X,Y) :- isa(X,person), isa(Y,person).";
+    init += "inconsistent(rule_1) :- query1(Y,Z), not isa(Y,Z,friendship).";
+//    init += "isa(e_4,person).";
+    String query = "inconsistent(X).";
+    de.init(DatalogParser.parseProgram(new DatalogTokenizer(new StringReader(init))));
+    Set<PositiveAtom> b = de.query(
+        DatalogParser.parseClauseAsPositiveAtom(new DatalogTokenizer(new StringReader(query))));
+    System.out.println(b);
+  }
 
   public static void interactive_basic()
       throws IOException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
@@ -139,18 +179,19 @@ public class Workbench {
 
   private static void interactiveLoop(DatalogExecutor de)
       throws IOException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-    interactiveLoop(de,new HashMap<>());
+    interactiveLoop(de, new HashMap<>());
   }
 
-  private static void interactiveLoop(DatalogExecutor de,Map<String,Query> shortcuts)
+  private static void interactiveLoop(DatalogExecutor de, Map<String, Query> shortcuts)
       throws IOException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
     System.out.println("Enter graql query to be completed, terminate with blank line to execute");
     System.out.println("Enter \"exit\" to exit to menu");
-    for(String shortcut : shortcuts.keySet()) {
-      System.out.println("Enter \""+shortcut+"\" as a shortcut");
+    for (String shortcut : shortcuts.keySet()) {
+      System.out.println("Enter \"" + shortcut + "\" as a shortcut");
     }
     BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-    loop: while (true) {
+    loop:
+    while (true) {
       String input = "";
       while (true) {
         String line = br.readLine();
@@ -163,11 +204,11 @@ public class Workbench {
         break;
       }
       for (String shortcut : shortcuts.keySet()) {
-        if (input.equals(shortcut+"\n\n")) {
-          GraqlParser overload = new GraqlParser(){
+        if (input.equals(shortcut + "\n\n")) {
+          GraqlParser overload = new GraqlParser() {
             @Override
             public List<Query> graqlToAST(String query) {
-              return Lists.asList(shortcuts.get(shortcut),new Query[0]);
+              return Lists.asList(shortcuts.get(shortcut), new Query[0]);
             }
           };
           GraqlParser oldParse = DatalogExecutor.parser;
@@ -212,7 +253,6 @@ public class Workbench {
     junit.run(TESTAstInterpreter.class);
   }
 
-
   public static void static_graqlAST() {
     //Test Graql->AST
     String schema_string = "define\n"
@@ -232,12 +272,12 @@ public class Workbench {
   }
 
   public static void static_graknconnection() throws InterruptedException {
-    Function<String,String> readFile = filePath -> {
+    Function<String, String> readFile = filePath -> {
       // inspired by https://howtodoinjava.com/java/io/java-read-file-to-string-examples/
       StringBuilder builder = new StringBuilder();
-      try (Stream<String> stream = Files.lines( Paths.get(filePath), StandardCharsets.UTF_8)){
+      try (Stream<String> stream = Files.lines(Paths.get(filePath), StandardCharsets.UTF_8)) {
         stream.forEach(s -> builder.append(s).append("\n"));
-      }catch (IOException e){
+      } catch (IOException e) {
         e.printStackTrace();
       }
       return builder.toString();
@@ -255,9 +295,9 @@ public class Workbench {
     Variable var_n = Variable.fromIdentifier("n");
     Variable var_x = Variable.fromIdentifier("x");
     QueryMatch matchget = new QueryMatch();
-    matchget.setActionGet(Lists.asList(var_n,new Variable[0]));
-    ConditionIsa cond = new ConditionIsa(var_x,"person");
-    cond.has.put(Attribute.fromIdentifier("name"),var_n);
+    matchget.setActionGet(Lists.asList(var_n, new Variable[0]));
+    ConditionIsa cond = new ConditionIsa(var_x, "person");
+    cond.has.put(Attribute.fromIdentifier("name"), var_n);
     matchget.conditions.add(cond);
     return matchget;
   }
@@ -269,8 +309,8 @@ public class Workbench {
     matchdel.setActionDelete(var_y);
     ConditionIsa cond_1 = new ConditionIsa(var_x, "person");
     cond_1.has.put(Attribute.fromIdentifier("name"), ConstantValue.fromValue("Alice"));
-    ConditionIsa cond_2 = new ConditionIsa(var_y,"employment");
-    cond_2.relates.add(new SimpleEntry<>(Plays.fromIdentifier("employee"),var_x));
+    ConditionIsa cond_2 = new ConditionIsa(var_y, "employment");
+    cond_2.relates.add(new SimpleEntry<>(Plays.fromIdentifier("employee"), var_x));
     matchdel.conditions.add(cond_1);
     matchdel.conditions.add(cond_2);
     return matchdel;
@@ -281,7 +321,7 @@ public class Workbench {
     QueryMatch matchdel = new QueryMatch();
     matchdel.setActionDelete(var_x);
     ConditionIsa cond = new ConditionIsa(var_x, "person");
-    cond.has.put(Attribute.fromIdentifier("name"),ConstantValue.fromValue("Alice"));
+    cond.has.put(Attribute.fromIdentifier("name"), ConstantValue.fromValue("Alice"));
     matchdel.conditions.add(cond);
     return matchdel;
   }
