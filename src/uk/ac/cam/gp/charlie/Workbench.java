@@ -35,6 +35,7 @@ import uk.ac.cam.gp.charlie.ast.Plays;
 import uk.ac.cam.gp.charlie.ast.Variable;
 import uk.ac.cam.gp.charlie.ast.queries.Query;
 import uk.ac.cam.gp.charlie.ast.queries.QueryDefineRule;
+import uk.ac.cam.gp.charlie.ast.queries.QueryInsert;
 import uk.ac.cam.gp.charlie.ast.queries.match.ConditionIsa;
 import uk.ac.cam.gp.charlie.ast.queries.match.QueryMatch;
 import uk.ac.cam.gp.charlie.datalog.DatalogExecutor;
@@ -120,6 +121,10 @@ public class Workbench {
     shortcuts.put("match_names", query_matchNames());
     shortcuts.put("match_del_alice", query_matchDelAlice());
     shortcuts.put("match_del_alice_e", query_matchDelAliceEmployment());
+    shortcuts.put("rule",query_insertRule_coworkers());
+    shortcuts.put("match_del_bc",query_matchDelBC_coworkers());
+    shortcuts.put("match_employ_b",query_match_employ_b());
+    shortcuts.put("match_employ_c",query_match_employ_c());
     interactiveLoop(de, shortcuts);
     DebugHelper.VERBOSE_DATALOG = false;
     DebugHelper.VERBOSE_RESULTS = false;
@@ -133,29 +138,28 @@ public class Workbench {
     TestEnvironment te = new TestEnvironment("", "");
     DatalogEngine de = new SemiNaiveEngine();
     String init = "";
-    init += "isa(e_1,person).";
-    init += "isa(e_2,person).";
-    init += "isa(e_3,person).";
-    init += "isa(e_1,e_1,friendship).";
-    init += "isa(e_2,e_1,friendship).";
-    init += "isa(e_3,e_1,friendship).";
-    init += "isa(e_1,e_2,friendship).";
-    init += "isa(e_2,e_2,friendship).";
-    init += "isa(e_3,e_2,friendship).";
-    init += "isa(e_1,e_3,friendship).";
-    init += "isa(e_2,e_3,friendship).";
-    init += "isa(e_3,e_3,friendship).";
-//    init += "friends(X,Y) :- isa(X,person), isa(Y,person).";
-//    String query = "friends(X,Y).";
-//    init += "agg(C,A,B) :- C = dl_concat(A,B).";
-//    init += "isa(D,friends) :- D = .";
-//    String query = "isa(D,friends).";
-//    init += "isa(e_1,e_2,employment).";
-//    String query = "isa.";
-    init += "query1(X,Y) :- isa(X,person), isa(Y,person).";
-    init += "inconsistent(rule_1) :- query1(Y,Z), not isa(Y,Z,friendship).";
+    init += "instanceof(r_1,employment).";
+    init += "instanceof(r_2,employment).";
+    init += "instancerel(r_1,e_1,employer).";
+    init += "instancerel(r_1,e_2,employee).";
+    init += "instancerel(r_2,e_1,employer).";
+    init += "instancerel(r_2,e_3,employee).";
+//    init += "instanceof(r_3,coworkers).";
+//    init += "instancerel(r_3,e_2,employee).";
+//    init += "instancerel(r_3,e_3,employee).";
+    init += "invariant_1(P1,P2) :- instanceof (X,employment),\n"
+        + "                        instancerel(X,P1,employee),\n"
+        + "                        instancerel(X,Y ,employer),\n"
+        + "                        instanceof (Z,employment),\n"
+        + "                        instancerel(Z,P2,employee),\n"
+        + "                        instancerel(Z,Y ,employer),\n"
+        + "                        P1 != P2,\n"
+        + "                        not invariant_1_inv(P1,P2).\n"
+        + "invariant_1_inv(P1,P2) :-  instanceof(W,coworkers),\n"
+        + "                          instancerel(W,P1,employee),\n"
+        + "                          instancerel(W,P2,employee).";
 //    init += "isa(e_4,person).";
-    String query = "inconsistent(X).";
+    String query = "invariant_1(P1,P2).";
     de.init(DatalogParser.parseProgram(new DatalogTokenizer(new StringReader(init))));
     Set<PositiveAtom> b = de.query(
         DatalogParser.parseClauseAsPositiveAtom(new DatalogTokenizer(new StringReader(query))));
@@ -327,13 +331,96 @@ public class Workbench {
     return matchdel;
   }
 
-  private static Query query_insertRule_coworkers() {
-    QueryDefineRule rule = new QueryDefineRule("people-with-same-workplace-are-coworkers",QueryDefineRule.getFromIdentifier("rule"));
-    ConditionIsa cond_1 = new ConditionIsa(null,"person");
+  private static Query query_matchDelBC_coworkers() {
+    Variable var_x = Variable.fromIdentifier("x");
+    Variable var_p2 = Variable.fromIdentifier("p2");
+    Variable var_p1 = Variable.fromIdentifier("p1");
+    QueryMatch matchdel = new QueryMatch();
+    matchdel.setActionDelete(var_x);
+    ConditionIsa cond = new ConditionIsa(var_x, "coworkers");
+    cond.relates.add(new SimpleEntry<>(Plays.fromIdentifier("employee"),var_p1));
+    cond.relates.add(new SimpleEntry<>(Plays.fromIdentifier("employee"),var_p2));
+    matchdel.conditions.add(cond);
+    ConditionIsa cond2 = new ConditionIsa(var_p1, "person");
+    cond2.has.put(Attribute.fromIdentifier("name"),ConstantValue.fromValue("Bob"));
+    matchdel.conditions.add(cond2);
+    ConditionIsa cond3 = new ConditionIsa(var_p2, "person");
+    cond3.has.put(Attribute.fromIdentifier("name"),ConstantValue.fromValue("Charlie"));
+    matchdel.conditions.add(cond3);
+    return matchdel;
+  }
 
+  private static Query query_match_employ_b() {
+    Variable var_x = Variable.fromIdentifier("x");
+    Variable var_y = Variable.fromIdentifier("y");
+    QueryMatch match = new QueryMatch();
+
+    ConditionIsa cond2 = new ConditionIsa(var_x, "person");
+    cond2.has.put(Attribute.fromIdentifier("name"),ConstantValue.fromValue("Bob"));
+    match.conditions.add(cond2);
+    ConditionIsa cond3 = new ConditionIsa(var_y, "organisation");
+    cond3.has.put(Attribute.fromIdentifier("name"),ConstantValue.fromValue("Uni"));
+    match.conditions.add(cond3);
+
+    QueryInsert insert = new QueryInsert(null,"employment");
+    insert.plays.add(new SimpleEntry<>(Plays.fromIdentifier("employee"),var_x));
+    insert.plays.add(new SimpleEntry<>(Plays.fromIdentifier("employer"),var_y));
+    match.setActionInsert(insert);
+    return match;
+  }
+
+  private static Query query_match_employ_c() {
+    Variable var_x = Variable.fromIdentifier("x");
+    Variable var_y = Variable.fromIdentifier("y");
+    QueryMatch match = new QueryMatch();
+
+    ConditionIsa cond2 = new ConditionIsa(var_x, "person");
+    cond2.has.put(Attribute.fromIdentifier("name"),ConstantValue.fromValue("Charlie"));
+    match.conditions.add(cond2);
+    ConditionIsa cond3 = new ConditionIsa(var_y, "organisation");
+    cond3.has.put(Attribute.fromIdentifier("name"),ConstantValue.fromValue("Uni"));
+    match.conditions.add(cond3);
+
+    QueryInsert insert = new QueryInsert(null,"employment");
+    insert.plays.add(new SimpleEntry<>(Plays.fromIdentifier("employee"),var_x));
+    insert.plays.add(new SimpleEntry<>(Plays.fromIdentifier("employer"),var_y));
+    match.setActionInsert(insert);
+    return match;
+  }
+
+  private static Query query_insertRule_coworkers() {
+    /**
+     * define people-with-same-workplace-are-coworkers sub rule, when {
+     *    (employer: $y, employee: $p1) isa employment;
+     *    (employer: $y, employee: $p2) isa employment;
+     ***    $p1 != $p2;
+     * }, then {
+     *    (employee: $p1, employee: $p2) isa coworkers;
+     * };
+     */;
+    Variable var_y = Variable.fromIdentifier("y");
+    Variable var_p1 = Variable.fromIdentifier("p1");
+    Variable var_p2 = Variable.fromIdentifier("p2");
+
+    QueryDefineRule rule = new QueryDefineRule("people-with-same-workplace-are-coworkers",QueryDefineRule.getFromIdentifier("rule"));
+    ConditionIsa cond_1 = new ConditionIsa(null,"employment");
+    cond_1.relates.add(new SimpleEntry<>(Plays.fromIdentifier("employer"),var_y));
+    cond_1.relates.add(new SimpleEntry<>(Plays.fromIdentifier("employee"),var_p1));
     rule.when.add(cond_1);
+    ConditionIsa cond_2 = new ConditionIsa(null,"employment");
+    cond_2.relates.add(new SimpleEntry<>(Plays.fromIdentifier("employer"),var_y));
+    cond_2.relates.add(new SimpleEntry<>(Plays.fromIdentifier("employee"),var_p2));
+    rule.when.add(cond_2);
+
+    rule.then = new QueryInsert(null,"coworkers");
+    rule.then.plays.add(new SimpleEntry<>(Plays.fromIdentifier("employee"),var_p1));
+    rule.then.plays.add(new SimpleEntry<>(Plays.fromIdentifier("employee"),var_p2));
     return rule;
   }
 
 
+  /*
+  TODO -
+  - match..insert and define-rule will add duplicates (e.g. 4-2 and 2-4 are coworkers relations). is that desirable?
+   */
 }
