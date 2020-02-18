@@ -25,6 +25,7 @@ import uk.ac.cam.gp.charlie.ast.queries.QueryDefine;
 import uk.ac.cam.gp.charlie.ast.queries.QueryDefineRule;
 import uk.ac.cam.gp.charlie.ast.queries.QueryInsert;
 import uk.ac.cam.gp.charlie.ast.queries.match.ConditionIsa;
+import uk.ac.cam.gp.charlie.ast.queries.match.ConditionNeq;
 import uk.ac.cam.gp.charlie.ast.queries.match.MatchCondition;
 import uk.ac.cam.gp.charlie.ast.queries.match.QueryMatch;
 
@@ -190,8 +191,34 @@ public class ASTInterpreter {
               relates_s = "e_" + i;
             }
             conditions.add(String
-                .format("instancerel(%s,%s,r_%d)", varString,relates_s,c.getPlaysNumber(entry.getKey())));
+                .format("instancerel(%s,%s,r_%d)", varString, relates_s,
+                    c.getPlaysNumber(entry.getKey())));
           }
+        } else if (mc instanceof ConditionNeq) {
+          ConditionNeq cond = (ConditionNeq) mc;
+          String[] sides = new String[2];
+          for (int side = 0; side < sides.length;side++) {
+            AttributeValue attr = cond.lhs;
+            if (side == 1) {
+              attr = cond.rhs;
+            }
+            String output;
+            if (attr instanceof ConstantValue) {
+              output = "const_" + c.getConstNumber((ConstantValue) attr);
+            } else if (attr instanceof Variable) {
+              Integer i = c.resolveScope((Variable) attr);
+              if (i == null) {
+                output = "Var" + c.getVariableNumber((Variable) attr);
+                vars.add(output);
+              } else {
+                output = "e_" + i;
+              }
+            } else {
+              throw new RuntimeException("Unknown attribute value (lhs)");
+            }
+            sides[side] = output;
+          }
+          conditions.add(String.format("%s != %s",sides[0],sides[1]));
         } else {
           throw new RuntimeException(
               "Unknown match condition during datalog translation:" + mc.getClass()

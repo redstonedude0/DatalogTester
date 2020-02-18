@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import uk.ac.cam.gp.charlie.ast.Variable;
+import uk.ac.cam.gp.charlie.ast.queries.match.QueryMatch;
+import uk.ac.cam.gp.charlie.ast.queries.match.QueryMatch.Action;
 
 public class DebugHelper {
 
@@ -90,9 +92,25 @@ public class DebugHelper {
         System.out.println("($"+ident+")");
       } else if (o instanceof Map.Entry) {
         printObjectTree(((Entry) o).getKey());
-        System.out.print(idnt(idnt)+"         ->");
+        System.out.print(idnt(idnt) + "         ->");
         printObjectTree(((Entry) o).getValue());
         System.out.println();
+      } else if (o instanceof QueryMatch) {
+        Field f = o.getClass().getDeclaredField("action");
+        f.setAccessible(true);
+        Action acc = ((Action) f.get(o));
+        System.out.println("("+acc.name()+")");
+        switch (acc) {
+          case GET:
+            printObjectTree(((QueryMatch)o).getDATA_GET());
+            break;
+          case DELETE:
+            printObjectTree(((QueryMatch)o).getDATA_DELETE());
+            break;
+          case INSERT:
+            printObjectTree(((QueryMatch)o).getDATA_INSERT());
+            break;
+        }
       } else {
         System.out.println();
       }

@@ -117,15 +117,27 @@ public class Workbench {
       m.invoke(de, q);
     }
     DatalogExecutor.parser = new RegexParser();
-    Map<String, Query> shortcuts = new HashMap();
-    shortcuts.put("match_names", query_matchNames());
-    shortcuts.put("match_del_alice", query_matchDelAlice());
-    shortcuts.put("match_del_alice_e", query_matchDelAliceEmployment());
-    shortcuts.put("rule",query_insertRule_coworkers());
-    shortcuts.put("match_del_bc",query_matchDelBC_coworkers());
-    shortcuts.put("match_employ_b",query_match_employ_b());
-    shortcuts.put("match_employ_c",query_match_employ_c());
-    interactiveLoop(de, shortcuts);
+    Map<String, Query> astShortcuts = new HashMap();
+    astShortcuts.put("\u001b[34mmatch..get\u001b[0m all names", query_matchNames());
+    astShortcuts.put("\u001b[34mmatch..delete\u001b[0m Alice from the database", query_matchDelAlice());
+    astShortcuts.put("\u001b[34mmatch..delete\u001b[0m unemploy Alice", query_matchDelAliceEmployment());
+    //astShortcuts.put("\u001b[34mdefine rule\u001b[0m to make people coworkers",query_insertRule_coworkers());
+    astShortcuts.put("\u001b[34mmatch..delete\u001b[0m Bob-Charlie coworkers relation",query_matchDelBC_coworkers());
+    astShortcuts.put("\u001b[34mmatch..insert\u001b[0m employ Bob",query_match_employ_b());
+    astShortcuts.put("\u001b[34mmatch..insert\u001b[0m employ Charlie",query_match_employ_c());
+    Map<String, String> graqlShortcuts = new HashMap();
+    graqlShortcuts.put("\u001b[34mdefine rule\u001b[0m everyone is friends (reflexive)","define\n rule-a sub rule, when {\n  $x isa person;\n  $y isa person;\n }, then {\n  (friend:$x,friend:$y) isa friends;\n };");
+    graqlShortcuts.put("\u001b[34mdefine rule\u001b[0m to make people coworkers",
+          "define\n"
+        + " people-with-same-workplace-are-coworkers sub rule, when {\n"
+        + "  (employer: $y, employee: $p1) isa employment;\n"
+        + "  (employer: $y, employee: $p2) isa employment;\n"
+        + "  $p1 != $p2;\n"
+        + " }, then {\n"
+        + "  (employee: $p1, employee: $p2) isa coworkers;\n"
+        + " };\n");
+
+    interactiveLoop(de, astShortcuts,graqlShortcuts);
     DebugHelper.VERBOSE_DATALOG = false;
     DebugHelper.VERBOSE_RESULTS = false;
 
@@ -184,19 +196,30 @@ public class Workbench {
 
   private static void interactiveLoop(DatalogExecutor de)
       throws IOException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-    interactiveLoop(de, new HashMap<>());
+    interactiveLoop(de, new HashMap<>(),new HashMap<>());
   }
 
-  private static void interactiveLoop(DatalogExecutor de, Map<String, Query> shortcuts)
+  private static void interactiveLoop(DatalogExecutor de, Map<String, Query> astShortcuts, Map<String, String> graqlShortcuts)
       throws IOException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-    System.out.println("Enter graql query to be completed, terminate with blank line to execute");
-    System.out.println("Enter \"exit\" to exit to menu");
-    for (String shortcut : shortcuts.keySet()) {
-      System.out.println("Enter \"" + shortcut + "\" as a shortcut");
-    }
     BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+    boolean displayPrompt = true;
     loop:
     while (true) {
+      if (displayPrompt) {
+        displayPrompt = false;
+        System.out.println("Enter graql query to be completed, terminate with blank line to execute");
+        System.out.println("Enter \"exit\" to exit to menu");
+        int astNum = 0;
+        for (String shortcut : astShortcuts.keySet()) {
+          System.out.println("Enter a"+astNum+" for \u001b[34mAST\u001b[0m shortcut \"" + shortcut + "\"");
+          astNum++;
+        }
+        int graqlNum = 0;
+        for (String shortcut : graqlShortcuts.keySet()) {
+          System.out.println("Enter g"+graqlNum+" for \u001b[34mGraql\u001b[0m shortcut \"" + shortcut + "\"");
+          graqlNum++;
+        }
+      }
       String input = "";
       while (true) {
         String line = br.readLine();
@@ -208,19 +231,40 @@ public class Workbench {
       if (input.equals("exit\n\n")) {
         break;
       }
-      for (String shortcut : shortcuts.keySet()) {
-        if (input.equals(shortcut + "\n\n")) {
-          GraqlParser overload = new GraqlParser() {
-            @Override
-            public List<Query> graqlToAST(String query) {
-              return Lists.asList(shortcuts.get(shortcut), new Query[0]);
-            }
-          };
-          GraqlParser oldParse = DatalogExecutor.parser;
-          DatalogExecutor.parser = overload;
-          de.execute("");
-          DatalogExecutor.parser = oldParse;
-          continue loop;
+      if (input.equals("help\n\n")) {
+        displayPrompt = true;
+        continue;
+      }
+      if (input.startsWith("a")) {
+        int astNum = 0;
+        for (String shortcut : astShortcuts.keySet()) {
+          if (input.equals("a"+astNum+"\n\n")) {
+            DebugHelper.printObjectTree(astShortcuts.get(shortcut));
+            br.readLine();
+            GraqlParser overload = new GraqlParser() {
+              @Override
+              public List<Query> graqlToAST(String query) {
+                return Lists.asList(astShortcuts.get(shortcut), new Query[0]);
+              }
+            };
+            GraqlParser oldParse = DatalogExecutor.parser;
+            DatalogExecutor.parser = overload;
+            de.execute("");
+            DatalogExecutor.parser = oldParse;
+            continue loop;
+          }
+          astNum++;
+        }
+      }
+      if (input.startsWith("g")) {
+        int graqlNum = 0;
+        for (String shortcut : graqlShortcuts.keySet()) {
+          if (input.equals("g"+graqlNum+"\n\n")) {
+            input = graqlShortcuts.get(shortcut);
+            System.out.println("\u001b[34m"+input+"\u001b[0m");
+            br.readLine();
+          }
+          graqlNum++;
         }
       }
       de.execute(input);
