@@ -68,8 +68,8 @@ public class Result {
     if (!(other instanceof Result)) return false;
     Result r2 = (Result) other;
 
-    Multiset<Map<String,String>> s1 = new HashMultiset<>();
-    Multiset<Map<String,String>> s2 = new HashMultiset<>();
+    HashMultiset<Map<String,String>> s1 = HashMultiset.create();
+    HashMultiset<Map<String,String>> s2 = HashMultiset.create();
 
     s1.addAll(results);
     s2.addAll(r2.results);
