@@ -4,6 +4,9 @@ package uk.ac.cam.gp.charlie.ast;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Represents a constant
+ */
 public class ConstantValue extends AttributeValue {
 
   public Object value;

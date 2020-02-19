@@ -10,6 +10,10 @@ import uk.ac.cam.gp.charlie.ast.AttributeValue;
 import uk.ac.cam.gp.charlie.ast.Plays;
 import uk.ac.cam.gp.charlie.ast.Variable;
 
+/**
+ * Represents an {@link MatchCondition} stating that a thing
+ * is of a type, has some attributes, and plays in some relations
+ */
 public class ConditionIsa extends MatchCondition {
 
   public String type;
@@ -17,7 +21,7 @@ public class ConditionIsa extends MatchCondition {
   //Map of "has" relations
   public Map<Attribute, AttributeValue> has = new HashMap<>();
   /**
-   * List of "relates" relations (may be implicit in () binding), null plays implies unknown relation (will be inferred)
+   * List of "relates" relations (may be implicit in '()' syntax), null plays implies unknown relation (will be inferred)
    */
   public List<Entry<Plays,Variable>> relates = new ArrayList<>();
 

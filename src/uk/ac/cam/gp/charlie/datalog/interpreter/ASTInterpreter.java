@@ -30,27 +30,25 @@ import uk.ac.cam.gp.charlie.ast.queries.match.MatchCondition;
 import uk.ac.cam.gp.charlie.ast.queries.match.QueryMatch;
 
 /**
- * Interprets to and from Context (An AST representation)
+ * Interprets an AST (AST->Datalog transformation)
  */
 public class ASTInterpreter {
 
   /**
-   * Convert a Context to datalog (to be used for initialising the environment)
-   *
-   * @param c The Context to convert
-   * @return A string to pass into engine.init
+   * Convert a Query with a Context to datalog
    */
   public static Set<Clause> toDatalog(Query q, Context c) {
     /*
-    t_ type definition
-    a_ attribute definition
-    r_ relation definiition (plays)
-
-    e_ thing instance
-    const_ constant instance
-
+    Key for datalog atoms:
+    t_<n> type definition
+    a_<n> attribute definition
+    r_<n> relation definiition (plays)
+    e_<n> thing instance
+    const_<n> constant instance
+    invariant__<n> rule (note the double '_' to prevent pattern matching with t_ during prettyprint)
      */
     StringBuilder toRet = new StringBuilder();
+    //Parse the query based upon its type
     if (q instanceof QueryDefine) {
       QueryDefine define = (QueryDefine) q;
       Integer typeNum = c.getTypeNumber(define.identifier);

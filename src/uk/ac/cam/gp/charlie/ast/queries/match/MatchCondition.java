@@ -3,7 +3,7 @@ package uk.ac.cam.gp.charlie.ast.queries.match;
 import uk.ac.cam.gp.charlie.ast.Variable;
 
 /**
- * Represents each condition in the match. Examples:
+ * Represents each condition in a match query or rule definition. Examples:
  *
  * - $x isa person has name "Bob";
  * - $y isa person has name "Alice";

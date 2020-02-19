@@ -7,17 +7,12 @@ import uk.ac.cam.gp.charlie.ast.queries.Query;
 import uk.ac.cam.gp.charlie.ast.queries.QueryInsert;
 
 /**
- * Represents abstract definition of a Grakn Concept Type or Grakn Rule. See subtypes for definition
- * of specific concept types.
- *
- * https://dev.grakn.ai/docs/schema/concepts#summary
+ * Represents a match query
  */
 public class QueryMatch extends Query {
 
-  /**
-   * If null then this subtypes the parent type directly (e.g. entity, relation...)
-   */
   public List<MatchCondition> conditions = new ArrayList<>();
+
   //TODO store modifiers (e.g. limit, sort)
 
   public enum Action {
@@ -25,6 +20,10 @@ public class QueryMatch extends Query {
     DELETE,
     INSERT
   }
+
+  /**
+   * Once the action has been set (by one of the below setters) for this query it cannot be changed
+   */
   private Action action = null;
   private List<Variable> DATA_GET;
   private Variable DATA_DELETE;
@@ -45,6 +44,7 @@ public class QueryMatch extends Query {
   /**
    * Set this to be a match...get query
    * @param v the variables to get, if null or empty then this returns all variables in match scope.
+   * @bug not tested if null
    */
   public void setActionGet(List<Variable> v) {
     if (action != null) {
@@ -68,7 +68,7 @@ public class QueryMatch extends Query {
 
   /**
    * Set this to be a match...insert query
-   * @param query the query to insert, you can assume variables defined in the match... part are bound in the insertion
+   * @param query the query to insert, you can assume variables defined in the match.. part are bound in the insertion
    */
   public void setActionInsert(QueryInsert query) {
     if (action != null) {
@@ -80,7 +80,7 @@ public class QueryMatch extends Query {
 
 }
 /*
-Currently syntax:
+Current regex syntax:
 match::=
 match
   (<match-condition>;)+
@@ -181,13 +181,5 @@ insert $new-employment (employer: $org, employee: $person) isa employment;
 delete $p;
 delete $emp;
 delete $r;
-
-
-
-
-
-
-
-
 
  */

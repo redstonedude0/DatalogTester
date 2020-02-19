@@ -6,18 +6,15 @@ import uk.ac.cam.gp.charlie.ast.Attribute;
 import uk.ac.cam.gp.charlie.ast.Plays;
 
 /**
- * Represents abstract definition of a Grakn Concept Type or Grakn Rule. See subtypes for definition
- * of specific concept types.
- *
- * https://dev.grakn.ai/docs/schema/concepts#summary
+ * Represents a query to define the schema representing an entity or relation
  */
 public class QueryDefine extends Query {
 
   /**
-   * If null then this subtypes the parent type directly (e.g. entity, relation...)
+   * If null then this is the parent type itself (e.g. entity, relation...)
    */
   public final QueryDefine subs;
-  //Unique string used to refer to this object
+  //Unique string used to refer to this type
   public final String identifier;
 
   //List of roles this entity 'plays' iff entity
@@ -27,7 +24,7 @@ public class QueryDefine extends Query {
   //List of play relations this relationship 'relates' iff relationship
   public List<Plays> relates = new ArrayList<>();
 
-
+  //List of instances (we keep this so that any 2 queries representing the same identifier are equal)
   private static List<QueryDefine> instances = new ArrayList<>();
   public QueryDefine(String identifier, QueryDefine subs) {
     this.identifier = identifier;

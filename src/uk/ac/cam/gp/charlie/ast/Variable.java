@@ -3,6 +3,9 @@ package uk.ac.cam.gp.charlie.ast;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Represents a variable
+ */
 public class Variable extends AttributeValue{
 
   private final String identifier;

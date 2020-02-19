@@ -7,10 +7,7 @@ import uk.ac.cam.gp.charlie.ast.Plays;
 import uk.ac.cam.gp.charlie.ast.queries.match.MatchCondition;
 
 /**
- * Represents abstract definition of a Grakn Rule. See subtypes for definition
- * of specific concept types.
- *
- * https://dev.grakn.ai/docs/schema/concepts#summary
+ * Represents abstract definition of a Grakn Rule.
  */
 public class QueryDefineRule extends Query {
 
@@ -18,13 +15,13 @@ public class QueryDefineRule extends Query {
    * If null then this is the parent type (e.g. 'rule')
    */
   public final QueryDefineRule subs;
-  //Unique string used to refer to this object
+  //Unique string used to refer to this rule
   public final String identifier;
 
-  //when
+  //list of conditions which must be true to trigger the 'then'
   public List<MatchCondition> when = new ArrayList<>();
 
-  //Then (always of the form <anonymous something (relations) > isa explicit_type;
+  //Then - in the form of an insert query (invoked if the rule is broken)
   public QueryInsert then;
 
   private static List<QueryDefineRule> instances = new ArrayList<>();

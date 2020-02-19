@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Represents an attribute an object (entity, relation) 'has'.
+ * Represents an attribute a thing (entity, relation) 'has'.
  *
  * Note: Later will need to change to DefineAttribute as something can sub attribute.
  */

@@ -11,17 +11,14 @@ import uk.ac.cam.gp.charlie.ast.Plays;
 import uk.ac.cam.gp.charlie.ast.Variable;
 
 /**
- * Represents abstract definition of a Grakn Concept Type or Grakn Rule. See subtypes for definition
- * of specific concept types.
+ * Represents an insert statement
  *
- * https://dev.grakn.ai/docs/schema/concepts#summary
  */
 public class QueryInsert extends Query {
 
-  /**
-   * If null then this subtypes the parent type directly (e.g. entity, relation...)
-   */
-  public String isa = null;
+  //type of thing being inserted
+  public String isa;
+  //Variable to bind this result to (or null)
   public Variable returnVariable;
   //List of Things which may play iff this is a relation
   public List<Entry<Plays,Variable>> plays = new ArrayList<>();

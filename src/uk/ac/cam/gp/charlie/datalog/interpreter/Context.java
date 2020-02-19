@@ -26,10 +26,10 @@ public class Context {
 
   public Context() {
     //Prepop datalog
-    String precode = "instanceof(Thing,Supertype) :- instanceof(Thing,Subtype), t_subs(Subtype,Supertype)."; //subtyping relation
-    precode += "t_subs(entity,thing).";
-    precode += "t_subs(relation,thing).";
-    precode += "t_subs(rule,thing)."; //???
+    String precode = "instanceof(Concept,Supertype) :- instanceof(Concept,Subtype), t_subs(Subtype,Supertype)."; //subtyping relation
+    precode += "t_subs(entity,concept).";
+    precode += "t_subs(relation,concept).";
+    precode += "t_subs(rule,concept)."; //???
     try {
       datalog.addAll(DatalogParser.parseProgram(new DatalogTokenizer(new StringReader(precode))));
     } catch (DatalogParseException e) {

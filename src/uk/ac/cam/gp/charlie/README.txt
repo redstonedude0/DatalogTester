@@ -32,6 +32,17 @@ The rough data flow (for now) is as follows. We should modify this so that the t
 - the graqlexecutor will execute these queries and return the results in a result object
 - the datalogexecutor will parse these (along with the context) into datalog (using astinterpreter), compile it into an engine, execute, and return as a result object.
 
-
+Overview of quirks about the datalog implementation:
+- the engine assumes correct queries, incorrect queries (syntactically or semantically) have undefined behaviour.
+- the engine implements a subset of graql, some queries will lead to undefined behaviour.
+- the datalog engine is only instantiated on match.. queries, as follows;
+  - first the validity of all rules are checked, for any rules where their invariant is broken appropriate
+    match..insert queries are executed to repair the invariant, if the invariants are not repaired within
+    (default: 10) iterations, then the query fails.
+  - then the match is executed, producing a list of maps.
+  - then this is used to either delete, insert, or get.
+- the syntax has been augmented with the idea of variables being bound in scope, e.g.
+  "insert $x isa person; $y isa person; (friend:$x, friend:$y) isa friendship;" is valid. This allows the interactive
+  interface to be smoother, and is how insertion within match queries (and rules) is calculated.
 
 
