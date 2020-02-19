@@ -2,6 +2,8 @@ package uk.ac.cam.gp.charlie;
 
 //import grakn.client.answer.ConceptMap;
 
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Multiset;
 import grakn.client.answer.ConceptMap;
 import grakn.client.concept.Concept;
 import graql.lang.statement.Variable;
@@ -60,4 +62,19 @@ public class Result {
   }
 
   public final List<Map<String, String>> results;
+
+  @Override
+  public boolean equals(Object other) {
+    if (!(other instanceof Result)) return false;
+    Result r2 = (Result) other;
+
+    Multiset<Map<String,String>> s1 = new HashMultiset<>();
+    Multiset<Map<String,String>> s2 = new HashMultiset<>();
+
+    results.stream().map(s1::add);
+    r2.results.stream().map(s2::add);
+
+    return s1.equals(s2);
+
+  }
 }
