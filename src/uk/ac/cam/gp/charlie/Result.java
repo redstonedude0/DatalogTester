@@ -71,8 +71,8 @@ public class Result {
     Multiset<Map<String,String>> s1 = new HashMultiset<>();
     Multiset<Map<String,String>> s2 = new HashMultiset<>();
 
-    results.stream().map(s1::add);
-    r2.results.stream().map(s2::add);
+    s1.addAll(results);
+    s2.addAll(r2.results);
 
     return s1.equals(s2);
 
