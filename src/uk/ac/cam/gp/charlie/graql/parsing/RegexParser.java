@@ -37,7 +37,6 @@ public class RegexParser extends GraqlParser {
     }
     test = re.graqlToAST(graql);
     DebugHelper.printObjectTree(test);
-
   }
 
   private static String regex(String regex, String... tags) {
