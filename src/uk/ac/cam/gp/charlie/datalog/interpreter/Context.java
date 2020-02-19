@@ -1,17 +1,23 @@
 package uk.ac.cam.gp.charlie.datalog.interpreter;
 
 import abcdatalog.ast.Clause;
+import abcdatalog.ast.PositiveAtom;
+import abcdatalog.parser.DatalogParseException;
+import abcdatalog.parser.DatalogParser;
+import abcdatalog.parser.DatalogTokenizer;
+import java.io.StringReader;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
 import uk.ac.cam.gp.charlie.ast.Attribute;
-import uk.ac.cam.gp.charlie.ast.AttributeValue;
 import uk.ac.cam.gp.charlie.ast.ConstantValue;
 import uk.ac.cam.gp.charlie.ast.Plays;
 import uk.ac.cam.gp.charlie.ast.Variable;
-import uk.ac.cam.gp.charlie.ast.queries.QueryDefine;
+import uk.ac.cam.gp.charlie.ast.queries.QueryInsert;
 
 /**
  * Represents a schema and data (test environment) in AST form
@@ -19,6 +25,17 @@ import uk.ac.cam.gp.charlie.ast.queries.QueryDefine;
 public class Context {
 
   public Context() {
+    //Prepop datalog
+    String precode = "instanceof(Thing,Supertype) :- instanceof(Thing,Subtype), t_subs(Subtype,Supertype)."; //subtyping relation
+    precode += "t_subs(entity,thing).";
+    precode += "t_subs(relation,thing).";
+    precode += "t_subs(rule,thing)."; //???
+    try {
+      datalog.addAll(DatalogParser.parseProgram(new DatalogTokenizer(new StringReader(precode))));
+    } catch (DatalogParseException e) {
+      e.printStackTrace();
+      throw new RuntimeException("Error initialising basic datalog");
+    }
   }
 
   /**
@@ -126,8 +143,11 @@ public class Context {
   private int variableNumber = 0;//NOTE: Reset after each engine execution (should be)
   private Map<Integer,Variable> variableDefinitions = new HashMap<>();
   int getVariableNumber(Variable v) {
+    if (v == null) {
+      return variableNumber++;
+    }
     for (Entry<Integer,Variable> entry : variableDefinitions.entrySet()) {
-      if (entry.getValue().equals(v)) {
+      if (Objects.equals(entry.getValue(),v)) {
         return entry.getKey();
       }
     }
@@ -140,7 +160,6 @@ public class Context {
   public void resetVariableNumber() {variableNumber = 0;variableDefinitions.clear();}
   public int getMaxVariableNumber() {return variableNumber-1;}
 
-
   //TODO only maps to things for now, need to map to constants, types, etc
   private Map<Variable,Integer> scope = new HashMap<>();
   public Integer resolveScope(Variable v) {
@@ -150,6 +169,37 @@ public class Context {
     scope.put(v,i);
   }
   public void removeFromScope(Variable v) {scope.remove(v);}
+
+  //<editor-fold desc="Rules (invariants)">
+  //Keeps track of rules, and what they've done
+  public Map<Integer,Map<String,Variable>> invariantVariableMappings = new HashMap<>();
+  public Map<Integer, QueryInsert> invariantInsertQueries = new HashMap<>();
+  private Map<String,Integer> invariantIdentifiers = new HashMap<>();
+  private Map<Integer, PositiveAtom> invariantCheckers = new HashMap<>();
+  public PositiveAtom getInvariantChecker(Integer i) {
+    return invariantCheckers.get(i);
+  }
+  public void setInvariantChecker(Integer i, PositiveAtom checker) {
+    invariantCheckers.put(i,checker);
+  }
+  public String getInvariantName(Integer i) {
+    for (Entry<String,Integer> entry : invariantIdentifiers.entrySet()) {
+      if (entry.getValue() == i) {
+        return entry.getKey();
+      }
+    }
+    throw new RuntimeException("No Invariant Name Found");
+  }
+  private int invariantNumber = 0;//NOTE: Reset after each engine execution (should be)
+  int getInvariantNumber(String identifier) {
+    if (invariantIdentifiers.containsKey(identifier)) {
+      return invariantIdentifiers.get(identifier);
+    }
+    invariantIdentifiers.put(identifier,invariantNumber);
+    return invariantNumber++;
+  }
+  public int getMaxInvariantNumber() {return invariantNumber-1;}
+  //</editor-fold>
 
   public String prettifyDatalog(String datalog) {
     for (Integer i : constDefinitions.keySet()) {

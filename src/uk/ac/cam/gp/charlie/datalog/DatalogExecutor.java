@@ -6,7 +6,6 @@ import abcdatalog.ast.validation.DatalogValidationException;
 import abcdatalog.engine.DatalogEngine;
 import abcdatalog.engine.bottomup.sequential.SemiNaiveEngine;
 import abcdatalog.util.substitution.Substitution;
-import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -18,9 +17,11 @@ import uk.ac.cam.gp.charlie.DebugHelper;
 import uk.ac.cam.gp.charlie.Executor;
 import uk.ac.cam.gp.charlie.Result;
 import uk.ac.cam.gp.charlie.TestEnvironment;
+import uk.ac.cam.gp.charlie.Workbench;
 import uk.ac.cam.gp.charlie.ast.Variable;
 import uk.ac.cam.gp.charlie.ast.queries.Query;
 import uk.ac.cam.gp.charlie.ast.queries.QueryDefine;
+import uk.ac.cam.gp.charlie.ast.queries.QueryDefineRule;
 import uk.ac.cam.gp.charlie.ast.queries.QueryInsert;
 import uk.ac.cam.gp.charlie.ast.queries.match.QueryMatch;
 import uk.ac.cam.gp.charlie.datalog.interpreter.ASTInterpreter;
@@ -32,6 +33,73 @@ public class DatalogExecutor extends Executor {
   private DatalogEngine engine; //The engine to use for datalog interpretation
   private Context c = new Context(); //The context of the test environment, contains the ASTs representing the environment
   public static GraqlParser parser = new GraqlParser();
+
+  /**
+   *
+   * @param cyclesRemaining cycles to do (prevents infinite loops)
+   */
+  private void ensureInvariants(int cyclesRemaining) throws DatalogValidationException {
+    boolean triggered = false;
+    if (DebugHelper.VERBOSE_DATALOG) {
+      System.out.println("\u001b[36;1m<INVARIANTS ("+cyclesRemaining+")>\u001b[0m");
+    }
+    //loop through each invariant
+    for (int invariantNum = 0; invariantNum <= c.getMaxInvariantNumber(); invariantNum++) {
+      //build the engine, test the invariant
+      engine = new SemiNaiveEngine();
+      engine.init(c.datalog);
+      PositiveAtom query = c.getInvariantChecker(invariantNum);
+      Set<PositiveAtom> results = engine.query(query);
+      //if contradictions, set up the insertions (simple QueryInsert addAll)
+      if (results.size() != 0) {
+        triggered = true;
+        if (DebugHelper.VERBOSE_DATALOG) {
+          System.out.println("\u001b[36;1mINVARIANT TRIGGERED: "+c.getInvariantName(invariantNum)+"\u001b[0m");
+        }
+        //Insert as new inserts
+        for (PositiveAtom result : results) {
+          //Get variables
+          Set<Variable> variables = new HashSet<>();
+          Substitution substitution = result.unify(query);
+          Map<String,Variable> variableMap = c.invariantVariableMappings.get(invariantNum);
+          for (Entry<String,Variable> entry : variableMap.entrySet()) {
+            String boundValue = substitution.get(abcdatalog.ast.Variable.create(entry.getKey())).toString();
+            Integer boundInt = Integer.parseInt(boundValue.substring(2));
+            if (!boundValue.equals("e_" + boundInt)) {
+              throw new RuntimeException(
+                  "Invalid returned object (unimplemented, expected thing): " + boundValue);
+            }
+            c.addToScope(entry.getValue(),boundInt);
+            variables.add(entry.getValue());
+          }
+          //insert
+          executeQuery(c.invariantInsertQueries.get(invariantNum));
+          //unbind scope
+          for (Variable v : variables) {
+            c.removeFromScope(v);
+          }
+        }
+      }
+      //next
+    }
+    if (DebugHelper.VERBOSE_DATALOG) {
+      System.out.println("\u001b[36;1m</INVARIANTS>\u001b[0m\n");
+    }
+    //if invariants were triggered, loop through again... (caution - infinite loops)
+    if (triggered) {
+      ensureInvariants(cyclesRemaining-1);
+    }
+  }
+
+  private void ensureInvariants() throws DatalogValidationException {
+    ensureInvariants(100);
+  }
+
+  private void createEngine() throws DatalogValidationException {
+    ensureInvariants();
+    //engine = new RecursiveQsqEngine(); //doesn't allow disunification
+    engine = new SemiNaiveEngine();//allows disunification
+  }
 
   /**
    * Execute a query using the context and engine.
@@ -52,8 +120,7 @@ public class DatalogExecutor extends Executor {
         c.datalog.addAll(ASTInterpreter.toDatalog(q, c));
       } else if (q instanceof QueryMatch) {
         //Need to match into scope(s), then perform insertions
-        //engine = new RecursiveQsqEngine(); //doesn't allow disunification
-        engine = new SemiNaiveEngine(); //allows disunification
+        createEngine();
         if (DebugHelper.VERBOSE_DATALOG) {
           System.out.println("\u001b[33;1m<EXECUTING>\u001b[0m");
         }
@@ -94,12 +161,13 @@ public class DatalogExecutor extends Executor {
                   //'Thing' -> not stored in resultMap
                   if (DebugHelper.VERBOSE_DATALOG) {
                     System.out.println(
-                        " _$" + v.getIdentifier() + " => \u001b[35m{" + boundInt + "}\u001b[0m");
+                        " _$" + Variable.getIdentifier(v) + " => \u001b[35m{" + boundInt
+                            + "}\u001b[0m");
                   }
                 } else if (boundValue.startsWith("const_")) {
                   resultMap.put(v, c.getConstantFromID(boundInt).value + "");
                   if (DebugHelper.VERBOSE_DATALOG) {
-                    System.out.println("  $" + v.getIdentifier() + " => \u001b[33m" + c
+                    System.out.println("  $" + Variable.getIdentifier(v) + " => \u001b[33m" + c
                         .getConstantFromID(boundInt).value + "\u001b[0m");
                   }
                 } else {
@@ -130,7 +198,8 @@ public class DatalogExecutor extends Executor {
                     //'Thing' -> can be deleted
                     if (DebugHelper.VERBOSE_DATALOG) {
                       System.out.println(
-                          "  $" + v.getIdentifier() + " => \u001b[35m{" + boundInt + "}\u001b[0m");
+                          "  $" + Variable.getIdentifier(v) + " => \u001b[35m{" + boundInt
+                              + "}\u001b[0m");
                     }
                   } else {
                     throw new RuntimeException("Attemped to delete non-thing object " + boundValue);
@@ -185,6 +254,18 @@ public class DatalogExecutor extends Executor {
             }
         }
         c.resetVariableNumber();
+      } else if (q instanceof QueryDefineRule) {
+        QueryDefineRule rule = (QueryDefineRule) q;
+        //add to database
+        Set<Clause> clauses = ASTInterpreter.toDatalog(q, c);
+        c.datalog.addAll(clauses);
+
+        //Prepare executable
+        if (DebugHelper.VERBOSE_DATALOG) {
+          System.out.print("\u001b[33;1mExecutable query:\u001b[0m\n");
+        }
+        PositiveAtom query = ASTInterpreter.toExecutableDatalog(q, c);
+        c.setInvariantChecker(c.getMaxInvariantNumber(),query);
       } else {
         throw new RuntimeException("Unsupported query type during datalog query execution");
       }
@@ -217,7 +298,7 @@ public class DatalogExecutor extends Executor {
   public Result execute(String query) {
     //Parse to AST
     List<Query> tests = parser.graqlToAST(query);
-    //ASSERT length(tests) == 1;
+    //ASSERT length(tests) != 1;
     if (tests.size() == 0) {
       System.out.println("No query found (parsing error?)");
     }
@@ -236,7 +317,7 @@ public class DatalogExecutor extends Executor {
         for (Map<Variable, String> resultMap : resultMaps) {
           Map<String, String> newMap = new HashMap<>();
           for (Entry<Variable, String> result : resultMap.entrySet()) {
-            newMap.put(result.getKey().getIdentifier(), result.getValue());
+            newMap.put(Variable.getIdentifier(result.getKey()), result.getValue());
           }
           toRet.add(newMap);
         }
@@ -249,4 +330,9 @@ public class DatalogExecutor extends Executor {
     }
     return r;
   }
+
+  public static void main(String[] args) throws Exception {
+    Workbench.interactive_datalog();
+  }
+
 }

@@ -3,6 +3,11 @@ package uk.ac.cam.gp.charlie;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import uk.ac.cam.gp.charlie.ast.Variable;
+import uk.ac.cam.gp.charlie.ast.queries.match.QueryMatch;
+import uk.ac.cam.gp.charlie.ast.queries.match.QueryMatch.Action;
 
 public class DebugHelper {
 
@@ -45,6 +50,23 @@ public class DebugHelper {
         System.out.println(idnt(idnt) + "]");
         return;
       }
+      if (o instanceof Map) {
+        Map m = (Map) o;
+        if (m.size() == 0) {
+          System.out.println("{}");
+          return;
+        }
+        System.out.println();
+        idnt--;
+        System.out.println(idnt(idnt) + "{");
+        idnt++;
+        for (Object item : m.entrySet()) {
+          printObjectTree(item, idnt);
+        }
+        idnt--;
+        System.out.println(idnt(idnt) + "}");
+        return;
+      }
       if (o instanceof String) {
         System.out.println("{" + o + "}");
         return;
@@ -62,7 +84,36 @@ public class DebugHelper {
           return;
         }
       }
-      System.out.println(idnt(idnt) + o.getClass().getSimpleName());
+      System.out.print(idnt(idnt) + o.getClass().getSimpleName());
+      if (o instanceof Variable) {
+        Field f = o.getClass().getDeclaredField("identifier");
+        f.setAccessible(true);
+        String ident = (String) f.get(o);
+        System.out.println("($"+ident+")");
+      } else if (o instanceof Map.Entry) {
+        printObjectTree(((Entry) o).getKey());
+        System.out.print(idnt(idnt) + "         ->");
+        printObjectTree(((Entry) o).getValue());
+        System.out.println();
+      } else if (o instanceof QueryMatch) {
+        Field f = o.getClass().getDeclaredField("action");
+        f.setAccessible(true);
+        Action acc = ((Action) f.get(o));
+        System.out.println("("+acc.name()+")");
+        switch (acc) {
+          case GET:
+            printObjectTree(((QueryMatch)o).getDATA_GET());
+            break;
+          case DELETE:
+            printObjectTree(((QueryMatch)o).getDATA_DELETE());
+            break;
+          case INSERT:
+            printObjectTree(((QueryMatch)o).getDATA_INSERT());
+            break;
+        }
+      } else {
+        System.out.println();
+      }
       idnt++;
       for (Field f : fields) {
         if (!Modifier.isStatic(f.getModifiers()) || !Modifier.isFinal(f.getModifiers())) {
@@ -72,7 +123,7 @@ public class DebugHelper {
           idnt--;
         }//else static final fields are ignored
       }
-    } catch (IllegalAccessException e) {
+    } catch (IllegalAccessException | NoSuchFieldException e) {
       System.out.print("#");
     }
   }
