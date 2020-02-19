@@ -20,11 +20,12 @@ import uk.ac.cam.gp.charlie.ast.queries.QueryInsert;
 import uk.ac.cam.gp.charlie.ast.queries.match.ConditionIsa;
 import uk.ac.cam.gp.charlie.ast.queries.match.ConditionNeq;
 import uk.ac.cam.gp.charlie.ast.queries.match.MatchCondition;
+import uk.ac.cam.gp.charlie.ast.queries.match.QueryMatch;
 
 public class RegexParser extends GraqlParser {
 
   public static void main(String[] args) {
-    int mode = 1;
+    int mode = 4;
     RegexParser re = new RegexParser();
     List<Query> test=null;
     String graql = "";
@@ -34,6 +35,17 @@ public class RegexParser extends GraqlParser {
     if (mode == 1) {
       graql = "define rule-a sub rule, when { $x isa person; $y isa person; }, then {(friend:$x,friend:$y) isa friends;};";
     }
+    if (mode == 2) {
+      graql = "match $x isa person, has name $n; get $n;";
+    }
+    if (mode == 4) {
+      graql = "match (employee: $x) isa employment; delete $x;";
+    }
+    if (mode == 3) {
+      graql = "match $x isa person, has name $n; get $n;";
+      Iterator<MatchResult> s = iterate(matcher(graql,"<match>"));
+      s.forEachRemaining(m -> System.out.println(m.start()+":"+m.end()));
+    }
     test = re.graqlToAST(graql);
     DebugHelper.printObjectTree(test);
   }
@@ -41,8 +53,35 @@ public class RegexParser extends GraqlParser {
   private static String regex(String regex, String... tags) {
     //Create a list of tags this regex may have, all not in the 'tags' param will be deleted from the string
     List<String> registeredTags = new ArrayList<>();
-    regex = regex.replace("<define_block>","(<wso>define(<ws>(<define>|<define_rule>))+)");
+    regex = regex.replace("<block>","(<define_block>|<insert_block>|<match>)");
 
+
+
+    //<editor-fold desc="Match statements">
+    regex = regex.replace("<match>","(<wso>match<ws>(?<MATCHCONDS>(<wso><match_condition>)+)<wso>(?<MATCHACT><match_action>))");
+    registeredTags.add("MATCHCONDS");
+    registeredTags.add("MATCHACT");
+    regex = regex.replace("<match_condition>","(<neq_condition>|<isa_has_condition>|<rel_ent_isa_condition>|<rel_isa_condition>)");
+    regex = regex.replace("<match_action>","(<get_all>|<get_some>|<insert_block>|<delete>)");
+
+    regex = regex.replace("<get_all>","(get<wso>;)");
+    regex = regex.replace("<get_some>","(get<wso><variable>(<wso>,<wso><variable>)*<wso>;)");
+    regex = regex.replace("<delete>","(delete<ws><variable><wso>;)");
+    //</editor-fold>
+
+
+    //<editor-fold desc="Insert statements">
+    regex = regex.replace("<insert_block>","(NONMATCHINGSEQUENCE)");//placeholder
+    //</editor-fold>
+
+    //<editor-fold desc="Conditions (for Matches and Rules)">
+    regex = regex.replace("<isa_has_condition>","((?<ISAHAS1><variable>)<ws>isa<ws>(?<ISAHAS2><identifier>)(,<wso><has_subcondition>)*;)");
+    registeredTags.add("ISAHAS1");
+    registeredTags.add("ISAHAS2");
+    //</editor-fold>
+
+    regex = regex.replace("<define_block>","(<wso>define(<ws>(<define>|<define_rule>))+)");
+    //<editor-fold desc="Defines for rules">
     regex = regex.replace("<define_rule>","((?<DEFINERULEIDENT><identifier>)<ws>sub<ws>(?<DEFINERULESUBS><identifier>)<wso>,<wso>when<wso><when_block><wso>,<wso>then<wso><then_block><wso>;)");
     registeredTags.add("DEFINERULEIDENT");
     registeredTags.add("DEFINERULESUBS");
@@ -54,6 +93,8 @@ public class RegexParser extends GraqlParser {
     regex = regex.replace("<has_subcondition>","(has<ws>(?<HASSUB1><identifier>)<ws>(?<HASSUB2><variable>)<wso>)");
     registeredTags.add("HASSUB1");
     registeredTags.add("HASSUB2");
+    //</editor-fold>
+
     regex = regex.replace("<neq_condition>","((?<NEQ1><variable>)<wso>!=<wso>(?<NEQ2><variable>)<wso>;)");
     registeredTags.add("NEQ1");
     registeredTags.add("NEQ2");
@@ -68,21 +109,41 @@ public class RegexParser extends GraqlParser {
     regex = regex.replace("<relation_subentry>","(<wso>(?<RELSUB1><identifier>)<wso>:<wso>(?<RELSUB2><variable>)<wso>)");
     registeredTags.add("RELSUB1");
     registeredTags.add("RELSUB2");
-    regex = regex.replace("<variable>","(\\$<identifier>)");
+    //</editor-fold>
 
+
+    //<editor-fold desc="Defines for entities and relations">
     regex = regex.replace("<define>","(((?<DEFINEHEADIDENT><identifier>)<ws>sub<ws>(?<DEFINEHEADSUBS><identifier>))(<define_has>|<define_plays>|<define_relates>)*<wso>;)");
     registeredTags.add("DEFINEHEADIDENT");
     registeredTags.add("DEFINEHEADSUBS");
-    regex = regex.replace("<define_relates>","(<wso>,<ws>relates<ws><identifier>)"); //'relates' definition
-    regex = regex.replace("<define_plays>","(<wso>,<ws>plays<ws><identifier>)"); //'plays' definition
-    regex = regex.replace("<define_has>","(<wso>,<ws>has<ws>(?<DEFINEHASIDENT><identifier>))"); //'has' definition
+    //'relates' definition
+    regex = regex.replace("<define_relates>","(<wso>,<ws>relates<ws><identifier>)");
+    //'plays' definition
+    regex = regex.replace("<define_plays>","(<wso>,<ws>plays<ws><identifier>)");
+    //'has' definition
+    regex = regex.replace("<define_has>","(<wso>,<ws>has<ws>(?<DEFINEHASIDENT><identifier>))");
     registeredTags.add("DEFINEHASIDENT");
-    regex = regex.replace("<identifier>","(<alpha>(<alphanum>)*)");//Identifier
-    regex = regex.replace("<alphanum>","(<alpha>|<num>|-)"); //Alphanumeric character (or _,-)
-    regex = regex.replace("<num>","([0-9])"); //Numeric character
-    regex = regex.replace("<alpha>","([a-z]|[A-Z]|_)"); //Alphabetic (or _) character
-    regex = regex.replace("<wso>","(<ws>)?"); //Whitespace optional
-    regex = regex.replace("<ws>","( |\n|\r)+"); //Whitespace
+    //</editor-fold>
+
+
+    //<editor-fold desc="Basic Definitions (variables, identifiers, whitespace, etc)">
+    //Variable - $<identifier>
+    regex = regex.replace("<variable>","(\\$(?<VARIABLE><identifier>))");
+    registeredTags.add("VARIABLE");
+    //Identifier - <alpha><alphanum>*
+    regex = regex.replace("<identifier>","(<alpha>(<alphanum>)*)");
+    //Alphanumeric character (or _,-)
+    regex = regex.replace("<alphanum>","(<alpha>|<num>|-)");
+    //Numeric character
+    regex = regex.replace("<num>","([0-9])");
+    //Alphabetic (or _) character
+    regex = regex.replace("<alpha>","([a-z]|[A-Z]|_)");
+    //Whitespace (optional)
+    regex = regex.replace("<wso>","(<ws>)?");
+    //One or more whitespace
+    regex = regex.replace("<ws>","( |\n|\r)+");
+    //</editor-fold>
+
     for(String tag: tags) {
       registeredTags.remove(tag);
     }
@@ -108,12 +169,89 @@ public class RegexParser extends GraqlParser {
   @Override
   public List<Query> graqlToAST(String graql) {
     List<Query> toRet = new ArrayList<>();
-    Iterator<MatchResult> s = iterate(matcher(graql,"<define_block>"));
-    s.forEachRemaining(matchResult -> toRet.addAll(parseDefineBlock(graql.substring(matchResult.start(), matchResult.end()))));
-
+    Iterator<MatchResult> s = iterate(matcher(graql,"<block>"));
+    s.forEachRemaining(matchResult -> toRet.addAll(parseBlock(graql.substring(matchResult.start(), matchResult.end()))));
     return toRet;
   }
 
+  private static List<Query> parseBlock(String graql) {
+    List<Query> toRet = new ArrayList<>();
+    Iterator<MatchResult> s;
+    s = iterate(matcher(graql,"<define_block>"));
+    s.forEachRemaining(matchResult -> toRet.addAll(parseDefineBlock(graql.substring(matchResult.start(), matchResult.end()))));
+    s = iterate(matcher(graql,"<insert_block>"));
+//    s.forEachRemaining(matchResult -> toRet.addAll(parseInsertBlock(graql.substring(matchResult.start(), matchResult.end()))));
+    s = iterate(matcher(graql,"<match>"));
+    s.forEachRemaining(matchResult -> toRet.add(parseMatch(graql.substring(matchResult.start(), matchResult.end()))));
+    return toRet;
+  }
+
+  //<editor-fold desc="Parsing for match">
+  private static QueryMatch parseMatch(String graql) {
+    QueryMatch q = new QueryMatch();
+    Matcher m = matcher(graql,"<match>","MATCHCONDS");
+    m.matches();
+    String conds = m.group("MATCHCONDS");
+    q.conditions = parseMatchConditions(conds);
+
+    m = matcher(graql,"<match>","MATCHACT");
+    m.matches();
+    String action = m.group("MATCHACT");
+    parseMatchAction(q,action);
+    return q;
+  }
+
+  private static void parseMatchAction(QueryMatch q, String graql) {
+    Matcher m = matcher(graql,"<get_all>");
+    if (m.matches()) {
+      q.setActionGet(new ArrayList<>());
+      return;
+    }
+    m = matcher(graql,"<delete>");
+    if (m.matches()) {
+      m = matcher(graql,"<delete>","VARIABLE");
+      m.matches();
+      String var = m.group("VARIABLE");
+      q.setActionDelete(Variable.fromIdentifier(var));
+      return;
+    }
+    m = matcher(graql,"<get_some>");
+    if (m.matches()) {
+      List<Variable> toAction = new ArrayList<>();
+      Iterator<MatchResult> s = iterate(matcher(graql,"<variable>","VARIABLE"));
+      s.forEachRemaining(matchResult -> {
+        String var = graql.substring(matchResult.start(),matchResult.end());
+        toAction.add(Variable.fromIdentifier(var.substring(1)));
+      });
+      q.setActionGet(toAction);
+      return;
+    }
+    m = matcher(graql,"<insert_block>");
+    if (m.matches()) {
+//      q.setActionInsert(parseInsertBlock());
+      return;
+    }
+    throw new RuntimeException("Match Action didn't match regex");
+  }
+
+  private static List<MatchCondition> parseMatchConditions(String graql) {
+    List<MatchCondition> toRet = new ArrayList<>();
+    Iterator<MatchResult> s;
+    //<neq_condition>|<isa_has_condition>|<rel_ent_isa_condition>|<rel_isa_condition>
+    s = iterate(matcher(graql,"<rel_isa_condition>"));
+    s.forEachRemaining(matchResult -> toRet.add(parseCondition_isa_rel(null,graql.substring(matchResult.start(),matchResult.end()))));
+    s = iterate(matcher(graql,"<isa_has_condition>"));
+    s.forEachRemaining(matchResult -> toRet.add(parseCondition_isa_has(graql.substring(matchResult.start(),matchResult.end()))));
+    s = iterate(matcher(graql,"<rel_ent_isa_condition>"));
+    s.forEachRemaining(matchResult -> toRet.add(parseCondition_isa_relent(graql.substring(matchResult.start(),matchResult.end()))));
+    s = iterate(matcher(graql,"<neq_condition>"));
+    s.forEachRemaining(matchResult -> toRet.add(parseCondition_neq(graql.substring(matchResult.start(),matchResult.end()))));
+    return toRet;
+  }
+
+  //</editor-fold>
+
+  //<editor-fold desc="Parsing for define_block">
   private static List<Query> parseDefineBlock(String graql) {
     List<Query> toRet = new ArrayList<>();
     Iterator<MatchResult> s = iterate(matcher(graql,"<define>"));
@@ -183,6 +321,7 @@ public class RegexParser extends GraqlParser {
     s.forEachRemaining(matchResult -> toRet.add(parseCondition_neq(graql.substring(matchResult.start(),matchResult.end()))));
     return toRet;
   }
+  //</editor-fold>
 
   private static ConditionNeq parseCondition_neq(String graql) {
     //$v1 != $v2;
@@ -206,6 +345,23 @@ public class RegexParser extends GraqlParser {
     ConditionIsa cond = new ConditionIsa(Variable.fromIdentifier(var),type);
     return cond;
   }
+
+  private static ConditionIsa parseCondition_isa_has(String graql) {
+    //$p isa person, has full-name $n;
+    Matcher m = matcher(graql,"<isa_has_condition>","ISAHAS1","ISAHAS2");
+    m.matches();
+    String var = m.group("ISAHAS1");//"$p"
+    var = var.substring(1);
+    String type = m.group("ISAHAS2");//"person"
+    ConditionIsa cond = new ConditionIsa(Variable.fromIdentifier(var),type);
+    Iterator<MatchResult> s = iterate(matcher(graql,"<has_subcondition>"));
+    s.forEachRemaining(matchResult -> {
+      Entry<Attribute,AttributeValue> entry = parseCondition_hassubentry(graql.substring(matchResult.start(),matchResult.end()));
+      cond.has.put(entry.getKey(),entry.getValue());
+    });
+    return cond;
+  }
+
 
   private static ConditionIsa parseCondition_isa_rel(Variable retVar,String graql) {
     //(lab1: $v1, lab2: $v2) isa type1;
