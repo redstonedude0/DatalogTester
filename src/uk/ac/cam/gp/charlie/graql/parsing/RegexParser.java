@@ -1,6 +1,5 @@
 package uk.ac.cam.gp.charlie.graql.parsing;
 
-import com.google.errorprone.annotations.Var;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Iterator;

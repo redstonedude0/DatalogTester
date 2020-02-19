@@ -56,7 +56,6 @@ public class Result {
         }
       }
     }
-
   }
 
   public final List<Map<String, String>> results;
