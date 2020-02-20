@@ -4,12 +4,11 @@ import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.function.Consumer;
 import java.util.Map.Entry;
+import java.util.function.Consumer;
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.w3c.dom.Attr;
 import uk.ac.cam.gp.charlie.DebugHelper;
 import uk.ac.cam.gp.charlie.ast.Attribute;
 import uk.ac.cam.gp.charlie.ast.AttributeValue;
@@ -43,7 +42,7 @@ public class GraqlParser {
       });
     } else {
       //Harrison Testing
-      int mode = 6;
+      int mode = 7;
       GraqlParser re = new GraqlParser();
       List<Query> test = null;
       String graql = "";
@@ -69,6 +68,12 @@ public class GraqlParser {
       }
       if (mode == 6) {
         graql = "insert $x (friend:$p1, friend:$z) isa friendship;";
+      }
+      if (mode == 7) {
+        graql = "match\n"
+            + "    $x isa person, has name \"Alice\";\n"
+            + "    $y (employee: $x) isa employment;\n"
+            + "delete $y;";
       }
       test = re.graqlToAST(graql);
       DebugHelper.printObjectTree(test);
@@ -120,6 +125,7 @@ public class GraqlParser {
     registeredTags.add("INSERTHEADIDENTREL");
     registeredTags.add("INSERTHEADISAREL");
     //Tags already added
+    //TODO - change to use has_condition (to allow variable has'es)
     regex = regex.replace("<insert_has>", "(,<ws>has<ws>(?<INSERTHASIDENT><identifier>)<ws><string_lit>)");
     registeredTags.add("INSERTHASIDENT");
     //Todo - $x has attr "VAL"; needs to be added (not the same as has above!!!!)
@@ -136,11 +142,6 @@ public class GraqlParser {
     regex = regex.replace("<when_block>","(\\{(<wso><when_condition>)*<wso>})");
     regex = regex.replace("<then_block>","(\\{<wso><rel_isa_condition><wso>})");
     regex = regex.replace("<when_condition>","(<rel_isa_condition>|<ent_isa_condition>|<rel_ent_isa_condition>|<has_condition>|<neq_condition>)");
-    regex = regex.replace("<has_condition>","((?<HAS1><variable>)<ws><has_subcondition>(,<wso><has_subcondition>)*;)");
-    registeredTags.add("HAS1");
-    regex = regex.replace("<has_subcondition>","(has<ws>(?<HASSUB1><identifier>)<ws>(?<HASSUB2><variable>)<wso>)");
-    registeredTags.add("HASSUB1");
-    registeredTags.add("HASSUB2");
     //</editor-fold>
 
     //<editor-fold desc="Conditions (for Matches and Rules)">
@@ -148,6 +149,12 @@ public class GraqlParser {
     regex = regex.replace("<isa_has_condition>","((?<ISAHAS1><variable>)<ws>isa<ws>(?<ISAHAS2><identifier>)(,<wso><has_subcondition>)*;)");
     registeredTags.add("ISAHAS1");
     registeredTags.add("ISAHAS2");
+    //has condition
+    regex = regex.replace("<has_condition>","((?<HAS1><variable>)<ws><has_subcondition>(,<wso><has_subcondition>)*;)");
+    registeredTags.add("HAS1");
+    regex = regex.replace("<has_subcondition>","(has<ws>(?<HASSUB1><identifier>)<ws>((?<HASSUB2><variable>)|(<string_lit>))<wso>)");
+    registeredTags.add("HASSUB1");
+    registeredTags.add("HASSUB2");
     //$x != $y
     regex = regex.replace("<neq_condition>","((?<NEQ1><variable>)<wso>!=<wso>(?<NEQ2><variable>)<wso>;)");
     registeredTags.add("NEQ1");
@@ -382,7 +389,7 @@ public class GraqlParser {
     m = matcher(graql,"<insert_block>");
     if (m.matches()) {
       //TODO - should be insert block - change querymatch to have a list<insertquery>
-      q.setActionInsert(parseInsert(graql));
+      q.setActionInsert(parseInsertBlock(graql).get(0));
       return;
     }
     throw new RuntimeException("Match Action didn't match regex");
@@ -391,16 +398,32 @@ public class GraqlParser {
   private static List<MatchCondition> parseMatchConditions(String graql) {
     List<MatchCondition> toRet = new ArrayList<>();
     List<String> ss;
-    //<neq_condition>|<isa_has_condition>|<rel_ent_isa_condition>|<rel_isa_condition>
-    ss = matches(graql,"<rel_isa_condition>");
-    ss.forEach(s -> toRet.add(parseCondition_isa_rel(null,s)));
-    ss = matches(graql,"<isa_has_condition>");
-    ss.forEach(s -> toRet.add(parseCondition_isa_has(s)));
-    ss = matches(graql,"<rel_ent_isa_condition>");
-    ss.forEach(s -> toRet.add(parseCondition_isa_relent(s)));
-    ss = matches(graql,"<neq_condition>");
-    ss.forEach(s -> toRet.add(parseCondition_neq(s)));
+    ss = matches(graql,"<match_condition>");
+    ss.forEach(s -> toRet.add(parseMatchCondition(s)));
     return toRet;
+  }
+
+  private static MatchCondition parseMatchCondition(String graql) {
+    List<MatchCondition> toRet = new ArrayList<>();
+    List<String> ss;
+    //<neq_condition>|<isa_has_condition>|<rel_ent_isa_condition>|<rel_isa_condition>
+    Matcher m = matcher(graql,"<rel_isa_condition>");
+    if (m.matches()) {
+      return parseCondition_isa_rel(null,graql);
+    }
+    m = matcher(graql,"<isa_has_condition>");
+    if (m.matches()) {
+      return parseCondition_isa_has(graql);
+    }
+    m = matcher(graql,"<rel_ent_isa_condition>");
+    if (m.matches()) {
+      return parseCondition_isa_relent(graql);
+    }
+    m = matcher(graql,"<neq_condition>");
+    if (m.matches()) {
+      return parseCondition_neq(graql);
+    }
+    throw new RuntimeException("matched, and then didn't");
   }
   //</editor-fold>
 
@@ -532,7 +555,9 @@ public class GraqlParser {
     m.matches();
     String var = m.group("REL2");//"var"
     var = var.substring(1);
-    return parseCondition_isa_rel(Variable.fromIdentifier(var),graql);
+    List<String> ss = matches(graql,"<rel_isa_condition>");
+    String subcondition = ss.get(0);
+    return parseCondition_isa_rel(Variable.fromIdentifier(var),subcondition);
   }
 
   private static Entry<Plays,Variable> parseCondition_relationsubentry(String graql) {
@@ -562,12 +587,20 @@ public class GraqlParser {
 
   private static Entry<Attribute, AttributeValue> parseCondition_hassubentry(String graql) {
     //has n1 $v2
-    Matcher m = matcher(graql,"<has_subcondition>","HASSUB1","HASSUB2");
+    //has n1 "bob"
+    Matcher m = matcher(graql,"<has_subcondition>","HASSUB1","HASSUB2","STRINGLIT");
     m.matches();
     String lab = m.group("HASSUB1");//"v1"
     String var = m.group("HASSUB2");//"$v2"
-    var = var.substring(1);
-    return new SimpleEntry<>(Attribute.fromIdentifier(lab),Variable.fromIdentifier(var));
+    String lit = m.group("STRINGLIT");//"Bob"
+    AttributeValue v = null;
+    if (var != null) {
+      var = var.substring(1);
+      v = Variable.fromIdentifier(var);
+    } else {
+      v = ConstantValue.fromValue(lit);
+    }
+    return new SimpleEntry<>(Attribute.fromIdentifier(lab),v);
   }
 
 

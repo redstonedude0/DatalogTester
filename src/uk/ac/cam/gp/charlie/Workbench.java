@@ -1,5 +1,6 @@
 package uk.ac.cam.gp.charlie;
 
+import abcdatalog.ast.Clause;
 import abcdatalog.ast.PositiveAtom;
 import abcdatalog.ast.Term;
 import abcdatalog.ast.validation.DatalogValidationException;
@@ -121,13 +122,34 @@ public class Workbench {
       m.invoke(de, q);
     }
     Map<String, Query> astShortcuts = new HashMap();
-    astShortcuts.put("\u001b[34mmatch..get\u001b[0m all names", query_matchNames());
-    astShortcuts.put("\u001b[34mmatch..delete\u001b[0m Alice from the database", query_matchDelAlice());
-    astShortcuts.put("\u001b[34mmatch..delete\u001b[0m unemploy Alice", query_matchDelAliceEmployment());
-    astShortcuts.put("\u001b[34mmatch..delete\u001b[0m Bob-Charlie coworkers relation",query_matchDelBC_coworkers());
-    astShortcuts.put("\u001b[34mmatch..insert\u001b[0m employ Bob",query_match_employ_b());
-    astShortcuts.put("\u001b[34mmatch..insert\u001b[0m employ Charlie",query_match_employ_c());
+    astShortcuts.put("\u001b[34mmatch..get\u001b[0m all names", query_matchNames());//GRAQL
+    astShortcuts.put("\u001b[34mmatch..delete\u001b[0m Alice from the database", query_matchDelAlice());//GRAQL
+    astShortcuts.put("\u001b[34mmatch..delete\u001b[0m unemploy Alice", query_matchDelAliceEmployment());//GRAQL
+    astShortcuts.put("\u001b[34mmatch..delete\u001b[0m Bob-Charlie coworkers relation",query_matchDelBC_coworkers());//GRAQL
+    astShortcuts.put("\u001b[34mmatch..insert\u001b[0m employ Bob",query_match_employ_b());//GRAQL
+    astShortcuts.put("\u001b[34mmatch..insert\u001b[0m employ Charlie",query_match_employ_c());//GRAQL
     Map<String, String> graqlShortcuts = new HashMap();
+    graqlShortcuts.put("\u001b[34mmatch..insert\u001b[0m employ Charlie",
+        "match\n"
+            + "    $x isa person, has name \"Charlie\";\n"
+            + "    $y isa organisation, has name \"Uni\";\n"
+            + "insert (employee: $x, employer: $y) isa employment;");
+    graqlShortcuts.put("\u001b[34mmatch..insert\u001b[0m employ Bob",
+        "match\n"
+            + "    $x isa person, has name \"Bob\";\n"
+            + "    $y isa organisation, has name \"Uni\";\n"
+            + "insert (employee: $x, employer: $y) isa employment;");
+    graqlShortcuts.put("\u001b[34mmatch..delete\u001b[0m Bob-Charlie coworkers relation",
+          "match\n"
+        + "    $x (employee: $p1, employee: $p2) isa coworkers;\n"
+        + "    $p1 isa person, has name \"Bob\";\n"
+        + "    $p2 isa person, has name \"Charlie\";\n"
+        + "delete $x;");
+    graqlShortcuts.put("\u001b[34mmatch..delete\u001b[0m Alice from the database",
+          "match\n"
+        + "    $x isa person,\n"
+        + "        has name \"Alice\";\n"
+        + "delete $x;");
     graqlShortcuts.put("\u001b[34mdefine rule\u001b[0m everyone is friends (reflexive)","define\n rule-a sub rule, when {\n  $x isa person;\n  $y isa person;\n }, then {\n  (friend:$x,friend:$y) isa friends;\n };");
     graqlShortcuts.put("\u001b[34mdefine rule\u001b[0m to make people coworkers",
           "define\n"
@@ -138,6 +160,16 @@ public class Workbench {
         + " }, then {\n"
         + "  (employee: $p1, employee: $p2) isa coworkers;\n"
         + " };\n");
+    graqlShortcuts.put("\u001b[34mmatch..delete\u001b[0m unemploy Alice",
+          "match\n"
+        + "    $x isa person, has name \"Alice\";\n"
+        + "    $y (employee: $x) isa employment;\n"
+        + "delete $y;");
+    graqlShortcuts.put("\u001b[34mmatch..get\u001b[0m all names",
+        "match\n"
+            + "    $x isa person,\n"
+            + "        has name $n;\n"
+            + "get $n;");
 
     interactiveLoop(de, astShortcuts,graqlShortcuts);
     DebugHelper.VERBOSE_DATALOG = false;
@@ -212,23 +244,32 @@ public class Workbench {
   private static void interactiveLoop(DatalogExecutor de, Map<String, Query> astShortcuts, Map<String, String> graqlShortcuts)
       throws IOException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
     BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-    boolean displayPrompt = true;
+    boolean displayPrompt_ast = false;
+    boolean displayPrompt_graql = true;
     loop:
     while (true) {
-      if (displayPrompt) {
-        displayPrompt = false;
+      if (displayPrompt_ast || displayPrompt_graql) {
         System.out.println("Enter graql query to be completed, terminate with blank line to execute");
         System.out.println("Enter \"exit\" to exit to menu");
-        int astNum = 0;
-        for (String shortcut : astShortcuts.keySet()) {
-          System.out.println("Enter a"+astNum+" for \u001b[34mAST\u001b[0m shortcut \"" + shortcut + "\"");
-          astNum++;
+        if (displayPrompt_ast) {
+          int astNum = 0;
+          for (String shortcut : astShortcuts.keySet()) {
+            System.out.println(
+                "Enter a" + astNum + " for \u001b[34mAST\u001b[0m shortcut \"" + shortcut + "\"");
+            astNum++;
+          }
         }
-        int graqlNum = 0;
-        for (String shortcut : graqlShortcuts.keySet()) {
-          System.out.println("Enter g"+graqlNum+" for \u001b[34mGraql\u001b[0m shortcut \"" + shortcut + "\"");
-          graqlNum++;
+        if (displayPrompt_graql) {
+          int graqlNum = 0;
+          for (String shortcut : graqlShortcuts.keySet()) {
+            System.out.println(
+                "Enter g" + graqlNum + " for \u001b[34mGraql\u001b[0m shortcut \"" + shortcut
+                    + "\"");
+            graqlNum++;
+          }
         }
+        displayPrompt_ast = false;
+        displayPrompt_graql = false;
       }
       String input = "";
       while (true) {
@@ -242,7 +283,23 @@ public class Workbench {
         break;
       }
       if (input.equals("help\n\n")) {
-        displayPrompt = true;
+        displayPrompt_graql = true;
+        continue;
+      }
+      if (input.equals("help_ast\n\n")) {
+        displayPrompt_ast = true;
+        continue;
+      }
+      if (input.equals("dump\n\n") || input.equals("dump raw\n\n")) {
+        boolean raw = input.equals("dump raw\n\n");
+        Set<Clause> clauses = de.c.datalog;
+        for (Clause c: clauses) {
+          String out = c.toString();
+          if (!raw) {
+            out = de.c.prettifyDatalog(out);
+          }
+          System.out.println(out);
+        }
         continue;
       }
       if (input.startsWith("a")) {
