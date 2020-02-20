@@ -31,8 +31,8 @@ import uk.ac.cam.gp.charlie.graql.parsing.GraqlParser;
 public class DatalogExecutor extends Executor {
 
   private DatalogEngine engine; //The engine to use for datalog interpretation
-  private Context c = new Context(); //The context of the test environment, contains the ASTs representing the environment
-  public static GraqlParser parser = new GraqlParser();
+  private Context c = new Context(); //The context of the test environment, contains the datalog of the current environment as well as variables to track metadata
+  public static GraqlParser parser = new GraqlParser();//using an instance to allow for this to be switched out during testing
 
   /**
    *

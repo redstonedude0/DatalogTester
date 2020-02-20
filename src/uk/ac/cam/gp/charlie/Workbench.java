@@ -44,7 +44,6 @@ import uk.ac.cam.gp.charlie.datalog.DatalogExecutor;
 import uk.ac.cam.gp.charlie.datalog.tests.TESTAstInterpreter;
 import uk.ac.cam.gp.charlie.graql.GraqlExecutor;
 import uk.ac.cam.gp.charlie.graql.parsing.GraqlParser;
-import uk.ac.cam.gp.charlie.graql.parsing.RegexParser;
 
 /**
  * Main file for running the interactive user workbench.
@@ -115,14 +114,12 @@ public class Workbench {
     DatalogExecutor de = new DatalogExecutor(te);
     DebugHelper.VERBOSE_DATALOG = true;
     DebugHelper.VERBOSE_RESULTS = true;
-    DatalogExecutor.parser = new GraqlParser();
     List<Query> data = TESTAstInterpreter.getTestEnv1();
     for (Query q : data) {
       Method m = de.getClass().getDeclaredMethod("executeQuery", Query.class);
       m.setAccessible(true);
       m.invoke(de, q);
     }
-    DatalogExecutor.parser = new RegexParser();
     Map<String, Query> astShortcuts = new HashMap();
     astShortcuts.put("\u001b[34mmatch..get\u001b[0m all names", query_matchNames());
     astShortcuts.put("\u001b[34mmatch..delete\u001b[0m Alice from the database", query_matchDelAlice());
@@ -190,12 +187,10 @@ public class Workbench {
     //TODO: does not work for now as graqlparser does not parse properly
     TestEnvironment te = new TestEnvironment("\n", "\n");
     DatalogExecutor de = new DatalogExecutor(te);
-    DatalogExecutor.parser = new RegexParser();
     DebugHelper.VERBOSE_AST = true;
     DebugHelper.VERBOSE_DATALOG = true;
     DebugHelper.VERBOSE_RESULTS = true;
     interactiveLoop(de);
-    DatalogExecutor.parser = new GraqlParser();
     DebugHelper.VERBOSE_AST = false;
     DebugHelper.VERBOSE_DATALOG = false;
     DebugHelper.VERBOSE_RESULTS = false;
@@ -256,6 +251,7 @@ public class Workbench {
           if (input.equals("a"+astNum+"\n\n")) {
             DebugHelper.printObjectTree(astShortcuts.get(shortcut));
             br.readLine();
+            //inject AST into parser
             GraqlParser overload = new GraqlParser() {
               @Override
               public List<Query> graqlToAST(String query) {
