@@ -210,7 +210,7 @@ public class GraqlParser {
     //Whitespace (optional)
     regex = regex.replace("<wso>","(<ws>)?");
     //One or more whitespace
-    regex = regex.replace("<ws>","( |\n|\r)+");
+    regex = regex.replace("<ws>","( |\n|\r|\t)+");
     //</editor-fold>
 
     for(String tag: tags) {
@@ -259,14 +259,26 @@ public class GraqlParser {
     return matches;
   }
 
+  private static String removeComments(String graql) {
+    StringBuilder ret = new StringBuilder();
+    String[] parts = graql.split("\n");
+    for(String s : parts) {
+      if (!s.startsWith("#")) {
+        ret.append(s).append("\n");
+      }
+    }
+    return ret.toString();
+  }
+
   /**
    * Convert a graql string into an AST (only public function in this class)
    * @param graql
    * @return
    */
   public List<Query> graqlToAST(String graql) {
+    graql = removeComments(graql);
     List<Query> toRet = new ArrayList<>();
-    List<String> ss = matches(graql,"<block>");
+    List<String> ss = matches(graql,"<block>*");
     ss.forEach(s -> toRet.addAll(parseBlock(s)));
     return toRet;
   }

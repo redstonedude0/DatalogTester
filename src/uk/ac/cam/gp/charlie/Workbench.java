@@ -171,7 +171,7 @@ public class Workbench {
             + "        has name $n;\n"
             + "get $n;");
 
-    interactiveLoop(de, astShortcuts,graqlShortcuts);
+    interactiveLoop(de, astShortcuts,graqlShortcuts,false);
     DebugHelper.VERBOSE_DATALOG = false;
     DebugHelper.VERBOSE_RESULTS = false;
 
@@ -222,26 +222,18 @@ public class Workbench {
     DebugHelper.VERBOSE_AST = true;
     DebugHelper.VERBOSE_DATALOG = true;
     DebugHelper.VERBOSE_RESULTS = true;
-    interactiveLoop(de);
+    interactiveLoop(de,new HashMap<>(), new HashMap<>(), true);
     DebugHelper.VERBOSE_AST = false;
     DebugHelper.VERBOSE_DATALOG = false;
     DebugHelper.VERBOSE_RESULTS = false;
   }
 
   /**
-   * Initiate a basic interactive graql console with a specified executor
-   * @param de
-   */
-  private static void interactiveLoop(DatalogExecutor de)
-      throws IOException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-    interactiveLoop(de, new HashMap<>(),new HashMap<>());
-  }
-
-  /**
    * Initiate a basic interactive graql console with a specified executor and shortcuts
+   * if extendedCommit is true then "\ncommit\n" is required rather than "\n\n" to commit
    * @param de
    */
-  private static void interactiveLoop(DatalogExecutor de, Map<String, Query> astShortcuts, Map<String, String> graqlShortcuts)
+  private static void interactiveLoop(DatalogExecutor de, Map<String, Query> astShortcuts, Map<String, String> graqlShortcuts, boolean extendedCommit)
       throws IOException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
     BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
     boolean displayPrompt_ast = false;
@@ -274,24 +266,29 @@ public class Workbench {
       String input = "";
       while (true) {
         String line = br.readLine();
-        input += line + "\n";
-        if (line.equals("")) {
+        if (line.equals("") && !extendedCommit) {
           break;
         }
+        if (line.equals("commit") && extendedCommit) {
+          break;
+        }
+        input += line + "\n";
       }
-      if (input.equals("exit\n\n")) {
+      //Trim trailing newlines
+      input = input.replaceFirst("\n++$","");
+      if (input.equals("exit")) {
         break;
       }
-      if (input.equals("help\n\n")) {
+      if (input.equals("help")) {
         displayPrompt_graql = true;
         continue;
       }
-      if (input.equals("help_ast\n\n")) {
+      if (input.equals("help_ast")) {
         displayPrompt_ast = true;
         continue;
       }
-      if (input.equals("dump\n\n") || input.equals("dump raw\n\n")) {
-        boolean raw = input.equals("dump raw\n\n");
+      if (input.equals("dump") || input.equals("dump raw")) {
+        boolean raw = input.equals("dump raw");
         Set<Clause> clauses = de.c.datalog;
         for (Clause c: clauses) {
           String out = c.toString();
@@ -305,7 +302,7 @@ public class Workbench {
       if (input.startsWith("a")) {
         int astNum = 0;
         for (String shortcut : astShortcuts.keySet()) {
-          if (input.equals("a"+astNum+"\n\n")) {
+          if (input.equals("a"+astNum)) {
             DebugHelper.printObjectTree(astShortcuts.get(shortcut));
             br.readLine();
             //inject AST into parser
@@ -327,7 +324,7 @@ public class Workbench {
       if (input.startsWith("g")) {
         int graqlNum = 0;
         for (String shortcut : graqlShortcuts.keySet()) {
-          if (input.equals("g"+graqlNum+"\n\n")) {
+          if (input.equals("g"+graqlNum)) {
             input = graqlShortcuts.get(shortcut);
             System.out.println("\u001b[34m"+input+"\u001b[0m");
             br.readLine();

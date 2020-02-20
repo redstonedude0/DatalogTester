@@ -303,14 +303,15 @@ public class DatalogExecutor extends Executor {
       System.out.println("No query found (parsing error?)");
     }
     Result r = new Result(new ArrayList<>());
+    if (DebugHelper.VERBOSE_AST) {
+      System.out.println("\u001b[35;1mAST:\u001b[0m");
+      DebugHelper.printObjectTree(tests);
+    }
+    if (DebugHelper.VERBOSE_AST) {
+      System.out.println("\u001b[35;1mDATALOG:\u001b[0m");
+    }
+    List<Result> results = new ArrayList<>();
     for (Query test : tests) {
-      if (DebugHelper.VERBOSE_AST) {
-        System.out.println("\u001b[35;1mAST:\u001b[0m");
-        DebugHelper.printObjectTree(test);
-      }
-      if (DebugHelper.VERBOSE_AST) {
-        System.out.println("\u001b[35;1mDATALOG:\u001b[0m");
-      }
       List<Map<Variable, String>> resultMaps = executeQuery(test);
       List<Map<String, String>> toRet = new ArrayList<>();
       if (resultMaps != null) {
@@ -323,10 +324,11 @@ public class DatalogExecutor extends Executor {
         }
       }
       r = new Result(toRet);
-      if (DebugHelper.VERBOSE_RESULTS) {
-        r.print();
-      }
-
+      results.add(r);
+    }
+    if (DebugHelper.VERBOSE_RESULTS) {
+      System.out.println("\u001b[35;1mRESULTS:\u001b[0m");
+      r.print();
     }
     return r;
   }
