@@ -30,3 +30,23 @@ public class QueryInsert extends Query {
     isa = type;
   }
 }
+/*
+ insert
+ $p isa person
+ , has full-name "John Parkson"
+ , has gender "male"
+ , has email "john.parkson@gmail.com"
+ , has phone-number "+44-1234=567890"
+ ;
+
+ $x isa emotion;
+ $x "like";
+ (unimplemented - attribute type)
+
+ insert
+ $new-employment (employer: $org, employee: $person) isa employment;
+
+ $new-employment has reference-id "WGFTSH";
+ (unimplemented - need QueryHas class)
+ */
+

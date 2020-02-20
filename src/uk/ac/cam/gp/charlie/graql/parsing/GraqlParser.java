@@ -9,9 +9,11 @@ import java.util.Map.Entry;
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.w3c.dom.Attr;
 import uk.ac.cam.gp.charlie.DebugHelper;
 import uk.ac.cam.gp.charlie.ast.Attribute;
 import uk.ac.cam.gp.charlie.ast.AttributeValue;
+import uk.ac.cam.gp.charlie.ast.ConstantValue;
 import uk.ac.cam.gp.charlie.ast.Plays;
 import uk.ac.cam.gp.charlie.ast.Variable;
 import uk.ac.cam.gp.charlie.ast.queries.Query;
@@ -41,7 +43,7 @@ public class GraqlParser {
       });
     } else {
       //Harrison Testing
-      int mode = 4;
+      int mode = 6;
       GraqlParser re = new GraqlParser();
       List<Query> test = null;
       String graql = "";
@@ -61,6 +63,12 @@ public class GraqlParser {
         graql = "match $x isa person, has name $n; get $n;";
         Iterator<MatchResult> s = iterate(matcher(graql, "<match>"));
         s.forEachRemaining(m -> System.out.println(m.start() + ":" + m.end()));
+      }
+      if (mode == 5) {
+        graql = "insert $p isa person, has name \"Bob\";";
+      }
+      if (mode == 6) {
+        graql = "insert $x (friend:$p1, friend:$z) isa friendship;";
       }
       test = re.graqlToAST(graql);
       DebugHelper.printObjectTree(test);
@@ -102,18 +110,22 @@ public class GraqlParser {
     //A block of insert statements
     regex = regex.replace("<insert_block>","(<wso>insert(<ws><insert>)+)");
     //A single insert statement
-    regex = regex.replace("<insert>", "((<insert_entity>|<insert_rule>)((<insert_has>)*<wso>;<wso>|(<insert_attribute>)*<wso>;<wso>))");
+    regex = regex.replace("<insert>", "((<insert_entity>|<insert_rel>)(<wso><insert_has>)*<wso>;<wso>)");
     //Inserting an entity
-    regex = regex.replace("<insert_entity>", "((?<INSERTHEADIDENT><variable>)<ws>isa<ws>(?<INSERTHEADISA><identifier>))");
-    //Inserting a _RELATION_ TODO change terminology and parse this regex to AST
-    regex = regex.replace("<insert_rule>", "(((?<INSERTHEADIDENT><variable>)?)<ws><rule_identifier><ws>isa<ws>(?<INSERTHEADISA><identifier>))");
-    regex = regex.replace("<rule_identifier>", "\\(<identifier>:<ws><variable>(,<ws><identifier>:<ws><variable>)*\\)");
-    registeredTags.add("INSERTHEADIDENT");
-    registeredTags.add("INSERTHEADISA");
-    regex = regex.replace("<insert_has>", "(<wso>,<ws>has<ws>(?<INSERTHASIDENT><identifier><ws><wso><string_lit>))");
-    regex = regex.replace("<insert_attribute>", "(<wso>;<ws><wso>(?<INSERTATTIDENT><variable><ws><wso><string_lit>))");
+    regex = regex.replace("<insert_entity>", "((?<INSERTHEADIDENTENT><variable>)<ws>isa<ws>(?<INSERTHEADISAENT><identifier>))");
+    registeredTags.add("INSERTHEADIDENTENT");
+    registeredTags.add("INSERTHEADISAENT");
+    //Inserting a relation
+    regex = regex.replace("<insert_rel>", "(((?<INSERTHEADIDENTREL><variable>)?)<wso><relation_entry><wso>isa<ws>(?<INSERTHEADISAREL><identifier>))");
+    registeredTags.add("INSERTHEADIDENTREL");
+    registeredTags.add("INSERTHEADISAREL");
+    //Tags already added
+    regex = regex.replace("<insert_has>", "(,<ws>has<ws>(?<INSERTHASIDENT><identifier>)<ws><string_lit>)");
     registeredTags.add("INSERTHASIDENT");
-    registeredTags.add("INSERTATTIDENT");
+    //Todo - $x has attr "VAL"; needs to be added (not the same as has above!!!!)
+    //TODO - $x has attr $v; also needs to be added
+//    regex = regex.replace("<insert_attribute>", "(<wso>;<ws><wso>(?<INSERTATTIDENT><variable>)<ws><string_lit>)");
+//    registeredTags.add("INSERTATTIDENT");
     //</editor-fold>
 
     regex = regex.replace("<define_block>","(<wso>define(<ws>(<define>|<define_rule>))+)");
@@ -173,7 +185,8 @@ public class GraqlParser {
 
     //<editor-fold desc="Basic Definitions (variables, identifiers, whitespace, etc)">
     //String literal for inserts
-    regex = regex.replace("<string_lit>", "(\"(<char>)*\")");
+    regex = regex.replace("<string_lit>", "(\"(?<STRINGLIT>(<char>)*)\")");
+    registeredTags.add("STRINGLIT");
     //Variable - $<identifier>
     regex = regex.replace("<variable>","(\\$(?<VARIABLE><identifier>))");
     registeredTags.add("VARIABLE");
@@ -257,10 +270,73 @@ public class GraqlParser {
     ss = matches(graql,"<define_block>");
     ss.forEach(s -> toRet.addAll(parseDefineBlock(s)));
     ss = matches(graql,"<insert_block>");
-//    s.forEachRemaining(matchResult -> toRet.addAll(parseInsertBlock(graql.substring(matchResult.start(), matchResult.end()))));
+    ss.forEach(s -> toRet.addAll(parseInsertBlock(s)));
     ss = matches(graql,"<match>");
     ss.forEach(s -> toRet.add(parseMatch(s)));
     return toRet;
+  }
+
+  private static List<QueryInsert> parseInsertBlock(String graql) {
+    List<QueryInsert> toRet = new ArrayList<>();
+    List<String> ss = matches(graql,"<insert>");
+    ss.forEach(s -> toRet.add(parseInsert(s)));
+    return toRet;
+  }
+
+  private static QueryInsert parseInsert(String graql) {
+    Matcher m = matcher(graql,"<insert>","INSERTHEADIDENTENT","INSERTHEADISAENT","INSERTHEADIDENTREL","INSERTHEADISAREL");
+    m.matches();
+    String subsent = m.group("INSERTHEADISAENT");//"person"
+    String subsrel = m.group("INSERTHEADISAREL");//"person"
+    if (subsent != null ^ subsrel == null) {
+      throw new RuntimeException("Parsing error");
+    }//else only 1 null
+    String var= m.group("INSERTHEADIDENTENT");//"x";
+    String subs = subsent;
+    if (subsent == null) {
+      subs = subsrel;
+      var = m.group("INSERTHEADIDENTREL");//"x"
+    } else {
+      if (var == null) {
+        throw new RuntimeException("Somehow got a null entity return variable on insert - parsing error");
+      }
+    }
+    Variable v = null;
+    if (var != null) {
+      var = var.substring(1);
+      v = Variable.fromIdentifier(var);
+    }
+    QueryInsert q = new QueryInsert(v,subs);
+    List<String> ss = matches(graql,"<insert_has>");
+    ss.forEach(s -> {
+      Entry<Attribute,AttributeValue> entry = parseInsertHas(s);
+      q.attributes.put(entry.getKey(),entry.getValue());
+    });
+
+    ss = matches(graql,"<relation_entry>");
+    if (ss.size() != 0) {
+      String relationEntry = ss.get(0);
+      q.plays = parseRelationEntry(relationEntry);
+    }
+    return q;
+  }
+
+  private static List<Entry<Plays,Variable>> parseRelationEntry(String graql) {
+    //(lab1: $v1, lab2: $v2)
+    List<Entry<Plays,Variable>> toRet = new ArrayList<>();
+    List<String> ss = matches(graql,"<relation_subentry>");
+    ss.forEach(s -> {
+      toRet.add(parseCondition_relationsubentry(s));
+    });
+    return toRet;
+  }
+
+  private static Entry<Attribute,AttributeValue> parseInsertHas(String graql) {
+    Matcher m = matcher(graql,"<insert_has>","INSERTHASIDENT","STRINGLIT");
+    m.matches();
+    String ident = m.group("INSERTHASIDENT");//"name"
+    String lit = m.group("STRINGLIT");//"Bob"
+    return new SimpleEntry<>(Attribute.fromIdentifier(ident), ConstantValue.fromValue(lit));
   }
 
   //TODO organise the methods in this class, and surround appropriate groups with editor fold comments
@@ -305,7 +381,8 @@ public class GraqlParser {
     }
     m = matcher(graql,"<insert_block>");
     if (m.matches()) {
-//      q.setActionInsert(parseInsertBlock());
+      //TODO - should be insert block - change querymatch to have a list<insertquery>
+      q.setActionInsert(parseInsert(graql));
       return;
     }
     throw new RuntimeException("Match Action didn't match regex");
@@ -437,7 +514,6 @@ public class GraqlParser {
     });
     return cond;
   }
-
 
   private static ConditionIsa parseCondition_isa_rel(Variable retVar,String graql) {
     //(lab1: $v1, lab2: $v2) isa type1;
