@@ -10,10 +10,12 @@ import abcdatalog.parser.DatalogParser;
 import abcdatalog.parser.DatalogTokenizer;
 import com.google.common.collect.Lists;
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintStream;
 import java.io.StringReader;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -52,6 +54,7 @@ public class Workbench {
   public static void main(String[] args)
       throws Exception {
     BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+    //Loop for the main menu
     while (true) {
       System.out.println("##################################");
       System.out.println("# GraQL Basic Test Workbench CLI #");
@@ -101,6 +104,9 @@ public class Workbench {
     }
   }
 
+  /**
+   * Interactive graql prompt to the datalog parser with some preloaded AST database
+   */
   public static void interactive_datalogPreloaded()
       throws IOException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
     //TODO: does not work for now as graqlparser does not parse properly
@@ -121,7 +127,6 @@ public class Workbench {
     astShortcuts.put("\u001b[34mmatch..get\u001b[0m all names", query_matchNames());
     astShortcuts.put("\u001b[34mmatch..delete\u001b[0m Alice from the database", query_matchDelAlice());
     astShortcuts.put("\u001b[34mmatch..delete\u001b[0m unemploy Alice", query_matchDelAliceEmployment());
-    //astShortcuts.put("\u001b[34mdefine rule\u001b[0m to make people coworkers",query_insertRule_coworkers());
     astShortcuts.put("\u001b[34mmatch..delete\u001b[0m Bob-Charlie coworkers relation",query_matchDelBC_coworkers());
     astShortcuts.put("\u001b[34mmatch..insert\u001b[0m employ Bob",query_match_employ_b());
     astShortcuts.put("\u001b[34mmatch..insert\u001b[0m employ Charlie",query_match_employ_c());
@@ -143,6 +148,9 @@ public class Workbench {
 
   }
 
+  /**
+   * Basic prompt to execute datalog, not particularly interactive atm, largely used for debugging
+   */
   public static void interactive_datalog()
       throws Exception {
     //TODO: does not work for now as graqlparser does not parse properly
@@ -156,9 +164,6 @@ public class Workbench {
     init += "instancerel(r_1,e_2,employee).";
     init += "instancerel(r_2,e_1,employer).";
     init += "instancerel(r_2,e_3,employee).";
-//    init += "instanceof(r_3,coworkers).";
-//    init += "instancerel(r_3,e_2,employee).";
-//    init += "instancerel(r_3,e_3,employee).";
     init += "invariant_1(P1,P2) :- instanceof (X,employment),\n"
         + "                        instancerel(X,P1,employee),\n"
         + "                        instancerel(X,Y ,employer),\n"
@@ -170,7 +175,6 @@ public class Workbench {
         + "invariant_1_inv(P1,P2) :-  instanceof(W,coworkers),\n"
         + "                          instancerel(W,P1,employee),\n"
         + "                          instancerel(W,P2,employee).";
-//    init += "isa(e_4,person).";
     String query = "invariant_1(P1,P2).";
     de.init(DatalogParser.parseProgram(new DatalogTokenizer(new StringReader(init))));
     Set<PositiveAtom> b = de.query(
@@ -178,6 +182,9 @@ public class Workbench {
     System.out.println(b);
   }
 
+  /**
+   * Run an interactive graql->datalog prompt with full verbosity
+   */
   public static void interactive_basic()
       throws IOException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
     //TODO: does not work for now as graqlparser does not parse properly
@@ -194,11 +201,19 @@ public class Workbench {
     DebugHelper.VERBOSE_RESULTS = false;
   }
 
+  /**
+   * Initiate a basic interactive graql console with a specified executor
+   * @param de
+   */
   private static void interactiveLoop(DatalogExecutor de)
       throws IOException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
     interactiveLoop(de, new HashMap<>(),new HashMap<>());
   }
 
+  /**
+   * Initiate a basic interactive graql console with a specified executor and shortcuts
+   * @param de
+   */
   private static void interactiveLoop(DatalogExecutor de, Map<String, Query> astShortcuts, Map<String, String> graqlShortcuts)
       throws IOException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
     BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
@@ -334,10 +349,13 @@ public class Workbench {
 
     TestEnvironment env = new TestEnvironment(readFile.apply("social_network_schema.gql"),
         readFile.apply("social_network_data.gql"));
+    PrintStream ps = System.out;
+    System.setOut(new PrintStream(new ByteArrayOutputStream()));
     GraqlExecutor graqlExecutor = new GraqlExecutor(env);
     Result result = graqlExecutor.execute(readFile.apply("social_network_queries.gql"));
-    result.print();
     Thread.sleep(1000);
+    System.setOut(ps); //un-absorb output
+    result.print();
   }
 
   private static Query query_matchNames() {

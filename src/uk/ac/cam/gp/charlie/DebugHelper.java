@@ -16,10 +16,10 @@ public class DebugHelper {
   public static boolean VERBOSE_RESULTS = false;
 
   /**
-   * If there's cycles this'll break horrendously, use this to print an AST in a (nice enough) way
+   * This will truncate the tree to depth 10, use this to print a tree in a (nice enough) way
    */
   public static void printObjectTree(Object o) {
-    printObjectTree(o, 1);
+    printObjectTree(o, 0,10);
   }
 
   private static String idnt(int idnt) {
@@ -31,100 +31,115 @@ public class DebugHelper {
   }
 
 
-  private static void printObjectTree(Object o, int idnt) {
-    try {
+  private static void printObjectTree(Object o, int idnt, int cycles) {
+    cycles--;
+    //ASSERT: The cursor is on a line, at the correct indent level for text to start,
+    //idnt(idnt) will align text as recommended by the parent,
+    //this returns at end of written line to the parent
+    if (cycles == 0) {
+      System.out.print("[Maximum output depth reached for AST]");
+      return;
+    }
+    try { //specific classes has custom output
       if (o instanceof List) {
         List l = (List) o;
         if (l.size() == 0) {
           System.out.println("[]");
           return;
         }
-        System.out.println();
-        idnt--;
-        System.out.println(idnt(idnt) + "[");
-        idnt++;
+        System.out.println("[");
         for (Object item : l) {
-          printObjectTree(item, idnt);
+          System.out.print(idnt(idnt));
+          printObjectTree(item, idnt,cycles);
+          System.out.println();
         }
         idnt--;
-        System.out.println(idnt(idnt) + "]");
+        System.out.print(idnt(idnt) + "]");
         return;
       }
       if (o instanceof Map) {
         Map m = (Map) o;
         if (m.size() == 0) {
-          System.out.println("{}");
+          System.out.print("{}");
           return;
         }
-        System.out.println();
-        idnt--;
-        System.out.println(idnt(idnt) + "{");
-        idnt++;
+        System.out.println("{");
         for (Object item : m.entrySet()) {
-          printObjectTree(item, idnt);
+          System.out.print(idnt(idnt));
+          printObjectTree(item, idnt,cycles);
+          System.out.println();
         }
         idnt--;
-        System.out.println(idnt(idnt) + "}");
+        System.out.print(idnt(idnt) + "}");
         return;
       }
       if (o instanceof String) {
-        System.out.println("{" + o + "}");
+        System.out.print("\"" + o + "\"");
         return;
       }
       if (o == null) {
-        System.out.println(idnt(idnt) + "[null]");
+        System.out.print("<<null>>");
         return;
       }
+      //Else arbitrary class, with some fields.
       Field[] fields = o.getClass().getFields();
-      if (fields.length == 1) {
-        if (fields[0].get(o) instanceof String) {
-          System.out.println(
-              idnt(idnt) + o.getClass().getSimpleName() + "{" + ((String) fields[0].get(o))
-                  .replaceAll("\n", "\\n") + "}");
-          return;
-        }
-      }
-      System.out.print(idnt(idnt) + o.getClass().getSimpleName());
+      //Print the class name
+      System.out.print(o.getClass().getSimpleName());
+      //If simple classes, or special classes, display content in a particular way
       if (o instanceof Variable) {
         Field f = o.getClass().getDeclaredField("identifier");
         f.setAccessible(true);
         String ident = (String) f.get(o);
-        System.out.println("($"+ident+")");
+        System.out.print("($"+ident+")");
+        return;
       } else if (o instanceof Map.Entry) {
-        printObjectTree(((Entry) o).getKey());
-        System.out.print(idnt(idnt) + "         ->");
-        printObjectTree(((Entry) o).getValue());
-        System.out.println();
+        printObjectTree(((Entry) o).getKey(),idnt,cycles);
+        System.out.print("->");
+        printObjectTree(((Entry) o).getValue(),idnt,cycles);
+        return;
       } else if (o instanceof QueryMatch) {
         Field f = o.getClass().getDeclaredField("action");
         f.setAccessible(true);
         Action acc = ((Action) f.get(o));
-        System.out.println("("+acc.name()+")");
+        System.out.print("("+acc.name()+") ");
         switch (acc) {
           case GET:
-            printObjectTree(((QueryMatch)o).getDATA_GET());
+            printObjectTree(((QueryMatch)o).getDATA_GET(),idnt+1,cycles);
             break;
           case DELETE:
-            printObjectTree(((QueryMatch)o).getDATA_DELETE());
+            printObjectTree(((QueryMatch)o).getDATA_DELETE(),idnt+1,cycles);
             break;
           case INSERT:
-            printObjectTree(((QueryMatch)o).getDATA_INSERT());
+            printObjectTree(((QueryMatch)o).getDATA_INSERT(),idnt+1,cycles);
             break;
         }
-      } else {
         System.out.println();
-      }
-      idnt++;
-      for (Field f : fields) {
-        if (!Modifier.isStatic(f.getModifiers()) || !Modifier.isFinal(f.getModifiers())) {
-          System.out.print(idnt(idnt) + f.getName() + ":");
-          idnt++;
-          printObjectTree(f.get(o), idnt);
-          idnt--;
-        }//else static final fields are ignored
+        System.out.print(idnt(idnt)+"MATCH ");
+        printObjectTree(((QueryMatch) o).conditions,idnt+1,cycles);
+        return;
+      } else {
+        //not a known class, dump fields
+        //only 1 field - display inline
+        if (fields.length == 1) {
+          if (fields[0].get(o) instanceof String) {
+            System.out.print("{" + ((String) fields[0].get(o))
+                    .replaceAll("\n", "\\n") + "}");
+            return;
+          }
+        }
+        //otherwise multiple fields, display in a block
+        System.out.println(" {");
+        for (Field f : fields) {
+          if (!Modifier.isStatic(f.getModifiers()) || !Modifier.isFinal(f.getModifiers())) {
+            System.out.print(idnt(idnt+1) + f.getName() + ":");
+            printObjectTree(f.get(o), idnt+2,cycles);
+            System.out.println();
+          }//else static final fields are ignored
+        }
+        System.out.print(idnt(idnt)+"}");
       }
     } catch (IllegalAccessException | NoSuchFieldException e) {
-      System.out.print("#");
+      System.out.print("#ERROR WHILE FETCHING#");
     }
   }
 

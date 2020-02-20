@@ -79,3 +79,115 @@ public class QueryMatch extends Query {
   }
 
 }
+/*
+Currently syntax:
+match::=
+match
+  (<match-condition>;)+
+  <match-action>
+
+match-condition::=
+  $emp (employer: $org, employee: $p) isa employment;
+  $emp (employer: $x, employee: $y) isa employment;
+  <rel_ent__isa_condition>
+
+  (employer: $x, employee: $y) isa employment;
+  <rel_isa_condition>
+
+  $y isa person, has full-name $y-fn, has phone-number $y-pn;
+  $p isa person, has full-name $fn;
+  $p isa person, has full-name $n;
+  $org isa organisation, has name "Facelook";
+  $person isa person, has email "tanya.arnold@gmail.com";
+  $org isa organisation, has name "Pharos";
+  $p isa person, has email "raphael.santos@gmail.com";
+  $p isa person;
+  $p isa person, has nickname $nn, has full-name $fn;
+  <isa-has-condition>
+
+match-action::=
+	get;
+	<get-all>
+
+	get $x-fn, $y-fn, $y-pn;
+	<get-some>
+
+	get; sort $fn; offset 100; limit 10;
+	get; sort $fn asc;
+	get; limit 1;
+	(limitations, sorting, etc on get currently unimplemented)
+
+	insert $new-employment (employer: $org, employee: $person) isa employment;
+  $new-employment has reference-id "WGFTSH";
+  	<insert-block>
+
+	delete $p;
+	delete $emp;
+	delete $r;
+	<delete>
+##################################
+
+  $emp (employer: $x, employee: $y) isa employment, has reference-id $ref;
+  (relations with attributes not currently implemented)
+
+  $fr ($x, $y) isa friendship;
+  (label-less relations not currently implemented well)
+
+  $x-fn contains "Miriam";
+  $phone-number contains "+44";
+  (contains)
+
+  $t isa travel, has start-date 2013-12-22 via $r;
+  (via)
+
+  $x "like";
+  $n isa nickname; $n "Mitzi";
+  (variable-value not currently implemented as a condition)
+
+  $x like "(Miriam Morton|Solomon Tran)";
+  (regex like not implemented)
+
+  $s isa school, has ranking < 100;
+  $s isa school, has ranking $r; $r < 100;
+  (numerical comparison not implemented)
+
+  $p isa person, has full-name $fn; { $fn contains "Miriam"; } or { $fn contains "Solomon"; };
+  (block optionals (and negations) not currently implemented)
+
+  $rr isa! romantic-relationship;  (directly isa)
+  $x sub! post;
+  (direct relations not currently implementeD)
+
+  $x id V41016;
+  (ids exposed in datalog not the same as graql)
+
+  $x sub post;
+  $x type post;
+  (type matching not supported currently)
+
+  employment relates $x;
+  location-of-office relates $x as located-subject;
+  $x plays employee;
+  $x has title;
+  (whatever this is is also not supported)
+
+<match-action>:
+get; sort $fn; offset 100; limit 10;
+get; sort $fn asc;
+get $x-fn, $y-fn, $y-pn;
+get; limit 1;
+insert $new-employment (employer: $org, employee: $person) isa employment;
+  $new-employment has reference-id "WGFTSH";
+delete $p;
+delete $emp;
+delete $r;
+
+
+
+
+
+
+
+
+
+ */
