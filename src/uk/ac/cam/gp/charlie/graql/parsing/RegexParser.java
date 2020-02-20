@@ -4,6 +4,7 @@ import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.Map.Entry;
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
@@ -25,59 +26,80 @@ import uk.ac.cam.gp.charlie.ast.queries.match.QueryMatch;
 public class RegexParser extends GraqlParser {
 
   public static void main(String[] args) {
-    int mode = 4;
-    RegexParser re = new RegexParser();
-    List<Query> test=null;
-    String graql = "";
-    if (mode == 0) {
-      graql = "define person sub entity, has name;";
+    boolean testA = false;
+    if (testA) {
+      //Charles Testing
+      iterate(matcher("insert $new-employment (employer: $org, employee: $person) isa employment;\n", regex("<insert_block>"))).forEachRemaining(new Consumer<MatchResult>() {
+        @Override
+        public void accept(MatchResult matchResult) {
+          System.out.println(matchResult.start()+":"+matchResult.end());
+        }
+      });
+    } else {
+      //Harrison Testing
+      int mode = 4;
+      RegexParser re = new RegexParser();
+      List<Query> test = null;
+      String graql = "";
+      if (mode == 0) {
+        graql = "define person sub entity, has name;";
+      }
+      if (mode == 1) {
+        graql = "define rule-a sub rule, when { $x isa person; $y isa person; }, then {(friend:$x,friend:$y) isa friends;};";
+      }
+      if (mode == 2) {
+        graql = "match $x isa person, has name $n; get $n;";
+      }
+      if (mode == 4) {
+        graql = "match (employee: $x) isa employment; delete $x;";
+      }
+      if (mode == 3) {
+        graql = "match $x isa person, has name $n; get $n;";
+        Iterator<MatchResult> s = iterate(matcher(graql, "<match>"));
+        s.forEachRemaining(m -> System.out.println(m.start() + ":" + m.end()));
+      }
+      test = re.graqlToAST(graql);
+      DebugHelper.printObjectTree(test);
     }
-    if (mode == 1) {
-      graql = "define rule-a sub rule, when { $x isa person; $y isa person; }, then {(friend:$x,friend:$y) isa friends;};";
-    }
-    if (mode == 2) {
-      graql = "match $x isa person, has name $n; get $n;";
-    }
-    if (mode == 4) {
-      graql = "match (employee: $x) isa employment; delete $x;";
-    }
-    if (mode == 3) {
-      graql = "match $x isa person, has name $n; get $n;";
-      Iterator<MatchResult> s = iterate(matcher(graql,"<match>"));
-      s.forEachRemaining(m -> System.out.println(m.start()+":"+m.end()));
-    }
-    test = re.graqlToAST(graql);
-    DebugHelper.printObjectTree(test);
   }
 
   private static String regex(String regex, String... tags) {
     //Create a list of tags this regex may have, all not in the 'tags' param will be deleted from the string
     List<String> registeredTags = new ArrayList<>();
+    //The graql can be considered a <block>*
     regex = regex.replace("<block>","(<define_block>|<insert_block>|<match>)");
 
-
-
     //<editor-fold desc="Match statements">
+    //A match statement
     regex = regex.replace("<match>","(<wso>match<ws>(?<MATCHCONDS>(<wso><match_condition>)+)<wso>(?<MATCHACT><match_action>))");
     registeredTags.add("MATCHCONDS");
     registeredTags.add("MATCHACT");
+    //A condition within the 'match' body
     regex = regex.replace("<match_condition>","(<neq_condition>|<isa_has_condition>|<rel_ent_isa_condition>|<rel_isa_condition>)");
+    //An action to take based on the match
     regex = regex.replace("<match_action>","(<get_all>|<get_some>|<insert_block>|<delete>)");
-
+    //Actions
     regex = regex.replace("<get_all>","(get<wso>;)");
     regex = regex.replace("<get_some>","(get<wso><variable>(<wso>,<wso><variable>)*<wso>;)");
     regex = regex.replace("<delete>","(delete<ws><variable><wso>;)");
     //</editor-fold>
 
-
     //<editor-fold desc="Insert statements">
-    regex = regex.replace("<insert_block>","(NONMATCHINGSEQUENCE)");//placeholder
-    //</editor-fold>
-
-    //<editor-fold desc="Conditions (for Matches and Rules)">
-    regex = regex.replace("<isa_has_condition>","((?<ISAHAS1><variable>)<ws>isa<ws>(?<ISAHAS2><identifier>)(,<wso><has_subcondition>)*;)");
-    registeredTags.add("ISAHAS1");
-    registeredTags.add("ISAHAS2");
+    //A block of insert statements
+    regex = regex.replace("<insert_block>","(<wso>insert(<ws><insert>)+)");
+    //A single insert statement
+    regex = regex.replace("<insert>", "((<insert_entity>|<insert_rule>)((<insert_has>)*<wso>;<wso>|(<insert_attribute>)*<wso>;<wso>))");
+    //Inserting an entity
+    regex = regex.replace("<insert_entity>", "((?<INSERTHEADIDENT><variable>)<ws>isa<ws>(?<INSERTHEADISA><identifier>))");
+    //Inserting a _RELATION_
+    regex = regex.replace("<insert_rule>", "(((?<INSERTHEADIDENT><variable>)?)<ws><rule_identifier><ws>isa<ws>(?<INSERTHEADISA><identifier>))");
+    regex = regex.replace("<rule_identifier>", "\\(<identifier>:<ws><variable>(,<ws><identifier>:<ws><variable>)*\\)");
+    registeredTags.add("INSERTHEADIDENT");
+    registeredTags.add("INSERTHEADISA");
+    regex = regex.replace("<insert_has>", "(<wso>,<ws>has<ws>(?<INSERTHASIDENT><identifier><ws><wso><string_lit>))");
+    regex = regex.replace("<insert_attribute>", "(<wso>;<ws><wso>(?<INSERTATTIDENT><variable><ws><wso><string_lit>))");
+    registeredTags.add("INSERTHASIDENT");
+    registeredTags.add("INSERTATTIDENT");
     //</editor-fold>
 
     regex = regex.replace("<define_block>","(<wso>define(<ws>(<define>|<define_rule>))+)");
@@ -95,22 +117,32 @@ public class RegexParser extends GraqlParser {
     registeredTags.add("HASSUB2");
     //</editor-fold>
 
+    //<editor-fold desc="Conditions (for Matches and Rules)">
+    //$x isa type, has attr $val, has attr "lit";
+    regex = regex.replace("<isa_has_condition>","((?<ISAHAS1><variable>)<ws>isa<ws>(?<ISAHAS2><identifier>)(,<wso><has_subcondition>)*;)");
+    registeredTags.add("ISAHAS1");
+    registeredTags.add("ISAHAS2");
+    //$x != $y
     regex = regex.replace("<neq_condition>","((?<NEQ1><variable>)<wso>!=<wso>(?<NEQ2><variable>)<wso>;)");
     registeredTags.add("NEQ1");
     registeredTags.add("NEQ2");
+    //$x isa type;
     regex = regex.replace("<ent_isa_condition>","((?<ENT1><variable>)<ws>isa<ws>(?<ENT2><identifier>)<wso>;)");
     registeredTags.add("ENT1");
     registeredTags.add("ENT2");
+    //$x (lab1:$v1,lab2:$v2) isa type;
     regex = regex.replace("<rel_ent_isa_condition>","((?<REL2><variable>)<wso><rel_isa_condition>)");
     registeredTags.add("REL2");
+    //(lab1: $v1, lab2: $v2) isa type;
     regex = regex.replace("<rel_isa_condition>","(<relation_entry><wso>isa<ws>(?<REL1><identifier>)<wso>;)");
     registeredTags.add("REL1");
+    //(lab1: $v1, lab2: $v2) //[Used in above conditions]
     regex = regex.replace("<relation_entry>","(\\(<relation_subentry>(,<wso><relation_subentry>)*\\))");
+    //lab1: $v1 //[Used in above conditions]
     regex = regex.replace("<relation_subentry>","(<wso>(?<RELSUB1><identifier>)<wso>:<wso>(?<RELSUB2><variable>)<wso>)");
     registeredTags.add("RELSUB1");
     registeredTags.add("RELSUB2");
     //</editor-fold>
-
 
     //<editor-fold desc="Defines for entities and relations">
     regex = regex.replace("<define>","(((?<DEFINEHEADIDENT><identifier>)<ws>sub<ws>(?<DEFINEHEADSUBS><identifier>))(<define_has>|<define_plays>|<define_relates>)*<wso>;)");
@@ -125,13 +157,16 @@ public class RegexParser extends GraqlParser {
     registeredTags.add("DEFINEHASIDENT");
     //</editor-fold>
 
-
     //<editor-fold desc="Basic Definitions (variables, identifiers, whitespace, etc)">
+    //String literal for inserts
+    regex = regex.replace("<string_lit>", "(\"(<char>)*\")");
     //Variable - $<identifier>
     regex = regex.replace("<variable>","(\\$(?<VARIABLE><identifier>))");
     registeredTags.add("VARIABLE");
     //Identifier - <alpha><alphanum>*
     regex = regex.replace("<identifier>","(<alpha>(<alphanum>)*)");
+    //standard character, for strings
+    regex = regex.replace("<char>","(<alphanum>|<ws>|=|\\+|@|\\.)");
     //Alphanumeric character (or _,-)
     regex = regex.replace("<alphanum>","(<alpha>|<num>|-)");
     //Numeric character
