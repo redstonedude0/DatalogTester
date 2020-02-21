@@ -31,10 +31,10 @@ public class GraqlParser {
 
   //TODO remove testing method (move to unit tests)
   public static void main(String[] args) {
-    boolean testA = false;
+    boolean testA = true;
     if (testA) {
       //Charles Testing
-      iterate(matcher("insert $new-employment (employer: $org, employee: $person) isa employment;\n", regex("<insert_block>"))).forEachRemaining(new Consumer<MatchResult>() {
+      iterate(matcher(" $x isa person; $y isa person;", regex("(<ws>((<insert_entity>|<insert_rel>)(<wso><insert_has>)*<wso>;))+"))).forEachRemaining(new Consumer<MatchResult>() {
         @Override
         public void accept(MatchResult matchResult) {
           System.out.println(matchResult.start()+":"+matchResult.end());
@@ -113,9 +113,9 @@ public class GraqlParser {
 
     //<editor-fold desc="Insert statements">
     //A block of insert statements
-    regex = regex.replace("<insert_block>","(<wso>insert(<ws><insert>)+)");
+    regex = regex.replace("<insert_block>","(<wso>insert(<ws><insert>)+<wso>)");
     //A single insert statement
-    regex = regex.replace("<insert>", "((<insert_entity>|<insert_rel>)(<wso><insert_has>)*<wso>;<wso>)");
+    regex = regex.replace("<insert>", "((<insert_entity>|<insert_rel>)(<wso><insert_has>)*<wso>;)");
     //Inserting an entity
     regex = regex.replace("<insert_entity>", "((?<INSERTHEADIDENTENT><variable>)<ws>isa<ws>(?<INSERTHEADISAENT><identifier>))");
     registeredTags.add("INSERTHEADIDENTENT");

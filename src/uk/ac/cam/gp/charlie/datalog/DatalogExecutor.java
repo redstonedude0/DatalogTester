@@ -16,6 +16,8 @@ import java.util.Set;
 import uk.ac.cam.gp.charlie.DebugHelper;
 import uk.ac.cam.gp.charlie.Executor;
 import uk.ac.cam.gp.charlie.Result;
+import uk.ac.cam.gp.charlie.Result.ResultValue;
+import uk.ac.cam.gp.charlie.Result.ResultValue.Type;
 import uk.ac.cam.gp.charlie.TestEnvironment;
 import uk.ac.cam.gp.charlie.Workbench;
 import uk.ac.cam.gp.charlie.ast.Variable;
@@ -145,6 +147,7 @@ public class DatalogExecutor extends Executor {
               System.out.println("\u001b[33;1mResults of query:\u001b[0m");
             }
             List<Map<Variable, String>> toRet = new ArrayList<>();
+            List<Variable> variablesToGet = ((QueryMatch) q).getDATA_GET();
             for (PositiveAtom result : results) {
               if (DebugHelper.VERBOSE_DATALOG) {
                 System.out.println("Match:");
@@ -157,22 +160,12 @@ public class DatalogExecutor extends Executor {
                 String boundValue = s.get(abcdatalog.ast.Variable.create("Var" + i)).toString();
                 //add to result map
                 Integer boundInt = Integer.parseInt(boundValue.split("_")[1]);
-                if (boundValue.startsWith("e_") || boundValue.startsWith("r_")) {
-                  //'Thing' -> not stored in resultMap
-                  if (DebugHelper.VERBOSE_DATALOG) {
-                    System.out.println(
-                        " _$" + Variable.getIdentifier(v) + " => \u001b[35m{" + boundInt
-                            + "}\u001b[0m");
-                  }
-                } else if (boundValue.startsWith("const_")) {
-                  resultMap.put(v, c.getConstantFromID(boundInt).value + "");
-                  if (DebugHelper.VERBOSE_DATALOG) {
-                    System.out.println("  $" + Variable.getIdentifier(v) + " => \u001b[33m" + c
-                        .getConstantFromID(boundInt).value + "\u001b[0m");
-                  }
-                } else {
-                  throw new RuntimeException(
-                      "Invalid returned object (unimplemented): " + boundValue);
+                if (variablesToGet.size() == 0 || variablesToGet.contains(v)) {
+                  //put bound value regardless of type of concept
+                  resultMap.put(v,boundValue);
+                  System.out.println(
+                      "  $" + Variable.getIdentifier(v) + " => \u001b[35m{" + boundValue
+                          + "}\u001b[0m");
                 }
               }
               toRet.add(resultMap);
@@ -282,6 +275,11 @@ public class DatalogExecutor extends Executor {
    * @param environment the environment the tests will be run in (schema+data)
    */
   public DatalogExecutor(TestEnvironment environment) {
+    execute(environment.schema);
+    execute(environment.data);
+/*    if (true) {
+      return;
+    }
     //Convert the Graql environment to a Context
     List<Query> schema = parser.graqlToAST(environment.schema);
     List<Query> data = parser.graqlToAST(environment.data);
@@ -291,7 +289,7 @@ public class DatalogExecutor extends Executor {
     }
     for (Query q : data) {
       executeQuery(q);
-    }
+    }*/
   }
 
   @Override
@@ -313,12 +311,24 @@ public class DatalogExecutor extends Executor {
     List<Result> results = new ArrayList<>();
     for (Query test : tests) {
       List<Map<Variable, String>> resultMaps = executeQuery(test);
-      List<Map<String, String>> toRet = new ArrayList<>();
+      List<Map<String, ResultValue>> toRet = new ArrayList<>();
       if (resultMaps != null) {
         for (Map<Variable, String> resultMap : resultMaps) {
-          Map<String, String> newMap = new HashMap<>();
+          Map<String, ResultValue> newMap = new HashMap<>();
           for (Entry<Variable, String> result : resultMap.entrySet()) {
-            newMap.put(Variable.getIdentifier(result.getKey()), result.getValue());
+            ResultValue rv = null;
+            String value = result.getValue();
+            Integer id = -1;
+            String[] splits = value.split("_");
+            id = Integer.parseInt(splits[splits.length-1]);
+            if (value.startsWith("const_")) {
+              rv = new ResultValue(Type.ATTRIBUTE);
+              rv.value = c.getConstantFromID(id).value.toString();
+            } else if (value.startsWith("e_")) {
+              rv = new ResultValue(Type.ENTITY);
+              rv.value = value;
+            }
+            newMap.put(Variable.getIdentifier(result.getKey()), rv);
           }
           toRet.add(newMap);
         }

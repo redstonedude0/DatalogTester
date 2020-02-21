@@ -71,6 +71,7 @@ public class Workbench {
       System.out.println("    (6) Run stock Graql->AST test");
       System.out.println("    (7) Run GRAKN graql test");
       System.out.println("    [8] Interactive Datalog Interface");
+      System.out.println("    [9] Interactive Comparison Tests");
 
       String input = br.readLine();
       switch (input) {
@@ -97,6 +98,9 @@ public class Workbench {
           break;
         case "8":
           interactive_datalog();
+          break;
+        case "9":
+          interactive_comparison();
           break;
         default:
           System.out.println("Unknown input " + input);
@@ -333,6 +337,44 @@ public class Workbench {
         }
       }
       de.execute(input);
+    }
+  }
+
+  /**
+   * Load test file and allow for comparison tests
+   * NOTE: Might not like initialising 2 engines :/
+   */
+  private static void interactive_comparison()
+      throws Exception {
+    BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+    List<File> files = TestLoader.listFiles();
+    loop:
+    while (true) {
+      System.out.println("Enter a number to run, or 'exit', or 'debug'");
+      int id = 0;
+      for (File f : files) {
+        System.out.println(id + ") \u001b[34m" + f.getName()+ "\u001b[0m");
+        id++;
+      }
+      String input = br.readLine();
+      if (input.equals("exit")) {
+        break;
+      }
+      if (input.equals("debug")) {
+        DebugHelper.VERBOSE_RESULTS = true;
+        DebugHelper.VERBOSE_AST = true;
+        DebugHelper.VERBOSE_DATALOG = true;
+        continue loop;
+      }
+      id = 0;
+      Integer selected = Integer.parseInt(input);
+      for (File f: files) {
+        if (selected == id) {
+          TestLoader.runComparisonTests(f);
+          continue loop;
+        }
+        id++;
+      }
     }
   }
 
