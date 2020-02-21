@@ -157,7 +157,7 @@ public class DatalogExecutor extends Executor {
                 String boundValue = s.get(abcdatalog.ast.Variable.create("Var" + i)).toString();
                 //add to result map
                 Integer boundInt = Integer.parseInt(boundValue.split("_")[1]);
-                if (boundValue.startsWith("e_")) {
+                if (boundValue.startsWith("e_") || boundValue.startsWith("r_")) {
                   //'Thing' -> not stored in resultMap
                   if (DebugHelper.VERBOSE_DATALOG) {
                     System.out.println(

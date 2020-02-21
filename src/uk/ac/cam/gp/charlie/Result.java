@@ -33,9 +33,21 @@ public class Result {
       for (ConceptMap map : mapList) {
         Map<String, String> result = new HashMap<>();
         for (Entry<Variable, Concept> entry : map.map().entrySet()) {
-          result.put(entry.getKey().name(), entry.getValue().asAttribute().value().toString());
-          System.out
-              .println(entry.getKey().name() + " : " + entry.getValue().asAttribute().value());
+          Concept concept = entry.getValue();
+          if (concept.isAttribute()) {
+            result.put(entry.getKey().name(), entry.getValue().asAttribute().value().toString());
+          } else {
+            System.out.println("Unknown concept " + concept.id().getValue());
+            System.out.println("isAttrType " + concept.isAttributeType());
+            System.out.println("isEnt " + concept.isEntity());
+            System.out.println("isEntType " + concept.isEntityType());
+            System.out.println("isRel " + concept.isRelation());
+            System.out.println("isRelType " + concept.isRelationType());
+            System.out.println("isRole " + concept.isRole());
+            System.out.println("isRule " + concept.isRule());
+            System.out.println("isThing " + concept.isThing());
+            System.out.println("isType " + concept.isType());
+          }
         }
         results.add(result);
       }

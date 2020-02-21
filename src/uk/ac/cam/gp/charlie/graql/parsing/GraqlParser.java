@@ -171,8 +171,10 @@ public class GraqlParser {
     registeredTags.add("REL1");
     //(lab1: $v1, lab2: $v2) //[Used in above conditions]
     regex = regex.replace("<relation_entry>","(\\(<relation_subentry>(,<wso><relation_subentry>)*\\))");
+    //Note that the relation_subentry permits labels to be omitted in regex,
+    //however this isn't valid for an insert - only a match.
     //lab1: $v1 //[Used in above conditions]
-    regex = regex.replace("<relation_subentry>","(<wso>(?<RELSUB1><identifier>)<wso>:<wso>(?<RELSUB2><variable>)<wso>)");
+    regex = regex.replace("<relation_subentry>","(<wso>(((?<RELSUB1><identifier>)<wso>:<wso>)?)(?<RELSUB2><variable>)<wso>)");
     registeredTags.add("RELSUB1");
     registeredTags.add("RELSUB2");
     //</editor-fold>
@@ -576,10 +578,14 @@ public class GraqlParser {
     //lab1: $v1
     Matcher m = matcher(graql,"<relation_subentry>","RELSUB1","RELSUB2");
     m.matches();
-    String lab = m.group("RELSUB1");//"lab1"
+    String lab = m.group("RELSUB1");//"lab1"//may not exist
     String var = m.group("RELSUB2");//"$v1"
+    Plays plays = null;
+    if (lab != null) {
+      plays = Plays.fromIdentifier(lab);
+    }
     var = var.substring(1);
-    return new SimpleEntry<>(Plays.fromIdentifier(lab), Variable.fromIdentifier(var));
+    return new SimpleEntry<>(plays, Variable.fromIdentifier(var));
   }
 
   private static ConditionIsa parseCondition_has(String graql) {

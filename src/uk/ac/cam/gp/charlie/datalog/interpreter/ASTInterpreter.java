@@ -245,8 +245,17 @@ public class ASTInterpreter {
           } else {
             relates_s = "e_" + i;
           }
-          datalogConditions.add(String
-              .format("instancerel(%s,%s,r_%d)", varString,relates_s,c.getPlaysNumber(entry.getKey())));
+          Plays plays = entry.getKey();
+          if (plays != null) {
+            datalogConditions.add(String
+                .format("instancerel(%s,%s,r_%d)", varString, relates_s,
+                    c.getPlaysNumber(plays)));
+          } else {
+            String relVarString = "Var"+c.getVariableNumber(null);
+            vars.add(relVarString);
+            datalogConditions.add(String
+                .format("instancerel(%s,%s,%s)", varString, relates_s, relVarString));
+          }
         }
       } else if (mc instanceof ConditionNeq) {
         //NotEQual condition
