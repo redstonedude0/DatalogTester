@@ -1,14 +1,16 @@
 package uk.ac.cam.gp.charlie.query_generator;
 
+import uk.ac.cam.gp.charlie.graql.GraqlExecutor;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
 public class QueryGenerator {
-    private static final int N_ENTITIES = 10;
-    private static final int N_RELATIONS = 5;
-    private static final int OBJS_PER_ENTITY = 10;
-    private static final int OBJS_PER_RELATION = 100;
+    private static final int N_ENTITIES = 5;
+    private static final int N_RELATIONS = 3;
+    private static final int OBJS_PER_ENTITY = 5;
+    private static final int OBJS_PER_RELATION = 10;
 
     public static TestSet generateTestSet(){
         Random random = new Random();
@@ -28,8 +30,18 @@ public class QueryGenerator {
             entity.isChild(entities.get(random.nextInt(entities.size())));
             String str = "define " + entity.name + " sub " +
                     (entity.parent == null ? "entity" : entity.parent.name) +
-                    ", plays " + entity.name + ", has name;";
+                    ", plays " + entity.name + "R, has name;";
             graqlSchema.add(str);
+        }
+
+        {
+            // needed for the relations to be defined
+            String str = "define " + randomString() + " sub relation";
+            for(Entity e: entities){
+                str += ", relates " + e.name + "R";
+            }
+            str += ";";
+            graqlSchema.add(0, str);
         }
 
         // generate relations
@@ -42,7 +54,7 @@ public class QueryGenerator {
             }
             String str = "define " + relation.name + " sub relation";
             for(Entity e: relation.players){
-                str += ", relates " + e.name;
+                str += ", relates " + e.name + "R";
             }
             str += ";";
             relations.add(relation);
@@ -71,17 +83,21 @@ public class QueryGenerator {
                 }
                 str += " insert $" + randomString() + " (";
                 for(Entity e: r.players){
-                    str += " " + e.name + ": $" + e.name + ", ";
+                    str += " " + e.name + "R: $" + e.name + ", ";
                 }
+                str = str.substring(0, str.length()-2); // remove last comma
                 str += ") isa " + r.name + "; ";
                 graqlData.add(str);
             }
         }
 
+        List<String> graqlQueries = new ArrayList<>();
+
+
         graqlSchema.forEach(System.out::println);
         graqlData.forEach(System.out::println);
 
-        return new TestSet();
+        return new TestSet(graqlSchema, graqlData, graqlQueries);
     }
 
 
@@ -98,7 +114,9 @@ public class QueryGenerator {
     }
 
     public static void main(String[] args) {
-        generateTestSet();
+        TestSet ts = generateTestSet();
+        GraqlExecutor gex = new GraqlExecutor(ts.env);
+
     }
 
 }

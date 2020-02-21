@@ -28,13 +28,17 @@ public class GraqlExecutor extends Executor {
     GraknClient client = new GraknClient("localhost:48555");
     session = client.session(randomString());
 
+    System.out.println("Running:" + environment.schema);
     GraknClient.Transaction schemaTxn = session.transaction().write();
     parseList(environment.schema).forEach(schemaTxn::execute);
     schemaTxn.commit();
 
-    GraknClient.Transaction dataTxn = session.transaction().write();
-    parseList(environment.data).forEach(dataTxn::execute);
-    dataTxn.commit();
+    if(environment.data.length() > 0) {
+      System.out.println("Running:" + environment.data);
+      GraknClient.Transaction dataTxn = session.transaction().write();
+      parseList(environment.data).forEach(dataTxn::execute);
+      dataTxn.commit();
+    }
   }
 
   @Override
