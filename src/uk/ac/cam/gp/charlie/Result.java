@@ -74,8 +74,22 @@ public class Result {
    *
    * @param results a
    */
-  public Result(List<Map<String, ResultValue>> results) {
-    this.results = results;
+  public Result(List<Map<String, String>> results) {
+    //List<Map<String, ResultValue>> results
+    this.results = new ArrayList<>();
+    for (Map<String,String> result : results) {
+      Map<String,ResultValue> result_parsed = new HashMap<>();
+      for (Entry<String,String> resultEntry : result.entrySet()) {
+        ResultValue rv = new ResultValue(Type.ATTRIBUTE);
+        rv.value = resultEntry.getValue();
+        result_parsed.put(resultEntry.getKey(),rv);
+      }
+      this.results.add(result_parsed);
+    }
+  }
+
+  private Result() {
+    this.results = new ArrayList<>();
   }
 
   public static Result fromGrakn(List<List<ConceptMap>> graknResults) {
@@ -125,7 +139,9 @@ public class Result {
         results.add(result);
       }
     }
-    return new Result(results);
+    Result toRet = new Result();
+    toRet.results = results;
+    return toRet;
   }
 
   public void print() {
@@ -145,7 +161,7 @@ public class Result {
     }
   }
 
-  public final List<Map<String, ResultValue>> results;
+  public List<Map<String, ResultValue>> results;
 
   @Override
   public boolean equals(Object other) {
