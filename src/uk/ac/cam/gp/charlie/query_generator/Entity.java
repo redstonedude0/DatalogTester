@@ -5,6 +5,7 @@ import java.util.*;
 public class Entity {
     String name;
     Set<Entity> closure;
+    List<Relation> relations;
     Entity parent;
     List<String> instances;
 
@@ -14,6 +15,7 @@ public class Entity {
         closure = new HashSet<>();
         closure.add(this);
         instances = new ArrayList<>();
+        relations = new ArrayList<>();
     }
 
     private void isParent(Entity child){
@@ -45,5 +47,11 @@ public class Entity {
             if (n-- == 0) return e;
         }
         return null;
+    }
+
+    void addRelation(Relation r){
+        for(Entity e: closure){
+            e.relations.add(r);
+        }
     }
 }

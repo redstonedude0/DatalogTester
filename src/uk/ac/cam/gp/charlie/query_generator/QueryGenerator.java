@@ -11,6 +11,7 @@ public class QueryGenerator {
     private static final int N_RELATIONS = 3;
     private static final int OBJS_PER_ENTITY = 5;
     private static final int OBJS_PER_RELATION = 10;
+    private static final int[] TRAVERSE_QUERIES = {3, 3, 3};
 
     public static TestSet generateTestSet(){
         Random random = new Random();
@@ -35,7 +36,7 @@ public class QueryGenerator {
         }
 
         {
-            // needed for the relations to be defined
+            // needed for the roles to be defined
             String str = "define " + randomString() + " sub relation";
             for(Entity e: entities){
                 str += ", relates " + e.name + "R";
@@ -93,9 +94,40 @@ public class QueryGenerator {
 
         List<String> graqlQueries = new ArrayList<>();
 
+        // traverse
+        int length = 0;
+        while(length < TRAVERSE_QUERIES.length){
+            length++;
+            for(int i = 0; i<TRAVERSE_QUERIES[length-1]; i++){
+                String str = "match ";
+                String lastId = "$" + randomString();
+                Entity lastEntity = entities.get(random.nextInt(entities.size()));
+                while(lastEntity.relations.size()==0) lastEntity = entities.get(random.nextInt(entities.size()));
+
+                for(int j = 0; j<length; j++){
+                    Relation r = lastEntity.relations.get(random.nextInt(lastEntity.relations.size()));
+                    str += " (" + lastEntity.name + "R: " + lastId;
+                    String newId = lastId;
+                    Entity newEntity = lastEntity;
+                    for(Entity e: r.players){
+                        if (!e.equals(lastEntity)){
+                            newId = "$" + randomString();
+                            newEntity = e;
+                            str += ", " + newEntity.name + "R: " + newId;
+                        }
+                    }
+                    str += ") isa " + r.name + "; ";
+                    lastEntity = newEntity;
+                    lastId = newId;
+                }
+                str += "get;";
+                graqlQueries.add(str);
+            }
+        }
 
         graqlSchema.forEach(System.out::println);
         graqlData.forEach(System.out::println);
+        graqlQueries.forEach(System.out::println);
 
         return new TestSet(graqlSchema, graqlData, graqlQueries);
     }
@@ -116,7 +148,9 @@ public class QueryGenerator {
     public static void main(String[] args) {
         TestSet ts = generateTestSet();
         GraqlExecutor gex = new GraqlExecutor(ts.env);
+        ts.queries.forEach(gex::execute);
 
     }
+
 
 }

@@ -13,6 +13,7 @@ public class Relation {
     }
 
     public void addPlayer(Entity e){
+        e.addRelation(this);
         players.add(e);
     }
 }
