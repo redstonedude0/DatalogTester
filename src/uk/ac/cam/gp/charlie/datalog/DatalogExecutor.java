@@ -31,8 +31,8 @@ import uk.ac.cam.gp.charlie.graql.parsing.GraqlParser;
 public class DatalogExecutor extends Executor {
 
   private DatalogEngine engine; //The engine to use for datalog interpretation
-  private Context c = new Context(); //The context of the test environment, contains the ASTs representing the environment
-  public static GraqlParser parser = new GraqlParser();
+  public Context c = new Context(); //The context of the test environment, contains the datalog of the current environment as well as variables to track metadata
+  public static GraqlParser parser = new GraqlParser();//using an instance to allow for this to be switched out during testing
 
   /**
    *
@@ -303,14 +303,15 @@ public class DatalogExecutor extends Executor {
       System.out.println("No query found (parsing error?)");
     }
     Result r = new Result(new ArrayList<>());
+    if (DebugHelper.VERBOSE_AST) {
+      System.out.println("\u001b[35;1mAST:\u001b[0m");
+      DebugHelper.printObjectTree(tests);
+    }
+    if (DebugHelper.VERBOSE_AST) {
+      System.out.println("\u001b[35;1mDATALOG:\u001b[0m");
+    }
+    List<Result> results = new ArrayList<>();
     for (Query test : tests) {
-      if (DebugHelper.VERBOSE_AST) {
-        System.out.println("\u001b[35;1mAST:\u001b[0m");
-        DebugHelper.printObjectTree(test);
-      }
-      if (DebugHelper.VERBOSE_AST) {
-        System.out.println("\u001b[35;1mDATALOG:\u001b[0m");
-      }
       List<Map<Variable, String>> resultMaps = executeQuery(test);
       List<Map<String, String>> toRet = new ArrayList<>();
       if (resultMaps != null) {
@@ -323,10 +324,11 @@ public class DatalogExecutor extends Executor {
         }
       }
       r = new Result(toRet);
-      if (DebugHelper.VERBOSE_RESULTS) {
-        r.print();
-      }
-
+      results.add(r);
+    }
+    if (DebugHelper.VERBOSE_RESULTS) {
+      System.out.println("\u001b[35;1mRESULTS:\u001b[0m");
+      r.print();
     }
     return r;
   }

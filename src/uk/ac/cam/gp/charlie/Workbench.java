@@ -1,5 +1,6 @@
 package uk.ac.cam.gp.charlie;
 
+import abcdatalog.ast.Clause;
 import abcdatalog.ast.PositiveAtom;
 import abcdatalog.ast.Term;
 import abcdatalog.ast.validation.DatalogValidationException;
@@ -44,7 +45,6 @@ import uk.ac.cam.gp.charlie.datalog.DatalogExecutor;
 import uk.ac.cam.gp.charlie.datalog.tests.TESTAstInterpreter;
 import uk.ac.cam.gp.charlie.graql.GraqlExecutor;
 import uk.ac.cam.gp.charlie.graql.parsing.GraqlParser;
-import uk.ac.cam.gp.charlie.graql.parsing.RegexParser;
 
 /**
  * Main file for running the interactive user workbench.
@@ -115,22 +115,41 @@ public class Workbench {
     DatalogExecutor de = new DatalogExecutor(te);
     DebugHelper.VERBOSE_DATALOG = true;
     DebugHelper.VERBOSE_RESULTS = true;
-    DatalogExecutor.parser = new GraqlParser();
     List<Query> data = TESTAstInterpreter.getTestEnv1();
     for (Query q : data) {
       Method m = de.getClass().getDeclaredMethod("executeQuery", Query.class);
       m.setAccessible(true);
       m.invoke(de, q);
     }
-    DatalogExecutor.parser = new RegexParser();
     Map<String, Query> astShortcuts = new HashMap();
-    astShortcuts.put("\u001b[34mmatch..get\u001b[0m all names", query_matchNames());
-    astShortcuts.put("\u001b[34mmatch..delete\u001b[0m Alice from the database", query_matchDelAlice());
-    astShortcuts.put("\u001b[34mmatch..delete\u001b[0m unemploy Alice", query_matchDelAliceEmployment());
-    astShortcuts.put("\u001b[34mmatch..delete\u001b[0m Bob-Charlie coworkers relation",query_matchDelBC_coworkers());
-    astShortcuts.put("\u001b[34mmatch..insert\u001b[0m employ Bob",query_match_employ_b());
-    astShortcuts.put("\u001b[34mmatch..insert\u001b[0m employ Charlie",query_match_employ_c());
+    astShortcuts.put("\u001b[34mmatch..get\u001b[0m all names", query_matchNames());//GRAQL
+    astShortcuts.put("\u001b[34mmatch..delete\u001b[0m Alice from the database", query_matchDelAlice());//GRAQL
+    astShortcuts.put("\u001b[34mmatch..delete\u001b[0m unemploy Alice", query_matchDelAliceEmployment());//GRAQL
+    astShortcuts.put("\u001b[34mmatch..delete\u001b[0m Bob-Charlie coworkers relation",query_matchDelBC_coworkers());//GRAQL
+    astShortcuts.put("\u001b[34mmatch..insert\u001b[0m employ Bob",query_match_employ_b());//GRAQL
+    astShortcuts.put("\u001b[34mmatch..insert\u001b[0m employ Charlie",query_match_employ_c());//GRAQL
     Map<String, String> graqlShortcuts = new HashMap();
+    graqlShortcuts.put("\u001b[34mmatch..insert\u001b[0m employ Charlie",
+        "match\n"
+            + "    $x isa person, has name \"Charlie\";\n"
+            + "    $y isa organisation, has name \"Uni\";\n"
+            + "insert (employee: $x, employer: $y) isa employment;");
+    graqlShortcuts.put("\u001b[34mmatch..insert\u001b[0m employ Bob",
+        "match\n"
+            + "    $x isa person, has name \"Bob\";\n"
+            + "    $y isa organisation, has name \"Uni\";\n"
+            + "insert (employee: $x, employer: $y) isa employment;");
+    graqlShortcuts.put("\u001b[34mmatch..delete\u001b[0m Bob-Charlie coworkers relation",
+          "match\n"
+        + "    $x (employee: $p1, employee: $p2) isa coworkers;\n"
+        + "    $p1 isa person, has name \"Bob\";\n"
+        + "    $p2 isa person, has name \"Charlie\";\n"
+        + "delete $x;");
+    graqlShortcuts.put("\u001b[34mmatch..delete\u001b[0m Alice from the database",
+          "match\n"
+        + "    $x isa person,\n"
+        + "        has name \"Alice\";\n"
+        + "delete $x;");
     graqlShortcuts.put("\u001b[34mdefine rule\u001b[0m everyone is friends (reflexive)","define\n rule-a sub rule, when {\n  $x isa person;\n  $y isa person;\n }, then {\n  (friend:$x,friend:$y) isa friends;\n };");
     graqlShortcuts.put("\u001b[34mdefine rule\u001b[0m to make people coworkers",
           "define\n"
@@ -141,8 +160,18 @@ public class Workbench {
         + " }, then {\n"
         + "  (employee: $p1, employee: $p2) isa coworkers;\n"
         + " };\n");
+    graqlShortcuts.put("\u001b[34mmatch..delete\u001b[0m unemploy Alice",
+          "match\n"
+        + "    $x isa person, has name \"Alice\";\n"
+        + "    $y (employee: $x) isa employment;\n"
+        + "delete $y;");
+    graqlShortcuts.put("\u001b[34mmatch..get\u001b[0m all names",
+        "match\n"
+            + "    $x isa person,\n"
+            + "        has name $n;\n"
+            + "get $n;");
 
-    interactiveLoop(de, astShortcuts,graqlShortcuts);
+    interactiveLoop(de, astShortcuts,graqlShortcuts,false);
     DebugHelper.VERBOSE_DATALOG = false;
     DebugHelper.VERBOSE_RESULTS = false;
 
@@ -190,72 +219,93 @@ public class Workbench {
     //TODO: does not work for now as graqlparser does not parse properly
     TestEnvironment te = new TestEnvironment("\n", "\n");
     DatalogExecutor de = new DatalogExecutor(te);
-    DatalogExecutor.parser = new RegexParser();
     DebugHelper.VERBOSE_AST = true;
     DebugHelper.VERBOSE_DATALOG = true;
     DebugHelper.VERBOSE_RESULTS = true;
-    interactiveLoop(de);
-    DatalogExecutor.parser = new GraqlParser();
+    interactiveLoop(de,new HashMap<>(), new HashMap<>(), true);
     DebugHelper.VERBOSE_AST = false;
     DebugHelper.VERBOSE_DATALOG = false;
     DebugHelper.VERBOSE_RESULTS = false;
   }
 
   /**
-   * Initiate a basic interactive graql console with a specified executor
-   * @param de
-   */
-  private static void interactiveLoop(DatalogExecutor de)
-      throws IOException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-    interactiveLoop(de, new HashMap<>(),new HashMap<>());
-  }
-
-  /**
    * Initiate a basic interactive graql console with a specified executor and shortcuts
+   * if extendedCommit is true then "\ncommit\n" is required rather than "\n\n" to commit
    * @param de
    */
-  private static void interactiveLoop(DatalogExecutor de, Map<String, Query> astShortcuts, Map<String, String> graqlShortcuts)
+  private static void interactiveLoop(DatalogExecutor de, Map<String, Query> astShortcuts, Map<String, String> graqlShortcuts, boolean extendedCommit)
       throws IOException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
     BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-    boolean displayPrompt = true;
+    boolean displayPrompt_ast = false;
+    boolean displayPrompt_graql = true;
     loop:
     while (true) {
-      if (displayPrompt) {
-        displayPrompt = false;
+      if (displayPrompt_ast || displayPrompt_graql) {
         System.out.println("Enter graql query to be completed, terminate with blank line to execute");
         System.out.println("Enter \"exit\" to exit to menu");
-        int astNum = 0;
-        for (String shortcut : astShortcuts.keySet()) {
-          System.out.println("Enter a"+astNum+" for \u001b[34mAST\u001b[0m shortcut \"" + shortcut + "\"");
-          astNum++;
+        if (displayPrompt_ast) {
+          int astNum = 0;
+          for (String shortcut : astShortcuts.keySet()) {
+            System.out.println(
+                "Enter a" + astNum + " for \u001b[34mAST\u001b[0m shortcut \"" + shortcut + "\"");
+            astNum++;
+          }
         }
-        int graqlNum = 0;
-        for (String shortcut : graqlShortcuts.keySet()) {
-          System.out.println("Enter g"+graqlNum+" for \u001b[34mGraql\u001b[0m shortcut \"" + shortcut + "\"");
-          graqlNum++;
+        if (displayPrompt_graql) {
+          int graqlNum = 0;
+          for (String shortcut : graqlShortcuts.keySet()) {
+            System.out.println(
+                "Enter g" + graqlNum + " for \u001b[34mGraql\u001b[0m shortcut \"" + shortcut
+                    + "\"");
+            graqlNum++;
+          }
         }
+        displayPrompt_ast = false;
+        displayPrompt_graql = false;
       }
       String input = "";
       while (true) {
         String line = br.readLine();
-        input += line + "\n";
-        if (line.equals("")) {
+        if (line.equals("") && !extendedCommit) {
           break;
         }
+        if (line.equals("commit") && extendedCommit) {
+          break;
+        }
+        input += line + "\n";
       }
-      if (input.equals("exit\n\n")) {
+      //Trim trailing newlines
+      input = input.replaceFirst("\n++$","");
+      if (input.equals("exit")) {
         break;
       }
-      if (input.equals("help\n\n")) {
-        displayPrompt = true;
+      if (input.equals("help")) {
+        displayPrompt_graql = true;
+        continue;
+      }
+      if (input.equals("help_ast")) {
+        displayPrompt_ast = true;
+        continue;
+      }
+      if (input.equals("dump") || input.equals("dump raw")) {
+        boolean raw = input.equals("dump raw");
+        Set<Clause> clauses = de.c.datalog;
+        for (Clause c: clauses) {
+          String out = c.toString();
+          if (!raw) {
+            out = de.c.prettifyDatalog(out);
+          }
+          System.out.println(out);
+        }
         continue;
       }
       if (input.startsWith("a")) {
         int astNum = 0;
         for (String shortcut : astShortcuts.keySet()) {
-          if (input.equals("a"+astNum+"\n\n")) {
+          if (input.equals("a"+astNum)) {
             DebugHelper.printObjectTree(astShortcuts.get(shortcut));
             br.readLine();
+            //inject AST into parser
             GraqlParser overload = new GraqlParser() {
               @Override
               public List<Query> graqlToAST(String query) {
@@ -274,7 +324,7 @@ public class Workbench {
       if (input.startsWith("g")) {
         int graqlNum = 0;
         for (String shortcut : graqlShortcuts.keySet()) {
-          if (input.equals("g"+graqlNum+"\n\n")) {
+          if (input.equals("g"+graqlNum)) {
             input = graqlShortcuts.get(shortcut);
             System.out.println("\u001b[34m"+input+"\u001b[0m");
             br.readLine();

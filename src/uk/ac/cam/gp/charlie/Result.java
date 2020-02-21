@@ -44,7 +44,7 @@ public class Result {
   }
 
   public void print() {
-    System.out.println("\u001b[35;1mRESULTS:\u001b[0m");
+    System.out.println("\u001b[35;1mRESULT:\u001b[0m");
     if (results.size() == 0) {
       System.out.println("\u001b[30;1m  [NONE]\u001b[0m");
     } else {

@@ -44,5 +44,5 @@ Overview of quirks about the datalog implementation:
 - the syntax has been augmented with the idea of variables being bound in scope, e.g.
   "insert $x isa person; $y isa person; (friend:$x, friend:$y) isa friendship;" is valid. This allows the interactive
   interface to be smoother, and is how insertion within match queries (and rules) is calculated.
-
+- the engine automatically 'commits' on each match query, this is the point at which rule invariants are checked and fixed
 

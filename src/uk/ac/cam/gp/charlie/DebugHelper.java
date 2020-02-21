@@ -9,8 +9,12 @@ import uk.ac.cam.gp.charlie.ast.Variable;
 import uk.ac.cam.gp.charlie.ast.queries.match.QueryMatch;
 import uk.ac.cam.gp.charlie.ast.queries.match.QueryMatch.Action;
 
+/**
+ * Class to help with debugging, and provides interactive console output
+ */
 public class DebugHelper {
 
+  //global variables used to enable/disable verbose output across several classes
   public static boolean VERBOSE_AST = false;
   public static boolean VERBOSE_DATALOG = false;
   public static boolean VERBOSE_RESULTS = false;
@@ -22,6 +26,7 @@ public class DebugHelper {
     printObjectTree(o, 0,10);
   }
 
+  //print out indent as necessary
   private static String idnt(int idnt) {
     StringBuilder s = new StringBuilder();
     for (int i = 0; i < idnt; i++) {
