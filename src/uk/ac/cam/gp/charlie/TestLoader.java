@@ -15,6 +15,7 @@ public class TestLoader {
   private static class TestFile {
     TestEnvironment te;
     List<String> tests = new ArrayList<>();
+    String name = "Unnamed Test";
   }
 
   public static TestFile loadTestsFromFile(File f) {
@@ -24,14 +25,16 @@ public class TestLoader {
       while ((line = br.readLine()) != null) {
         contents.append(line).append("\n");
       }
-      return loadTestsFromFileContents(contents.toString());
+      TestFile tf = loadTestsFromFileContents(contents.toString());
+      tf.name = f.getName();
+      return tf;
     } catch (Exception e) {
       e.printStackTrace();
     }
     return null;
   }
 
-  public static TestFile loadTestsFromFileContents(String fileContents) {
+  private static TestFile loadTestsFromFileContents(String fileContents) {
     String[] bits = fileContents.split("###Schema");
     fileContents = bits[1];
     bits = fileContents.split("###Data");
@@ -51,14 +54,38 @@ public class TestLoader {
     return tf;
   }
 
-  public static void runComparisonTests(File f) {
-    runComparisonTests(loadTestsFromFile(f));
+  public static List<String> runComparisonTests(File f) {
+    return runComparisonTests(loadTestsFromFile(f));
   }
 
-  public static void runComparisonTests(TestFile tf) {
+  private static List<String> runComparisonTests(TestFile tf) {
+    boolean passed = true;
+    int id = 1;
+    List<String> results = new ArrayList<>();
+    results.add("\u001b[36m"+tf.name+"\u001b[0m Summary:");
     for (String query : tf.tests) {
-      runComparisonTest(tf.te,query);
+      String result;
+      try {
+        runComparisonTest(tf.te, query);
+        result = "Test \u001b[32mPassed\u001b[0m \u001b[36m"+tf.name + "\u001b[0m("+id+"/"+tf.tests.size()+") - \u001b[35m"+query+"\u001b[0m";
+      } catch (Throwable t) {
+        System.out.println("Error: " + t.getMessage());
+        result = "Test \u001b[31mFailed\u001b[0m \u001b[36m"+tf.name + "\u001b[0m("+id+"/"+tf.tests.size()+") - \u001b[35m"+query+"\u001b[0m";
+        passed = false;
+      }
+      System.out.println(result);
+      results.add("  "+result);
+      id++;
     }
+    if (passed) {
+      results.add("\u001b[32mAll Tests Passed\u001b[0m");
+    } else {
+      results.add("\u001b[31mSome Tests Failed\u001b[0m");
+    }
+    for (String result: results) {
+      System.out.println(result);
+    }
+    return results;
   }
 
   private static String makeDatalogSafe(String query) {
@@ -86,16 +113,16 @@ public class TestLoader {
     return ret.toString();
   }
 
-  public static void runComparisonTest(TestEnvironment te, String query) {
+  private static void runComparisonTest(TestEnvironment te, String query) {
     DatalogExecutor de = new DatalogExecutor(te);
     GraqlExecutor ge = new GraqlExecutor(te);
     Result dr = de.execute(makeDatalogSafe(query));
     Result gr = ge.execute(makeGraqlSafe(query));
+    System.out.println("DL RESULTS:");
+    dr.print();
+    System.out.println("GRAQL RESULTS:");
+    gr.print();
     if (!dr.equals(gr)) {
-      System.out.println("DL RESULTS:");
-      dr.print();
-      System.out.println("GRAQL RESULTS:");
-      gr.print();
       throw new RuntimeException("Results not equal");
     }
   }

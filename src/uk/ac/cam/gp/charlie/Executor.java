@@ -27,4 +27,8 @@ public abstract class Executor {
     return toReturn;
   }
 
+  public void close() {
+
+  }
+
 }

@@ -14,8 +14,7 @@ person sub entity,
 ###Data
 insert $x isa person, has name "Alice";
        $y isa person, has name "Bob";
-       $z isa person, has name "Charlie";
-       (friend:$x,friend:$y,friend:$z) isa friends;
+       (friend:$x,friend:$y) isa friends;
 
 ###Test
 match ($a,$b) isa friends; get;

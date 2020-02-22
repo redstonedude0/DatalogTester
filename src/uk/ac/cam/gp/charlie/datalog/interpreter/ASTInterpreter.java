@@ -235,6 +235,7 @@ public class ASTInterpreter {
               .format("instanceattr(%s,a_%d,%s)", varString, c.getAttributeNumber(entry.getKey()),
                   attrval_s));
         }
+        List<Entry<String,String>> entity_role_pairs = new ArrayList<>();
         for (Entry<Plays, Variable> entry : cond.relates) {
           Integer i = c.resolveScope(entry.getValue());
           String relates_s;
@@ -246,17 +247,40 @@ public class ASTInterpreter {
             relates_s = "e_" + i;
           }
           Plays plays = entry.getKey();
-          if (plays != null) {
-            datalogConditions.add(String
-                .format("instancerel(%s,%s,r_%d)", varString, relates_s,
-                    c.getPlaysNumber(plays)));
-          } else {
-            String relVarString = "Var"+c.getVariableNumber(null);
-            vars.add(relVarString);
-            datalogConditions.add(String
-                .format("instancerel(%s,%s,%s)", varString, relates_s, relVarString));
+          String relatesString;
+          if (plays != null) { //specific role
+            relatesString = "r_"+c.getPlaysNumber(plays);
+          } else { //any role
+            relatesString = "Var"+c.getVariableNumber(null);
+            vars.add(relatesString);
+          }
+          datalogConditions.add(String
+              .format("instancerel(%s,%s,%s)", varString, relates_s, relatesString));
+          entity_role_pairs.add(new SimpleEntry<>(relates_s,relatesString));
+        }
+        //the same variable cannot represent 2 relations with the same role and same binding
+        //so ensure they are all disjoint
+        int pairCount = entity_role_pairs.size();
+        //For all pairs
+        for (int i = 0; i < pairCount; i++) {
+          for (int j = 0; j < pairCount; j++) {
+            //Not reflexive pairs
+            if (i != j) {
+              Entry<String,String> pair1 = entity_role_pairs.get(i);
+              Entry<String,String> pair2 = entity_role_pairs.get(j);
+              String entity1 = pair1.getKey();
+              String role1 = pair1.getValue();
+              String entity2 = pair2.getKey();
+              String role2 = pair2.getValue();
+              //if entities not bound to the same variable
+              if (!entity1.equals(entity2)) {
+                datalogConditions
+                    .add(String.format("disjoint(%s,%s,%s,%s)", entity1, role1, entity2, role2));
+              }
+            }
           }
         }
+
       } else if (mc instanceof ConditionNeq) {
         //NotEQual condition
         //e.g. $x != $y

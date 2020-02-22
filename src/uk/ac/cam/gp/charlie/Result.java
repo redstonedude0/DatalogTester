@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import uk.ac.cam.gp.charlie.Result.ResultValue.Type;
 
 public class Result {
@@ -35,7 +36,17 @@ public class Result {
     public boolean equals(Object o) {
       if (!(o instanceof ResultValue)) return false;
       ResultValue r2 = (ResultValue) o;
-      if (type != r2.type) return false;
+      if (type != r2.type) {
+        //Different types, normally this would return false,
+        //however graql uses the RELATION type whilst datalog does not, so
+        if (type == Type.RELATION || r2.type == Type.RELATION) {
+          if (type == Type.ENTITY || r2.type == Type.ENTITY) {
+            //REL=ENTITY for now
+            return true;
+          }
+        }
+        return false;
+      }
       //2 have the same time, change based on the type here
       if (type == Type.RULE) return true;//any rule is equal
       if (type == Type.ROLE) return true;//any role is equal
@@ -89,6 +100,9 @@ public class Result {
           if (concept.isAttribute()) {
             rv = new ResultValue(Type.ATTRIBUTE);
             rv.value = concept.asAttribute().value().toString();
+          } else if (concept.isEntity()) {
+            rv = new ResultValue(Type.ENTITY);
+            rv.value = concept.asEntity().id().toString();
           } else if (concept.isRelation()) {
             rv = new ResultValue(Type.RELATION);
             Map<Role, Set<Thing>> rolePlayers = concept.asRelation().rolePlayersMap();
@@ -103,9 +117,6 @@ public class Result {
             }
             rv.values = rolePlayers_s;
             rv.value = concept.asRelation().id().toString();
-          } else if (concept.isEntity()) {
-            rv = new ResultValue(Type.ENTITY);
-            rv.value = concept.asEntity().id().toString();
           } else if (concept.isRule()) {
             rv = new ResultValue(Type.RULE);
             rv.value = concept.asRule().id().toString();
@@ -151,13 +162,44 @@ public class Result {
   public boolean equals(Object other) {
     if (!(other instanceof Result)) return false;
     Result r2 = (Result) other;
+    if (results.size() != r2.results.size()) return false;
 
-    HashMultiset<Map<String,ResultValue>> s1 = HashMultiset.create();
-    HashMultiset<Map<String,ResultValue>> s2 = HashMultiset.create();
-
-    s1.addAll(results);
-    s2.addAll(r2.results);
-    return s1.equals(s2);
-
+    ConcurrentLinkedQueue<Map<String, ResultValue>> res1s = new ConcurrentLinkedQueue<>(results);
+    ConcurrentLinkedQueue<Map<String, ResultValue>> res2s = new ConcurrentLinkedQueue<>(r2.results);
+    loop: for (Map<String,ResultValue> res2: res2s) {
+      for (Map<String,ResultValue> res1: res1s) {
+        //if map equal
+        boolean mapEqual = false;
+        if (res1.size() == res2.size()) {
+          boolean allEntriesEqual = true;
+          for (Entry<String,ResultValue> res1Entry : res1.entrySet()) {
+            String key = res1Entry.getKey();
+            ResultValue value = res1Entry.getValue();
+            ResultValue value2 = res2.get(key);
+            if (value == null && value2 == null) {
+              continue;//Equal entry
+            }
+            if (value.equals(value2)) {
+              continue;//Equal entry
+            }
+            //Not equal, out
+            allEntriesEqual = false;
+            break;
+          }
+          if (allEntriesEqual) {
+            mapEqual = true;
+          }
+        }
+        if (mapEqual) {
+          res1s.remove(res1);
+          res2s.remove(res2);
+          continue loop;
+        }
+      }
+    }
+    if (res1s.size() != 0) {
+      return false;
+    }
+    return true;
   }
 }

@@ -24,6 +24,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.AbstractMap.SimpleEntry;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -191,28 +192,38 @@ public class Workbench {
     TestEnvironment te = new TestEnvironment("", "");
     DatalogEngine de = new SemiNaiveEngine();
     String init = "";
-    init += "instanceof(r_1,employment).";
-    init += "instanceof(r_2,employment).";
-    init += "instancerel(r_1,e_1,employer).";
-    init += "instancerel(r_1,e_2,employee).";
-    init += "instancerel(r_2,e_1,employer).";
-    init += "instancerel(r_2,e_3,employee).";
-    init += "invariant_1(P1,P2) :- instanceof (X,employment),\n"
-        + "                        instancerel(X,P1,employee),\n"
-        + "                        instancerel(X,Y ,employer),\n"
-        + "                        instanceof (Z,employment),\n"
-        + "                        instancerel(Z,P2,employee),\n"
-        + "                        instancerel(Z,Y ,employer),\n"
-        + "                        P1 != P2,\n"
-        + "                        not invariant_1_inv(P1,P2).\n"
-        + "invariant_1_inv(P1,P2) :-  instanceof(W,coworkers),\n"
-        + "                          instancerel(W,P1,employee),\n"
-        + "                          instancerel(W,P2,employee).";
-    String query = "invariant_1(P1,P2).";
+    init += "instanceof(e_0,employment).";
+    init += "instanceof(e_1,person).";
+    init += "instanceof(e_2,person).";
+    init += "t_playsrole(t_1,employee).";
+    init += "t_playsrole(t_1,employer).";
+    init += "instancerel(e_0,e_1,employee).";//e1,e2 are employees
+    init += "instancerel(e_0,e_1,employer).";
+    init += "test(a).";
+    init += "ground(P1,R1,W1,W2) :- instanceof(P1,W1), t_playsrole(W2,R1).";
+    init += "ground(P1,R1) :- ground(P1,R1,_,_).";
+    init += "disjoint(P1,R1,P2,R2) :- ground(P1,R1), ground(P2,R2), P1 != P2.";
+    init += "disjoint(P1,R1,P2,R2) :- ground(P1,R1), ground(P2,R2), R1 != R2.";
+    init += "query(P1,P2,P3,P4) :- \n"
+        + "                  instancerel(X,P1,P3),\n"
+        + "                  instancerel(X,P2,P4),\n"
+        + "                  disjoint(P1,P3,P2,P4),  \n"
+        + "                  disjoint(P2,P4,P1,P3).  \n"
+//        + "                        instanceof (Z,employment),\n"
+//        + "                        instancerel(Z,P2,employee),\n"
+//        + "                        instancerel(Z,Y ,employer),\n"
+//        + "                        P1 != P2,\n"
+//        + "                        not invariant_1_inv(P1,P2).\n"
+//        + "invariant_1_inv(P1,P2) :-  instanceof(W,coworkers),\n"
+//        + "                          instancerel(W,P1,employee),\n"
+//        + "                          instancerel(W,P2,employee).";
+    ;
+    String query = "query(P1,P2,P3,P4).";
     de.init(DatalogParser.parseProgram(new DatalogTokenizer(new StringReader(init))));
     Set<PositiveAtom> b = de.query(
         DatalogParser.parseClauseAsPositiveAtom(new DatalogTokenizer(new StringReader(query))));
     System.out.println(b);
+
   }
 
   /**
@@ -350,7 +361,7 @@ public class Workbench {
     List<File> files = TestLoader.listFiles();
     loop:
     while (true) {
-      System.out.println("Enter a number to run, or 'exit', or 'debug'");
+      System.out.println("Enter a number to run, or 'exit', or 'debug', or 'all'");
       int id = 0;
       for (File f : files) {
         System.out.println(id + ") \u001b[34m" + f.getName()+ "\u001b[0m");
@@ -364,14 +375,28 @@ public class Workbench {
         DebugHelper.VERBOSE_RESULTS = true;
         DebugHelper.VERBOSE_AST = true;
         DebugHelper.VERBOSE_DATALOG = true;
-        continue loop;
+        continue;
+      }
+      if (input.equals("all")) {
+        List<String> allResults = new ArrayList<>();
+        for (File f: files) {
+          List<String> results = TestLoader.runComparisonTests(f);
+          allResults.addAll(results);
+        }
+        System.out.println("#####################");
+        System.out.println("SUMMARY OF ALL TESTS:");
+        System.out.println("#####################");
+        for (String result: allResults) {
+          System.out.println(result);
+        }
+        continue;
       }
       id = 0;
       Integer selected = Integer.parseInt(input);
       for (File f: files) {
         if (selected == id) {
           TestLoader.runComparisonTests(f);
-          continue loop;
+          break;
         }
         id++;
       }

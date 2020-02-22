@@ -4,6 +4,7 @@ import grakn.client.GraknClient;
 import grakn.client.answer.ConceptMap;
 import graql.lang.query.GraqlGet;
 import graql.lang.query.GraqlInsert;
+import uk.ac.cam.gp.charlie.DebugHelper;
 import uk.ac.cam.gp.charlie.Executor;
 import uk.ac.cam.gp.charlie.Result;
 import uk.ac.cam.gp.charlie.TestEnvironment;
@@ -18,33 +19,60 @@ public class GraqlExecutor extends Executor {
   private GraknClient.Session session;
 
   public GraqlExecutor(TestEnvironment environment) {
+    if (!DebugHelper.VERBOSE_GRAQL) {
+      DebugHelper.absorbOutput();
+    }
     GraknClient client = new GraknClient("localhost:48555");
     session = client.session(randomString());
+    DebugHelper.restoreOutput();
 
-    System.out.println("Running:" + environment.schema);
+    if (DebugHelper.VERBOSE_GRAQL_INPUT) {
+      System.out.println("Running:" + environment.schema);
+    }
+    if (!DebugHelper.VERBOSE_GRAQL) {
+      DebugHelper.absorbOutput();
+    }
     GraknClient.Transaction schemaTxn = session.transaction().write();
     parseList(environment.schema).forEach(schemaTxn::execute);
     schemaTxn.commit();
+    DebugHelper.restoreOutput();
 
     if(environment.data.length() > 0) {
-      System.out.println("Running:" + environment.data);
+      if (DebugHelper.VERBOSE_GRAQL_INPUT) {
+        System.out.println("Running:" + environment.data);
+      }
+      if (!DebugHelper.VERBOSE_GRAQL) {
+        DebugHelper.absorbOutput();
+      }
       GraknClient.Transaction dataTxn = session.transaction().write();
       parseList(environment.data).forEach(dataTxn::execute);
       dataTxn.commit();
+      DebugHelper.restoreOutput();
     }
+  }
+
+  @Override
+  public void close() {
+    super.close();
+    session.close();
   }
 
   @Override
   public Result execute(String query) {
     GraknClient.Transaction readTxn = session.transaction().read();
-    System.out.println("Executing Graql Queries: " + query);
+    if (DebugHelper.VERBOSE_GRAQL_INPUT) {
+      System.out.println("Executing Graql Queries: " + query);
+    }
+    if (!DebugHelper.VERBOSE_GRAQL) {
+      DebugHelper.absorbOutput();
+    }
     List<List<ConceptMap>> graqlResults =
             parseList(query).map(q -> readTxn.stream((GraqlGet) q).collect(Collectors.toList()))
                     .collect(Collectors.toList());
 
     Result result = Result.fromGrakn(graqlResults);
     readTxn.close();
-
+    DebugHelper.restoreOutput();
     return result;
   }
 

@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.Function;
+import uk.ac.cam.gp.charlie.DebugHelper;
 import uk.ac.cam.gp.charlie.ast.Attribute;
 import uk.ac.cam.gp.charlie.ast.ConstantValue;
 import uk.ac.cam.gp.charlie.ast.Plays;
@@ -26,10 +26,20 @@ public class Context {
 
   public Context() {
     //Prepopulate with some datalog
-    String precode = "instanceof(Concept,Supertype) :- instanceof(Concept,Subtype), t_subs(Subtype,Supertype)."; //subtyping is transitive
-    precode += "t_subs(entity,concept).";
-    precode += "t_subs(relation,concept).";
-    precode += "t_subs(rule,concept)."; //???
+    String precode = "instanceof(Concept,Supertype) :- instanceof(Concept,Subtype), t_subs(Subtype,Supertype).\n"; //subtyping is transitive
+    precode += "t_subs(entity,concept).\n";
+    precode += "t_subs(relation,concept).\n";
+    precode += "t_subs(rule,concept).\n"; //???
+    //Ground a pair (entity,role) (used for calculating disjoint pairs)
+    precode += "ground(E1,R1,W1,W2,W3) :- instanceof(E1,W1), instancerel(W2,W3,R1).\n";
+    //the witnesses are required to ground but can be discarded to give a 2-arg rule
+    precode += "ground(E1,R1) :- ground(E1,R1,_,_,_).\n";
+    //2 pairs (entity,role) are disjoint if either the entities, or roles, disunify
+    precode += "disjoint(E1,R1,E2,R2) :- ground(E1,R1), ground(E2,R2), E1 != E2.\n";
+    precode += "disjoint(E1,R1,E2,R2) :- ground(E1,R1), ground(E2,R2), R1 != R2.\n";
+    if (DebugHelper.VERBOSE_DATALOG) {
+      System.out.println(prettifyDatalog(precode));
+    }
     try {
       datalog.addAll(DatalogParser.parseProgram(new DatalogTokenizer(new StringReader(precode))));
     } catch (DatalogParseException e) {

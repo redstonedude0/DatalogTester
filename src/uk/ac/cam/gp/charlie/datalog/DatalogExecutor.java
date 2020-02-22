@@ -158,14 +158,19 @@ public class DatalogExecutor extends Executor {
               for (int i = 0; i <= c.getMaxVariableNumber(); i++) {
                 Variable v = c.getVariableByNumber(i);
                 String boundValue = s.get(abcdatalog.ast.Variable.create("Var" + i)).toString();
+                //REMOVE: Integer boundInt = Integer.parseInt(boundValue.split("_")[1]);
                 //add to result map
-                Integer boundInt = Integer.parseInt(boundValue.split("_")[1]);
-                if (variablesToGet.size() == 0 || variablesToGet.contains(v)) {
-                  //put bound value regardless of type of concept
-                  resultMap.put(v,boundValue);
-                  System.out.println(
-                      "  $" + Variable.getIdentifier(v) + " => \u001b[35m{" + boundValue
-                          + "}\u001b[0m");
+                //Anonymous variables don't get returned
+                if (v != null) {
+                  if (variablesToGet.size() == 0 || variablesToGet.contains(v)) {
+                    //put bound value regardless of type of concept
+                    resultMap.put(v, boundValue);
+                    if (DebugHelper.VERBOSE_DATALOG) {
+                      System.out.println(
+                          "  $" + Variable.getIdentifier(v) + " => \u001b[35m{" + boundValue
+                              + "}\u001b[0m");
+                    }
+                  }
                 }
               }
               toRet.add(resultMap);
@@ -320,13 +325,33 @@ public class DatalogExecutor extends Executor {
             String value = result.getValue();
             Integer id = -1;
             String[] splits = value.split("_");
-            id = Integer.parseInt(splits[splits.length-1]);
+            try {
+              id = Integer.parseInt(splits[splits.length - 1]);
+            } catch (NumberFormatException e) {
+              //Abdorb exception, id will be -1
+            }
             if (value.startsWith("const_")) {
               rv = new ResultValue(Type.ATTRIBUTE);
               rv.value = c.getConstantFromID(id).value.toString();
             } else if (value.startsWith("e_")) {
               rv = new ResultValue(Type.ENTITY);
               rv.value = value;
+            } else if (value.startsWith("invariant__")) {
+              rv = new ResultValue(Type.RULE);
+              rv.value = value;
+            } else if (value.startsWith("r_")) {
+              rv = new ResultValue(Type.ROLE);
+              rv.value = value;
+            } else if (value.startsWith("t_")
+                || value.equals("entity")
+                || value.equals("relation")
+                || value.equals("role")
+                || value.equals("thing")
+                || value.equals("concept")) {
+              rv = new ResultValue(Type.TYPE);
+              rv.value = value;
+            } else {
+              throw new RuntimeException("Unexpected variable value '"+value+"'");
             }
             newMap.put(Variable.getIdentifier(result.getKey()), rv);
           }

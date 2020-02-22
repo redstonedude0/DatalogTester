@@ -1,5 +1,8 @@
 package uk.ac.cam.gp.charlie;
 
+import abcdatalog.util.substitution.Substitution;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.List;
@@ -18,6 +21,8 @@ public class DebugHelper {
   public static boolean VERBOSE_AST = false;
   public static boolean VERBOSE_DATALOG = false;
   public static boolean VERBOSE_RESULTS = false;
+  public static boolean VERBOSE_GRAQL = false;
+  public static boolean VERBOSE_GRAQL_INPUT = true;
 
   /**
    * This will truncate the tree to depth 10, use this to print a tree in a (nice enough) way
@@ -145,6 +150,18 @@ public class DebugHelper {
       }
     } catch (IllegalAccessException | NoSuchFieldException e) {
       System.out.print("#ERROR WHILE FETCHING#");
+    }
+  }
+
+  public static PrintStream out = null;
+  public static void absorbOutput() {
+    out = System.out;
+    System.setOut(new PrintStream(new ByteArrayOutputStream()));
+  }
+  public static void restoreOutput() {
+    if (out != null) {
+      System.setOut(out);
+      out = null;
     }
   }
 
