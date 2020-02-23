@@ -3,10 +3,12 @@ package uk.ac.cam.gp.charlie;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import uk.ac.cam.gp.charlie.datalog.DatalogExecutor;
 import uk.ac.cam.gp.charlie.graql.GraqlExecutor;
 
@@ -54,24 +56,23 @@ public class TestLoader {
     return tf;
   }
 
-  public static List<String> runComparisonTests(File f) {
+  public static TestResults runComparisonTests(File f) {
     return runComparisonTests(loadTestsFromFile(f));
   }
 
-  private static List<String> runComparisonTests(TestFile tf) {
+  private static TestResults runComparisonTests(TestFile tf) {
     try (
-        DatalogExecutor de = new DatalogExecutor(new TestEnvironment(makeDatalogSafe(tf.te.schema),makeDatalogSafe(tf.te.data)));
         GraqlExecutor ge = new GraqlExecutor(new TestEnvironment(makeGraqlSafe(tf.te.schema),makeGraqlSafe(tf.te.data)));
+        DatalogExecutor de = new DatalogExecutor(new TestEnvironment(makeDatalogSafe(tf.te.schema),makeDatalogSafe(tf.te.data)));
     ) {
       boolean passed = true;
       int id = 1;
-      List<String> results = new ArrayList<>();
-      results.add("\u001b[36m" + tf.name + "\u001b[0m Summary:");
+      TestResults results = new TestResults(tf.name,tf.tests.size());
       for (String query : tf.tests) {
         String result;
         try {
-          Result dr = de.execute(makeDatalogSafe(query));
           Result gr = ge.execute(makeGraqlSafe(query));
+          Result dr = de.execute(makeDatalogSafe(query));
           System.out.println("DL RESULTS:");
           dr.print();
           System.out.println("GRAQL RESULTS:");
@@ -79,26 +80,15 @@ public class TestLoader {
           if (!dr.equals(gr)) {
             throw new RuntimeException("Results not equal");
           }
-          result = "Test \u001b[32mPassed\u001b[0m \u001b[36m" + tf.name + "\u001b[0m(" + id + "/"
-              + tf.tests.size() + ") - \u001b[35m" + query + "\u001b[0m";
+          results.addPassedTest(query);
         } catch (Throwable t) {
           System.out.println("Error: " + t.getMessage());
-          result = "Test \u001b[31mFailed\u001b[0m \u001b[36m" + tf.name + "\u001b[0m(" + id + "/"
-              + tf.tests.size() + ") - \u001b[35m" + query + "\u001b[0m";
+          results.addFailedTest(query);
           passed = false;
         }
-        System.out.println(result);
-        results.add("  " + result);
         id++;
       }
-      if (passed) {
-        results.add("\u001b[32mAll Tests Passed\u001b[0m");
-      } else {
-        results.add("\u001b[31mSome Tests Failed\u001b[0m");
-      }
-      for (String result : results) {
-        System.out.println(result);
-      }
+      results.soutAll();
       return results;
     } catch (Exception e) {
       throw new RuntimeException("Error during execution",e);
@@ -131,18 +121,18 @@ public class TestLoader {
   }
 
 
-  public static Map<String,File> listFiles() {
+  public static List<Entry<String,File>> listFiles() {
     return listFiles("");
   }
 
-  private static Map<String,File> listFiles(String prepend) {
+  private static List<Entry<String,File>> listFiles(String prepend) {
     File f = new File("tests"+prepend+"/");
-    Map<String,File> list = new HashMap<>();
+    List<Entry<String,File>> list = new ArrayList<>();
     for (File file : f.listFiles()) {
       if (file.isDirectory()) {
-        list.putAll(listFiles(prepend+"/"+file.getName()));
+        list.addAll(listFiles(prepend+"/"+file.getName()));
       } else if (file.isFile()) {
-        list.put(prepend + "/" + file.getName(), file);
+        list.add(new SimpleEntry<>(prepend + "/" + file.getName(), file));
       }
     }
     return list;

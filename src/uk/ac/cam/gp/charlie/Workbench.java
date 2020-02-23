@@ -359,12 +359,12 @@ public class Workbench {
   private static void interactive_comparison()
       throws Exception {
     BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-    Map<String,File> files = TestLoader.listFiles();
+    List<Entry<String,File>> files = TestLoader.listFiles();
     loop:
     while (true) {
       System.out.println("Enter a number to run, or 'exit', or 'debug', or 'all'");
       int id = 0;
-      for (Entry<String,File> fileEntry : files.entrySet()) {
+      for (Entry<String,File> fileEntry : files) {
         System.out.println(id + ") \u001b[34m" + fileEntry.getKey()+ "\u001b[0m");
         id++;
       }
@@ -379,22 +379,47 @@ public class Workbench {
         continue;
       }
       if (input.equals("all")) {
-        List<String> allResults = new ArrayList<>();
-        for (Entry<String,File> fileEntry: files.entrySet()) {
-          List<String> results = TestLoader.runComparisonTests(fileEntry.getValue());
-          allResults.addAll(results);
+        List<TestResults> allResults = new ArrayList<>();
+        for (Entry<String,File> fileEntry: files) {
+          TestResults results = TestLoader.runComparisonTests(fileEntry.getValue());
+          allResults.add(results);
         }
         System.out.println("#####################");
         System.out.println("SUMMARY OF ALL TESTS:");
         System.out.println("#####################");
-        for (String result: allResults) {
-          System.out.println(result);
+        for (TestResults result: allResults) {
+          result.soutAll();
+        }
+        System.out.println("################");
+        System.out.println("COMPACT SUMMARY:");
+        System.out.println("################");
+        int passed = 0;
+        int failed = 0;
+        for (TestResults result: allResults) {
+          System.out.println(result.getConclusion()+ " - \u001b[36m" + result.testName + "\u001b[0m");
+          passed += result.getPassed();
+          failed += result.getFailed();
+        }
+        if (failed == 0) {
+          System.out.println("\u001b[32m#################################\u001b[0m");
+          System.out.println("\u001b[32m# ALL TESTS IN ALL FILES PASSED #\u001b[0m");
+          System.out.println("\u001b[32m#################################\u001b[0m");
+        } else {
+          System.out.println("\u001b[31m#################################\u001b[0m");
+          System.out.println("\u001b[31m#    SOME TESTS DID NOT PASS    #\u001b[0m");
+          System.out.println("\u001b[31m#################################\u001b[0m");
+          System.out.println("\u001b[31m"+failed+"/"+(passed+failed)+" Tests Failed, these were:\u001b[0m");
+          for (TestResults result: allResults) {
+            for (String failure: result.failedTests) {
+              System.out.println("\u001b[31m- " + failure);
+            }
+          }
         }
         continue;
       }
       id = 0;
       Integer selected = Integer.parseInt(input);
-      for (Entry<String,File> fileEntry: files.entrySet()) {
+      for (Entry<String,File> fileEntry: files) {
         if (selected == id) {
           TestLoader.runComparisonTests(fileEntry.getValue());
           break;

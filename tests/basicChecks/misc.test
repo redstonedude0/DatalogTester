@@ -1,0 +1,46 @@
+###Schema
+
+#Miscellaneous tests, aimed at bugs which once existed in the Datalog interpretation
+
+define
+
+employment sub relation,
+  relates employee,
+  relates employer;
+
+~name sub attribute,
+~  datatype string;
+
+person sub entity,
+  has name,
+  plays employee,
+  plays employer,
+  plays friend;
+
+friends sub relation,
+  relates friend;
+
+friend-transitive sub relation,
+  relates friend;
+
+define friend-transitivity sub rule, when {
+  ($f1, $f2) isa friends;
+}, then {
+  (friend:$f1, friend:$f2) isa friend-transitive;
+};
+
+define friend-transitivity-expands sub rule, when {
+  ($f1, $f2) isa friend-transitive;
+  ($f2, $f3) isa friend-transitive;
+}, then {
+  (friend:$f1,friend:$f3) isa friend-transitive;
+};
+
+###Data
+insert $a isa person, has name "Alice";
+       $b isa person, has name "Bob";
+       $c isa person, has name "Charlie";
+       (friend: $b,friend: $c) isa friends;
+
+###Test
+match ($a,$b) isa friends; get;
