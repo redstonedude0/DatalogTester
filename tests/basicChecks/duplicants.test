@@ -1,0 +1,76 @@
+###Schema
+
+# Testing duplicate names, relations, etc. Fake surnames given to aid explanation;
+# Alice A employs Alice B
+# Bob A employs Bob A
+# Alice A friends Bob A
+# Alice B friends Alice A
+# Alice C friends Bob C
+# Alice B friends Bob A
+# Charlie exists
+#
+# friends-transitive contains transitive friend relations
+# friend graph:
+# AA - BA
+# |
+# AB - BA
+#
+# AC - BC
+#
+define
+
+employment sub relation,
+  relates employee,
+  relates employer;
+
+~name sub attribute,
+~  datatype string;
+
+person sub entity,
+  has name,
+  plays employee,
+  plays employer,
+  plays friend;
+
+friends sub relation,
+  relates friend;
+
+friend-transitive sub relation,
+  relates friend;
+
+define friend-transitivity sub rule, when {
+  ($f1, $f2) isa friends;
+}, then {
+  (friend:$f1, friend:$f2) isa friend-transitive;
+};
+
+define friend-transitivity-expands sub rule, when {
+  ($f1, $f2) isa friend-transitive;
+  ($f2, $f3) isa friend-transitive;
+}, then {
+  (friend:$f1,friend:$f3) isa friend-transitive;
+};
+
+###Data
+insert $aa isa person, has name "Alice";
+       $ab isa person, has name "Alice";
+       $ac isa person, has name "Alice";
+       $ba isa person, has name "Bob";
+       $bb isa person, has name "Bob";
+       $bc isa person, has name "Bob";
+       $c isa person, has name "Charlie";
+       (employer:$aa,employee:$ab) isa employment;
+       (employer:$ba,employee:$ba) isa employment;
+       (friend:$aa,friend:$ba) isa friends;
+       (friend:$ab,friend:$aa) isa friends;
+       (friend:$ac,friend:$bc) isa friends;
+       (friend:$ab,friend:$ba) isa friends;
+
+###Test
+match ($a) isa employment; get;
+match ($a,$b) isa employment; get;
+match ($a,$b) isa friends; get;
+match ($a,$b) isa friend-transitive; get;
+match $a isa person, has name $n; get;
+match $a isa person, has name $n; get $n;
+match $a isa person, has name $n; get $a;

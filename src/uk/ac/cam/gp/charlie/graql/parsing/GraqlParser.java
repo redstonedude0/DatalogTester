@@ -136,11 +136,11 @@ public class GraqlParser {
 
     regex = regex.replace("<define_block>","(<wso>define(<ws>(<define>|<define_rule>))+)");
     //<editor-fold desc="Defines for rules">
-    regex = regex.replace("<define_rule>","((?<DEFINERULEIDENT><identifier>)<ws>sub<ws>(?<DEFINERULESUBS><identifier>)<wso>,<wso>when<wso><when_block><wso>,<wso>then<wso><then_block><wso>;)");
+    regex = regex.replace("<define_rule>","((?<DEFINERULEIDENT><identifier>)<ws>sub<ws>(?<DEFINERULESUBS><identifier>)<wso>,<wso><when_block><wso>,<wso><then_block><wso>;)");
     registeredTags.add("DEFINERULEIDENT");
     registeredTags.add("DEFINERULESUBS");
-    regex = regex.replace("<when_block>","(\\{(<wso><when_condition>)*<wso>})");
-    regex = regex.replace("<then_block>","(\\{<wso><rel_isa_condition><wso>})");
+    regex = regex.replace("<when_block>","(when<wso>\\{(<wso><when_condition>)*<wso>})");
+    regex = regex.replace("<then_block>","(then<wso>\\{<wso><rel_isa_condition><wso>})");
     regex = regex.replace("<when_condition>","(<rel_isa_condition>|<ent_isa_condition>|<rel_ent_isa_condition>|<has_condition>|<neq_condition>)");
     //</editor-fold>
 
