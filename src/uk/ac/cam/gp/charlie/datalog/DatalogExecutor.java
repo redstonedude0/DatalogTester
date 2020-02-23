@@ -169,8 +169,14 @@ public class DatalogExecutor extends Executor {
                       System.out.println(
                           "  $" + Variable.getIdentifier(v) + " => \u001b[35m{" + boundValue
                               + "}\u001b[0m");
+                      continue;//loop to next variable
                     }
                   }
+                }
+                if (DebugHelper.VERBOSE_DATALOG) {//didn't continue, so didn't print, therefore a non-returned variable
+                  System.out.println(
+                      "NR$" + Variable.getIdentifier(v) + " => \u001b[35m{" + boundValue
+                          + "}\u001b[0m");
                 }
               }
               toRet.add(resultMap);
