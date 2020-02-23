@@ -87,6 +87,7 @@ public class Result {
    */
   public Result(List<Map<String, ResultValue>> results) {
     this.results = results;
+    setify();//ensure set-like
   }
 
   public static Result fromGrakn(List<List<ConceptMap>> graknResults) {
@@ -169,27 +170,7 @@ public class Result {
     loop: for (Map<String,ResultValue> res2: res2s) {
       for (Map<String,ResultValue> res1: res1s) {
         //if map equal
-        boolean mapEqual = false;
-        if (res1.size() == res2.size()) {
-          boolean allEntriesEqual = true;
-          for (Entry<String,ResultValue> res1Entry : res1.entrySet()) {
-            String key = res1Entry.getKey();
-            ResultValue value = res1Entry.getValue();
-            ResultValue value2 = res2.get(key);
-            if (value == null && value2 == null) {
-              continue;//Equal entry
-            }
-            if (value.equals(value2)) {
-              continue;//Equal entry
-            }
-            //Not equal, out
-            allEntriesEqual = false;
-            break;
-          }
-          if (allEntriesEqual) {
-            mapEqual = true;
-          }
-        }
+        boolean mapEqual = resultMapsEqual(res2, res1);
         if (mapEqual) {
           res1s.remove(res1);
           res2s.remove(res2);
@@ -197,9 +178,59 @@ public class Result {
         }
       }
     }
-    if (res1s.size() != 0) {
+    if (res1s.size() != 0 || res2s.size() != 0) {
       return false;
     }
     return true;
+  }
+
+  private static boolean resultMapsEqual(Map<String, ResultValue> result1,
+      Map<String, ResultValue> result2) {
+    boolean mapEqual = false;
+    if (result2.size() == result1.size()) {
+      boolean allEntriesEqual = true;
+      for (Entry<String,ResultValue> res1Entry : result2.entrySet()) {
+        String key = res1Entry.getKey();
+        ResultValue value = res1Entry.getValue();
+        ResultValue value2 = result1.get(key);
+        if (value == null && value2 == null) {
+          continue;//Equal entry
+        }
+        if (value != null && value.equals(value2)) {
+          continue;//Equal entry
+        }
+        //Not equal, out
+        allEntriesEqual = false;
+        break;
+      }
+      if (allEntriesEqual) {
+        mapEqual = true;
+      }
+    }
+    return mapEqual;
+  }
+
+  /**
+   * Turn into a set-like structure (so there's no duplicate results)
+   */
+  public void setify() {
+    List<Map<String, ResultValue>> newResults = new ArrayList<>();
+    for (Map<String,ResultValue> result: results) {
+      //check if map in newResults
+      boolean alreadyInNewResults = false;
+      for (Map<String,ResultValue> newResult: newResults) {
+        //if map equal
+        boolean mapEqual = resultMapsEqual(newResult, result);
+        if (mapEqual) {
+          alreadyInNewResults = true;
+          break;//no point checking rest of map
+        }
+      }
+      //if not in, add
+      if (!alreadyInNewResults) {
+        newResults.add(result);
+      }
+    }
+    this.results = newResults;
   }
 }
