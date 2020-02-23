@@ -217,16 +217,9 @@ public class ASTInterpreter {
             //If it's a constant, reference the constant atom (effectively an attribute entity)
             attrval_s = "const_" + c.getConstNumber((ConstantValue) attrval);
           } else if (attrval instanceof Variable) {
-            //If it's a variable, try and resolve the scope
-            Integer i = c.resolveScope((Variable) attrval);
-            if (i == null) {
-              //Not in the scope/dataset - it's a bound variable in this match statement, add it to the var list
-              attrval_s = "Var" + c.getVariableNumber((Variable) attrval);
-              vars.add(attrval_s);
-            } else {
-              //Scope resolved, it's in the dataset - set it to that instance
-              attrval_s = "e_" + i;
-            }
+            //Not in the scope/dataset - it's a bound variable in this match statement, add it to the var list
+            attrval_s = "Var" + c.getVariableNumber((Variable) attrval);
+            vars.add(attrval_s);
           } else {
             throw new RuntimeException("Unknown attribute value");
           }
@@ -237,15 +230,8 @@ public class ASTInterpreter {
         }
         List<Entry<String,String>> entity_role_pairs = new ArrayList<>();
         for (Entry<Plays, Variable> entry : cond.relates) {
-          Integer i = c.resolveScope(entry.getValue());
-          String relates_s;
-          //Similar scope resolution as above to resolve the variable
-          if (i == null) {
-            relates_s = "Var" + c.getVariableNumber(entry.getValue());
-            vars.add(relates_s);
-          } else {
-            relates_s = "e_" + i;
-          }
+          String relates_s = "Var" + c.getVariableNumber(entry.getValue());
+          vars.add(relates_s);
           Plays plays = entry.getKey();
           String relatesString;
           if (plays != null) { //specific role
@@ -300,13 +286,8 @@ public class ASTInterpreter {
           if (attr instanceof ConstantValue) {
             output = "const_" + c.getConstNumber((ConstantValue) attr);
           } else if (attr instanceof Variable) {
-            Integer i = c.resolveScope((Variable) attr);
-            if (i == null) {
-              output = "Var" + c.getVariableNumber((Variable) attr);
-              vars.add(output);
-            } else {
-              output = "e_" + i;
-            }
+            output = "Var" + c.getVariableNumber((Variable) attr);
+            vars.add(output);
           } else {
             throw new RuntimeException("Unknown attribute value");
           }

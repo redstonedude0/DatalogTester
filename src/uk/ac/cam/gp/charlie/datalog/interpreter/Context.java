@@ -209,8 +209,17 @@ public class Context {
 
   //<editor-fold desc="Scope information (bound variables)">
   //TODO only maps to things for now, need to map to types, etc
+  //Edit: does this need to? This is just for insert blocks right? In which case you wouldn't really insert a non-thing at the moment
   //Maps all bound variables (bound by previously inserted in an insert block, or matched in a match/rule)
   //@bug not entirely sure how reliable this maps to constants, relations, etc (check in ASTInterpreter for all instances of e_)
+  //match..insert/rule will addToScope some variable bindings, then later removeFromScope them once the insertion is complete
+  //insert will addToScope and never remove
+  //resolveScope is used to resolve for relations in an insert (should resolve attributes perhaps in a rule?
+  //used to be used for match/rule conditions, but since it only references things outside of scope there's little need (it would allow)
+  //   insert $x.....;
+  //   match ($x,$Var) isa friends....;
+  //not much need since all relations to $x should be easily known (excluding rules), and we can just match get for that.
+  //removed that functionality for now
   private Map<Variable,Integer> scope = new HashMap<>();
   public Integer resolveScope(Variable v) {
     return scope.get(v);
