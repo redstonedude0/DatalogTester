@@ -1,0 +1,81 @@
+###Schema
+define
+
+# Alice,Bob,Charlie,Delta, and Ellie work for Uni
+#   they are all coworkers
+#
+# Bob and Favio work for Zulu, Zulu works for himself
+#
+# Alice and Favio are friends
+# Alice and Bob are friends
+# Delta and Ellie are friends
+# Zulu considers himself a friend
+
+
+~name sub attribute,
+~  datatype string;
+
+person sub entity,
+  has name,
+  plays employee,
+  plays employer,
+  plays friend;
+
+organisation sub entity,
+  has name,
+  plays employer;
+
+employment sub relation,
+  relates employee,
+  relates employer;
+
+friends sub relation,
+  relates friend;
+
+coworkers sub relation,
+  relates employee;
+
+define same-employer-are-coworkers sub rule, when {
+  (employer:$employer,employee:$p1) isa employment;
+  (employer:$employer,employee:$p2) isa employment;
+  $p1 != $p2;
+}, then {
+  (employee:$p1, employee:$p2) isa coworkers;
+};
+
+define friends-are-transitive sub rule, when {
+  (friend: $f1, friend:$f2) isa friends;
+  (friend: $f2, friend:$f3) isa friends;
+}, then {
+  (friend:$f1, friend:$f3) isa friends;
+};
+
+###Data
+insert $a isa person, has name "Alice";
+       $b isa person, has name "Bob";
+       $c isa person, has name "Charlie";
+       $d isa person, has name "Delta";
+       $e isa person, has name "Ellie";
+       $f isa person, has name "Favio";
+       $z isa person, has name "Zulu";
+       $u isa organisation, has name "Uni";
+       (employer: $u, employee: $a) isa employment;
+       (employer: $u, employee: $b) isa employment;
+       (employer: $u, employee: $c) isa employment;
+       (employer: $u, employee: $d) isa employment;
+       (employer: $u, employee: $e) isa employment;
+       (employer: $z, employee: $b) isa employment;
+       (employer: $z, employee: $f) isa employment;
+       (employer: $z, employee: $z) isa employment;
+       (friend: $a, friend: $f) isa friends;
+       (friend: $a, friend: $b) isa friends;
+       (friend: $d, friend: $e) isa friends;
+       (friend: $z, friend: $z) isa friends;
+###Test
+match $p isa person, has name $n; get $n;
+match $p isa person; get;
+match $o isa organisation, has name $n; get;
+match $rel (employer: $er, employee: $ee) isa employment; get;
+match $rel (employee: $ee1, employee: $ee2) isa coworkers; get;
+match $rel (friend: $f1, friend: $f2) isa friends; get $f1, $f2;
+

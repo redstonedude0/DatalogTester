@@ -1,6 +1,9 @@
 ###Schema
 define
 
+~name sub attribute,
+~  datatype string;
+
 person sub entity,
   has name,
   plays employee;
@@ -14,12 +17,12 @@ employment sub relation,
   relates employer;
 
 ###Data
-insert $x isa person has name "Bob";
-insert $y isa organisation has name "Uni"";
-insert $z (employer: $y, employee: $x) isa employment;
-
+insert $x isa person, has name "Bob";
+       $y isa organisation, has name "Uni";
+       $z (employer: $y, employee: $x) isa employment;
 ###Test
 match $p isa person, has name $n; get;
+match $p isa person, has name $n; get $n;
 match $o isa organisation, has name $n; get;
 match (employer: $a, employee: $b) isa employment; get;
 

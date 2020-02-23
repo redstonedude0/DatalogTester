@@ -4,14 +4,15 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import uk.ac.cam.gp.charlie.datalog.DatalogExecutor;
 import uk.ac.cam.gp.charlie.graql.GraqlExecutor;
 
 public class TestLoader {
 
   private static class TestFile {
-
     TestEnvironment te;
     List<String> tests = new ArrayList<>();
     String name = "Unnamed Test";
@@ -59,8 +60,8 @@ public class TestLoader {
 
   private static List<String> runComparisonTests(TestFile tf) {
     try (
-        DatalogExecutor de = new DatalogExecutor(tf.te);
-        GraqlExecutor ge = new GraqlExecutor(tf.te);
+        DatalogExecutor de = new DatalogExecutor(new TestEnvironment(makeDatalogSafe(tf.te.schema),makeDatalogSafe(tf.te.data)));
+        GraqlExecutor ge = new GraqlExecutor(new TestEnvironment(makeGraqlSafe(tf.te.schema),makeGraqlSafe(tf.te.data)));
     ) {
       boolean passed = true;
       int id = 1;
@@ -100,7 +101,7 @@ public class TestLoader {
       }
       return results;
     } catch (Exception e) {
-      throw new RuntimeException("Error during execution");
+      throw new RuntimeException("Error during execution",e);
     }
   }
 
@@ -129,38 +130,23 @@ public class TestLoader {
     return ret.toString();
   }
 
-  public static List<File> listFiles() {
-    File f = new File("tests/1/");
-    List<File> list = new ArrayList<>();
+
+  public static Map<String,File> listFiles() {
+    return listFiles("");
+  }
+
+  private static Map<String,File> listFiles(String prepend) {
+    File f = new File("tests"+prepend+"/");
+    Map<String,File> list = new HashMap<>();
     for (File file : f.listFiles()) {
-      list.add(file);
+      if (file.isDirectory()) {
+        list.putAll(listFiles(prepend+"/"+file.getName()));
+      } else if (file.isFile()) {
+        list.put(prepend + "/" + file.getName(), file);
+      }
     }
     return list;
   }
 
 
 }
-
-
-/*
-
-    Constructor[] constructors = clazz.getConstructors();
-    for (Constructor constructor : constructors) {
-      if (constructor.getParameterCount() == 1) {
-        if (constructor.getParameterTypes()[0].equals(TestEnvironment.class)) {
-          try {
-            Executor executor = (Executor) constructor.newInstance(testEnvironment);
-            for (String query: queries) {
-              if (!query.equals("\n")) {
-                executor.execute(query);
-              }
-            }
-            return;
-          } catch (InstantiationException|IllegalAccessException|InvocationTargetException e) {
-            e.printStackTrace();
-          }
-        }
-      }
-    }
-    System.out.println("Could not find a valid constructor");
- */

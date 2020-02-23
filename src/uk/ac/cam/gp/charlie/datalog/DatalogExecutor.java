@@ -303,7 +303,8 @@ public class DatalogExecutor extends Executor {
     List<Query> tests = parser.graqlToAST(query);
     //ASSERT length(tests) != 1;
     if (tests.size() == 0) {
-      System.out.println("No query found (parsing error?)");
+      System.out.println("No query found (parsing error?) Query was:");
+      System.out.println(query);
     }
     Result r = new Result(new ArrayList<>());
     if (DebugHelper.VERBOSE_AST) {

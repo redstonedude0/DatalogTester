@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -358,13 +359,13 @@ public class Workbench {
   private static void interactive_comparison()
       throws Exception {
     BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-    List<File> files = TestLoader.listFiles();
+    Map<String,File> files = TestLoader.listFiles();
     loop:
     while (true) {
       System.out.println("Enter a number to run, or 'exit', or 'debug', or 'all'");
       int id = 0;
-      for (File f : files) {
-        System.out.println(id + ") \u001b[34m" + f.getName()+ "\u001b[0m");
+      for (Entry<String,File> fileEntry : files.entrySet()) {
+        System.out.println(id + ") \u001b[34m" + fileEntry.getKey()+ "\u001b[0m");
         id++;
       }
       String input = br.readLine();
@@ -379,8 +380,8 @@ public class Workbench {
       }
       if (input.equals("all")) {
         List<String> allResults = new ArrayList<>();
-        for (File f: files) {
-          List<String> results = TestLoader.runComparisonTests(f);
+        for (Entry<String,File> fileEntry: files.entrySet()) {
+          List<String> results = TestLoader.runComparisonTests(fileEntry.getValue());
           allResults.addAll(results);
         }
         System.out.println("#####################");
@@ -393,9 +394,9 @@ public class Workbench {
       }
       id = 0;
       Integer selected = Integer.parseInt(input);
-      for (File f: files) {
+      for (Entry<String,File> fileEntry: files.entrySet()) {
         if (selected == id) {
-          TestLoader.runComparisonTests(f);
+          TestLoader.runComparisonTests(fileEntry.getValue());
           break;
         }
         id++;
