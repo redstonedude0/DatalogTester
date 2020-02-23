@@ -17,12 +17,13 @@ import java.util.stream.Collectors;
 public class GraqlExecutor extends Executor {
 
   private GraknClient.Session session;
+  private GraknClient client;
 
   public GraqlExecutor(TestEnvironment environment) {
     if (!DebugHelper.VERBOSE_GRAQL) {
       DebugHelper.absorbOutput();
     }
-    GraknClient client = new GraknClient("localhost:48555");
+    client = new GraknClient("localhost:48555");
     session = client.session(randomString());
     DebugHelper.restoreOutput();
 
@@ -55,6 +56,7 @@ public class GraqlExecutor extends Executor {
   public void close() {
     super.close();
     session.close();
+    client.close();
   }
 
   @Override

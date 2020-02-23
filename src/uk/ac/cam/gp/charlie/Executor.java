@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-public abstract class Executor {
+public abstract class Executor implements AutoCloseable{
 
   /**
    * Execute a query in this execution environment
@@ -27,8 +27,8 @@ public abstract class Executor {
     return toReturn;
   }
 
+  @Override
   public void close() {
-
   }
 
 }

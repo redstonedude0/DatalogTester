@@ -3,8 +3,6 @@ package uk.ac.cam.gp.charlie;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 import uk.ac.cam.gp.charlie.datalog.DatalogExecutor;
@@ -13,6 +11,7 @@ import uk.ac.cam.gp.charlie.graql.GraqlExecutor;
 public class TestLoader {
 
   private static class TestFile {
+
     TestEnvironment te;
     List<String> tests = new ArrayList<>();
     String name = "Unnamed Test";
@@ -45,8 +44,8 @@ public class TestLoader {
     String queryBlock = bits[1];
     String[] queries = queryBlock.split("\n");
     TestFile tf = new TestFile();
-    tf.te = new TestEnvironment(schema,data);
-    for (String query: queries) {
+    tf.te = new TestEnvironment(schema, data);
+    for (String query : queries) {
       if (!query.equals("\n") && !query.equals("")) {
         tf.tests.add(query);
       }
@@ -59,40 +58,57 @@ public class TestLoader {
   }
 
   private static List<String> runComparisonTests(TestFile tf) {
-    boolean passed = true;
-    int id = 1;
-    List<String> results = new ArrayList<>();
-    results.add("\u001b[36m"+tf.name+"\u001b[0m Summary:");
-    for (String query : tf.tests) {
-      String result;
-      try {
-        runComparisonTest(tf.te, query);
-        result = "Test \u001b[32mPassed\u001b[0m \u001b[36m"+tf.name + "\u001b[0m("+id+"/"+tf.tests.size()+") - \u001b[35m"+query+"\u001b[0m";
-      } catch (Throwable t) {
-        System.out.println("Error: " + t.getMessage());
-        result = "Test \u001b[31mFailed\u001b[0m \u001b[36m"+tf.name + "\u001b[0m("+id+"/"+tf.tests.size()+") - \u001b[35m"+query+"\u001b[0m";
-        passed = false;
+    try (
+        DatalogExecutor de = new DatalogExecutor(tf.te);
+        GraqlExecutor ge = new GraqlExecutor(tf.te);
+    ) {
+      boolean passed = true;
+      int id = 1;
+      List<String> results = new ArrayList<>();
+      results.add("\u001b[36m" + tf.name + "\u001b[0m Summary:");
+      for (String query : tf.tests) {
+        String result;
+        try {
+          Result dr = de.execute(makeDatalogSafe(query));
+          Result gr = ge.execute(makeGraqlSafe(query));
+          System.out.println("DL RESULTS:");
+          dr.print();
+          System.out.println("GRAQL RESULTS:");
+          gr.print();
+          if (!dr.equals(gr)) {
+            throw new RuntimeException("Results not equal");
+          }
+          result = "Test \u001b[32mPassed\u001b[0m \u001b[36m" + tf.name + "\u001b[0m(" + id + "/"
+              + tf.tests.size() + ") - \u001b[35m" + query + "\u001b[0m";
+        } catch (Throwable t) {
+          System.out.println("Error: " + t.getMessage());
+          result = "Test \u001b[31mFailed\u001b[0m \u001b[36m" + tf.name + "\u001b[0m(" + id + "/"
+              + tf.tests.size() + ") - \u001b[35m" + query + "\u001b[0m";
+          passed = false;
+        }
+        System.out.println(result);
+        results.add("  " + result);
+        id++;
       }
-      System.out.println(result);
-      results.add("  "+result);
-      id++;
+      if (passed) {
+        results.add("\u001b[32mAll Tests Passed\u001b[0m");
+      } else {
+        results.add("\u001b[31mSome Tests Failed\u001b[0m");
+      }
+      for (String result : results) {
+        System.out.println(result);
+      }
+      return results;
+    } catch (Exception e) {
+      throw new RuntimeException("Error during execution");
     }
-    if (passed) {
-      results.add("\u001b[32mAll Tests Passed\u001b[0m");
-    } else {
-      results.add("\u001b[31mSome Tests Failed\u001b[0m");
-    }
-    for (String result: results) {
-      System.out.println(result);
-    }
-    return results;
   }
 
   private static String makeDatalogSafe(String query) {
     //Lines starting '~' are graql only
     StringBuilder ret = new StringBuilder();
     String[] parts = query.split("\n");
-    for(String s : parts) {
+    for (String s : parts) {
       if (!s.startsWith("~")) {
         ret.append(s).append("\n");
       }
@@ -104,27 +120,13 @@ public class TestLoader {
     //Lines starting '~' are graql only
     StringBuilder ret = new StringBuilder();
     String[] parts = query.split("\n");
-    for(String s : parts) {
+    for (String s : parts) {
       if (s.startsWith("~")) {
         s = s.substring(1);
       }
       ret.append(s).append("\n");
     }
     return ret.toString();
-  }
-
-  private static void runComparisonTest(TestEnvironment te, String query) {
-    DatalogExecutor de = new DatalogExecutor(te);
-    GraqlExecutor ge = new GraqlExecutor(te);
-    Result dr = de.execute(makeDatalogSafe(query));
-    Result gr = ge.execute(makeGraqlSafe(query));
-    System.out.println("DL RESULTS:");
-    dr.print();
-    System.out.println("GRAQL RESULTS:");
-    gr.print();
-    if (!dr.equals(gr)) {
-      throw new RuntimeException("Results not equal");
-    }
   }
 
   public static List<File> listFiles() {
