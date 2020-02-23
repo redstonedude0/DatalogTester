@@ -1,6 +1,8 @@
 package uk.ac.cam.gp.charlie;
 
 import abcdatalog.util.substitution.Substitution;
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.lang.reflect.Field;
@@ -8,6 +10,7 @@ import java.lang.reflect.Modifier;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import org.slf4j.LoggerFactory;
 import uk.ac.cam.gp.charlie.ast.Variable;
 import uk.ac.cam.gp.charlie.ast.queries.match.QueryMatch;
 import uk.ac.cam.gp.charlie.ast.queries.match.QueryMatch.Action;
@@ -153,16 +156,23 @@ public class DebugHelper {
     }
   }
 
-  public static PrintStream out = null;
+//  public static PrintStream out = null;
+  public static Level loggerLevel = null;
   public static void absorbOutput() {
-    out = System.out;
-    System.setOut(new PrintStream(new ByteArrayOutputStream()));
+    Logger logger = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
+    logger.setLevel(Level.OFF);
+//    out = System.out;
+//    System.setOut(new PrintStream(new ByteArrayOutputStream()));
   }
   public static void restoreOutput() {
-    if (out != null) {
-      System.setOut(out);
-      out = null;
+    if (loggerLevel != null) {
+      Logger logger = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
+      logger.setLevel(loggerLevel);
     }
+//    if (out != null) {
+//      System.setOut(out);
+//      out = null;
+//    }
   }
 
 }

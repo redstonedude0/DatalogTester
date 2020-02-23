@@ -1,17 +1,17 @@
 package uk.ac.cam.gp.charlie.graql;
-import static graql.lang.Graql.*;
+
+import static graql.lang.Graql.parseList;
+
 import grakn.client.GraknClient;
 import grakn.client.answer.ConceptMap;
 import graql.lang.query.GraqlGet;
-import graql.lang.query.GraqlInsert;
+import java.util.List;
+import java.util.Random;
+import java.util.stream.Collectors;
 import uk.ac.cam.gp.charlie.DebugHelper;
 import uk.ac.cam.gp.charlie.Executor;
 import uk.ac.cam.gp.charlie.Result;
 import uk.ac.cam.gp.charlie.TestEnvironment;
-
-import java.util.List;
-import java.util.Random;
-import java.util.stream.Collectors;
 
 
 public class GraqlExecutor extends Executor {
