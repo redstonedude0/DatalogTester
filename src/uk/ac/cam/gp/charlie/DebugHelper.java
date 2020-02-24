@@ -26,6 +26,7 @@ public class DebugHelper {
   public static boolean VERBOSE_RESULTS = false;
   public static boolean VERBOSE_GRAQL = false;
   public static boolean VERBOSE_GRAQL_INPUT = true;
+  //public static boolean DUMP_DATALOG_ON_RESULT = false;
 
   /**
    * This will truncate the tree to depth 10, use this to print a tree in a (nice enough) way

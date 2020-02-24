@@ -94,6 +94,7 @@ public class GraqlParser {
     //Create a list of tags this regex may have, all not in the 'tags' param will be deleted from the string
     List<String> registeredTags = new ArrayList<>();
     //The graql can be considered a <block>*
+    regex = regex.replace("<block>*","<block>*+");//greedy
     regex = regex.replace("<block>","(<define_block>|<insert_block>|<match>)");
 
     //<editor-fold desc="Match statements">
@@ -102,18 +103,18 @@ public class GraqlParser {
     registeredTags.add("MATCHCONDS");
     registeredTags.add("MATCHACT");
     //A condition within the 'match' body
-    regex = regex.replace("<match_condition>","(<neq_condition>|<isa_has_condition>|<rel_ent_isa_condition>|<rel_isa_condition>)");
+    regex = regex.replace("<match_condition>","(<neq_condition>|<isa_has_condition>|<rel_ent_isa_condition>|<has_condition>|<rel_isa_condition>)");
     //An action to take based on the match
     regex = regex.replace("<match_action>","(<get_all>|<get_some>|<insert_block>|<delete>)");
     //Actions
     regex = regex.replace("<get_all>","(get<wso>;)");
-    regex = regex.replace("<get_some>","(get<wso><variable>(<wso>,<wso><variable>)*<wso>;)");
+    regex = regex.replace("<get_some>","(get<wso><variable>(<wso>,<wso><variable>)*+<wso>;)");
     regex = regex.replace("<delete>","(delete<ws><variable><wso>;)");
     //</editor-fold>
 
     //<editor-fold desc="Insert statements">
     //A block of insert statements
-    regex = regex.replace("<insert_block>","(<wso>insert(<ws><insert>)+<wso>)");
+    regex = regex.replace("<insert_block>","(<wso>insert(<ws><insert>)++<wso>)");
     //A single insert statement
     regex = regex.replace("<insert>", "((<insert_entity>|<insert_rel>)(<wso><insert_has>)*<wso>;)");
     //Inserting an entity
@@ -126,11 +127,11 @@ public class GraqlParser {
     registeredTags.add("INSERTHEADISAREL");
     //Tags already added
     //TODO - change to use has_condition (to allow variable has'es)
-    regex = regex.replace("<insert_has>", "(,<ws>has<ws>(?<INSERTHASIDENT><identifier>)<ws><string_lit>)");
+    regex = regex.replace("<insert_has>", "(,<ws>has<ws>(?<INSERTHASIDENT><identifier>)<ws><literal>)");
     registeredTags.add("INSERTHASIDENT");
     //Todo - $x has attr "VAL"; needs to be added (not the same as has above!!!!)
     //TODO - $x has attr $v; also needs to be added
-//    regex = regex.replace("<insert_attribute>", "(<wso>;<ws><wso>(?<INSERTATTIDENT><variable>)<ws><string_lit>)");
+//    regex = regex.replace("<insert_attribute>", "(<wso>;<ws><wso>(?<INSERTATTIDENT><variable>)<ws><literal>)");
 //    registeredTags.add("INSERTATTIDENT");
     //</editor-fold>
 
@@ -152,7 +153,7 @@ public class GraqlParser {
     //has condition
     regex = regex.replace("<has_condition>","((?<HAS1><variable>)<ws><has_subcondition>(,<wso><has_subcondition>)*;)");
     registeredTags.add("HAS1");
-    regex = regex.replace("<has_subcondition>","(has<ws>(?<HASSUB1><identifier>)<ws>((?<HASSUB2><variable>)|(<string_lit>))<wso>)");
+    regex = regex.replace("<has_subcondition>","(has<ws>(?<HASSUB1><identifier>)<ws>((?<HASSUB2><variable>)|(<literal>))<wso>)");
     registeredTags.add("HASSUB1");
     registeredTags.add("HASSUB2");
     //$x != $y
@@ -194,15 +195,22 @@ public class GraqlParser {
 
     //<editor-fold desc="Basic Definitions (variables, identifiers, whitespace, etc)">
     //String literal for inserts
-    regex = regex.replace("<string_lit>", "(\"(?<STRINGLIT>(<char>)*)\")");
+    regex = regex.replace("<literal>","(<string_lit>|<num_lit>|<date_lit>|<bool_lit>)");
+    regex = regex.replace("<string_lit>", "(\"(?<STRINGLIT>(<char>)*+)\")");
     registeredTags.add("STRINGLIT");
+    regex = regex.replace("<num_lit>", "(?<NUMLIT>((<num>|\\.)+))");
+    registeredTags.add("NUMLIT");
+    regex = regex.replace("<date_lit>", "(?<DATELIT>((<num>|-)+))");
+    registeredTags.add("DATELIT");
+    regex = regex.replace("<bool_lit>", "(?<BOOLLIT>(?i)(true|false)(?-i))");
+    registeredTags.add("BOOLLIT");
     //Variable - $<identifier>
     regex = regex.replace("<variable>","(\\$(?<VARIABLE><identifier>))");
     registeredTags.add("VARIABLE");
     //Identifier - <alpha><alphanum>*
-    regex = regex.replace("<identifier>","(<alpha>(<alphanum>)*)");
+    regex = regex.replace("<identifier>","(<alpha>(<alphanum>)*+)");
     //standard character, for strings
-    regex = regex.replace("<char>","(<alphanum>|<ws>|=|\\+|@|\\.)");
+    regex = regex.replace("<char>","(<alphanum>|<ws>|=|\\+|@|\\.|\\$)");
     //Alphanumeric character (or _,-)
     regex = regex.replace("<alphanum>","(<alpha>|<num>|-)");
     //Numeric character
@@ -353,10 +361,25 @@ public class GraqlParser {
   }
 
   private static Entry<Attribute,AttributeValue> parseInsertHas(String graql) {
-    Matcher m = matcher(graql,"<insert_has>","INSERTHASIDENT","STRINGLIT");
+    Matcher m = matcher(graql,"<insert_has>","INSERTHASIDENT","STRINGLIT","NUMLIT","DATELIT","BOOLLIT");
     m.matches();
     String ident = m.group("INSERTHASIDENT");//"name"
-    String lit = m.group("STRINGLIT");//"Bob"
+    String lit1 = m.group("STRINGLIT");//"Bob"
+    String lit2 = m.group("NUMLIT");//36
+    String lit3 = m.group("DATELIT");//2000-01-01
+    String lit4 = m.group("BOOLLIT");//true
+    Object lit = lit1;
+    if (lit == null) {
+      if (lit2 != null) {
+        lit = Double.parseDouble(lit2);
+      } else {
+        if (lit3 != null) {
+          lit = lit3;
+        } else {
+          lit = Boolean.parseBoolean(lit4);
+        }
+      }
+    }
     return new SimpleEntry<>(Attribute.fromIdentifier(ident), ConstantValue.fromValue(lit));
   }
 
@@ -436,6 +459,10 @@ public class GraqlParser {
     m = matcher(graql,"<neq_condition>");
     if (m.matches()) {
       return parseCondition_neq(graql);
+    }
+    m = matcher(graql,"<has_condition>");
+    if (m.matches()) {
+      return parseCondition_has(graql);
     }
     throw new RuntimeException("matched, and then didn't");
   }
@@ -606,16 +633,31 @@ public class GraqlParser {
   private static Entry<Attribute, AttributeValue> parseCondition_hassubentry(String graql) {
     //has n1 $v2
     //has n1 "bob"
-    Matcher m = matcher(graql,"<has_subcondition>","HASSUB1","HASSUB2","STRINGLIT");
+    Matcher m = matcher(graql,"<has_subcondition>","HASSUB1","HASSUB2","STRINGLIT","NUMLIT","DATELIT","BOOLLIT");
     m.matches();
     String lab = m.group("HASSUB1");//"v1"
     String var = m.group("HASSUB2");//"$v2"
-    String lit = m.group("STRINGLIT");//"Bob"
+    String lit1 = m.group("STRINGLIT");//"Bob"
+    String lit2 = m.group("NUMLIT");//36
+    String lit3 = m.group("DATELIT");//2000-01-01
+    String lit4 = m.group("BOOLLIT");//true
     AttributeValue v = null;
     if (var != null) {
       var = var.substring(1);
       v = Variable.fromIdentifier(var);
     } else {
+      Object lit = lit1;
+      if (lit == null) {
+        if (lit2 != null) {
+          lit = Double.parseDouble(lit2);
+        } else {
+          if (lit3 != null) {
+            lit = lit3;
+          } else {
+            lit = Boolean.parseBoolean(lit4);
+          }
+        }
+      }
       v = ConstantValue.fromValue(lit);
     }
     return new SimpleEntry<>(Attribute.fromIdentifier(lab),v);

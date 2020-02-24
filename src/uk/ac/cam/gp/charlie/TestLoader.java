@@ -85,6 +85,7 @@ public class TestLoader {
           System.out.println("Error: " + t.getMessage());
           results.addFailedTest(query);
           passed = false;
+          t.printStackTrace();
         }
         id++;
       }

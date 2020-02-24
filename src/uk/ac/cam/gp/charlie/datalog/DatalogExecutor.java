@@ -4,7 +4,10 @@ import abcdatalog.ast.Clause;
 import abcdatalog.ast.PositiveAtom;
 import abcdatalog.ast.validation.DatalogValidationException;
 import abcdatalog.engine.DatalogEngine;
+import abcdatalog.engine.bottomup.concurrent.ConcurrentBottomUpEngine;
 import abcdatalog.engine.bottomup.sequential.SemiNaiveEngine;
+import abcdatalog.engine.topdown.IterativeQsqEngine;
+import abcdatalog.engine.topdown.RecursiveQsqEngine;
 import abcdatalog.util.substitution.Substitution;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -99,8 +102,10 @@ public class DatalogExecutor extends Executor {
 
   private void createEngine() throws DatalogValidationException {
     ensureInvariants();
-    //engine = new RecursiveQsqEngine(); //doesn't allow disunification
-    engine = new SemiNaiveEngine();//allows disunification
+    //engine = new RecursiveQsqEngine(); //doesn't allow disunification (top-down)
+    //engine = new IterativeQsqEngine(); //doesn't allow disunification (top-down)
+    //engine = new ConcurrentBottomUpEngine(); //Negated body atoms are not allowed (bottom-up)
+    engine = new SemiNaiveEngine(); //allows disunification (bottom-up)
   }
 
   /**

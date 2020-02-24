@@ -6,8 +6,12 @@ import abcdatalog.parser.DatalogParseException;
 import abcdatalog.parser.DatalogParser;
 import abcdatalog.parser.DatalogTokenizer;
 import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
@@ -272,26 +276,45 @@ public class Context {
   public int getMaxInvariantNumber() {return invariantNumber-1;}
   //</editor-fold>
 
+  public List<Integer> descending(Collection<Integer> inputList) {
+    List<Integer> descending = new LinkedList<>();
+    for (Integer input : inputList) {
+      boolean inserted = false;
+      for (int idx = 0; idx < descending.size(); idx++) {
+        Integer compareTo = descending.get(idx);
+        if (input > compareTo) {
+          descending.add(idx,input);
+          inserted = true;
+          break;
+        }
+      }
+      if (!inserted) {
+        descending.add(input);
+      }
+    }
+    return descending;
+  }
+
   /**
    * Prettify datalog using ANSI color codes and filling in data to be more human-readable
    * @param datalog
    * @return
    */
   public String prettifyDatalog(String datalog) {
-    for (Integer i : constDefinitions.keySet()) {
-      datalog = datalog.replaceAll("const_"+i,"\u001b[33m"+constDefinitions.get(i).value+"\u001b[0m");
+    for (Integer i : descending(constDefinitions.keySet())) {
+      datalog = datalog.replace("const_"+i,"\u001b[33m"+constDefinitions.get(i).value+"\u001b[0m");
     }
     for (int i = instanceNumber-1; i >= 0; i--) {
-      datalog = datalog.replaceAll("e_"+i,"\u001b[35m{"+i+"}\u001b[0m");
+      datalog = datalog.replace("e_"+i,"\u001b[35m{"+i+"}\u001b[0m");
     }
-    for (Integer i : playsDefinitions.keySet()) {
-      datalog = datalog.replaceAll("r_"+i,"\u001b[32m"+playsDefinitions.get(i).identifier+"\u001b[0m");
+    for (Integer i : descending(playsDefinitions.keySet())) {
+      datalog = datalog.replace("r_"+i,"\u001b[32m"+playsDefinitions.get(i).identifier+"\u001b[0m");
     }
-    for (Integer i : attributeDefinitions.keySet()) {
-      datalog = datalog.replaceAll("a_"+i,"\u001b[34m"+attributeDefinitions.get(i).identifier+"\u001b[0m");
+    for (Integer i : descending(attributeDefinitions.keySet())) {
+      datalog = datalog.replace("a_"+i,"\u001b[34m"+attributeDefinitions.get(i).identifier+"\u001b[0m");
     }
-    for (Integer i : typeDefinitions.keySet()) {
-      datalog = datalog.replaceAll("t_"+i,"\u001b[31m"+typeDefinitions.get(i)+"\u001b[0m");
+    for (Integer i : descending(typeDefinitions.keySet())) {
+      datalog = datalog.replace("t_"+i,"\u001b[31m"+typeDefinitions.get(i)+"\u001b[0m");
     }
     //ANSI color codes key:
     //Black: \u001b[30m

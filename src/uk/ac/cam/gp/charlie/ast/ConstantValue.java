@@ -17,7 +17,7 @@ public class ConstantValue extends AttributeValue {
     instances.add(this);
   }
 
-  public static ConstantValue fromValue(String value) {
+  public static ConstantValue fromValue(Object value) {
     for(ConstantValue v : instances) {
       if (v.value.equals(value)) {
         return v;
