@@ -377,6 +377,16 @@ public class DatalogExecutor extends Executor {
       System.out.println("\u001b[35;1mRESULTS:\u001b[0m");
       r.print();
     }
+    if (DebugHelper.DUMP_DATALOG_ON_RESULT) {
+      System.out.println("\u001b[35;1mRAW DATALOG:\u001b[0m");
+      for (Clause cl : c.datalog) {
+        System.out.println(cl);
+      }
+      System.out.println("\u001b[35;1mPRETTY DATALOG:\u001b[0m");
+      for (Clause cl : c.datalog) {
+        System.out.println(c.prettifyDatalog(cl.toString()));
+      }
+    }
     return r;
   }
 

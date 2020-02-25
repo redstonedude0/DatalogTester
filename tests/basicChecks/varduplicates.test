@@ -1,0 +1,24 @@
+###Schema
+
+#Testing with duplicate variable names
+
+define
+
+friends sub relation,
+  relates friend;
+
+~name sub attribute,
+~  datatype string;
+
+person sub entity,
+  has name,
+  plays friend;
+
+###Data
+insert $a isa person, has name "Alice";
+       $b isa person, has name "Bob";
+       (friend: $a,friend: $b) isa friends;
+
+###Test
+match $a has name $aName; ($a,$b) isa friends; $b has name $bName; get;
+match $a has name $aName; ($a,$b) isa friends; $a has name $aName; get;

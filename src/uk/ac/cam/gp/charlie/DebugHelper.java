@@ -26,7 +26,7 @@ public class DebugHelper {
   public static boolean VERBOSE_RESULTS = false;
   public static boolean VERBOSE_GRAQL = false;
   public static boolean VERBOSE_GRAQL_INPUT = true;
-  //public static boolean DUMP_DATALOG_ON_RESULT = false;
+  public static boolean DUMP_DATALOG_ON_RESULT = false;
 
   /**
    * This will truncate the tree to depth 10, use this to print a tree in a (nice enough) way
@@ -45,11 +45,14 @@ public class DebugHelper {
   }
 
 
+  /**
+   * Print the object as a tree
+   */
   private static void printObjectTree(Object o, int idnt, int cycles) {
     cycles--;
     //ASSERT: The cursor is on a line, at the correct indent level for text to start,
     //idnt(idnt) will align text as recommended by the parent,
-    //this returns at end of written line to the parent
+    //this returns at end of written line to the parent (the parent should newline if necessary)
     if (cycles == 0) {
       System.out.print("[Maximum output depth reached for AST]");
       return;

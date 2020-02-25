@@ -71,7 +71,14 @@ public class Context {
   private int typeNumber = 0;
   //a map from type num->name is kept
   private Map<Integer, String> typeDefinitions = new HashMap<>();
-  int getTypeNumber(String identifier) {
+  public String getTypeString(String identifier) {
+    if (identifier.equals("concept")||identifier.equals("entity")||identifier.equals("relation")||identifier.equals("rule")) {
+      return identifier;
+    } else {
+      return "t_"+getTypeNumber(identifier);
+    }
+  }
+  private int getTypeNumber(String identifier) {
     for (Entry<Integer,String> entry : typeDefinitions.entrySet()) {
       if (entry.getValue().equals(identifier)) {
         return entry.getKey();

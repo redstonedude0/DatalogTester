@@ -376,6 +376,7 @@ public class Workbench {
         DebugHelper.VERBOSE_RESULTS = true;
         DebugHelper.VERBOSE_AST = true;
         DebugHelper.VERBOSE_DATALOG = true;
+        DebugHelper.DUMP_DATALOG_ON_RESULT = true;
         continue;
       }
       if (input.equals("all")) {

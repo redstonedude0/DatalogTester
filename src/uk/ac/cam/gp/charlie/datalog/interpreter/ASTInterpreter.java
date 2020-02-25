@@ -52,24 +52,24 @@ public class ASTInterpreter {
     if (q instanceof QueryDefine) {
       //Defining an entity or relation
       QueryDefine define = (QueryDefine) q;
-      //Get a unique type number to represent this new type
-      Integer typeNum = c.getTypeNumber(define.identifier);
+      //Get a unique type number to represent this new type (should be a t_ string)
+      String typeString = c.getTypeString(define.identifier);
       //Define the type subs fact
-      toRet.append(String.format("t_subs(t_%d,%s).\n", typeNum, define.subs.identifier));
+      toRet.append(String.format("t_subs(%s,%s).\n", typeString, define.subs.identifier));
       //Define that this type has each attribute
       for (Attribute attribute : define.attributes) {
         toRet.append(String
-            .format("t_hasattr(t_%d,a_%d).\n", typeNum, c.getAttributeNumber(attribute)));
+            .format("t_hasattr(%s,a_%d).\n", typeString, c.getAttributeNumber(attribute)));
       }
       //Define that this type plays each role
       for (Plays play : define.plays) {
         toRet.append(
-            String.format("t_playsrole(t_%d,r_%d).\n", typeNum, c.getPlaysNumber(play)));
+            String.format("t_playsrole(%s,r_%d).\n", typeString, c.getPlaysNumber(play)));
       }
       //Define that this type relates each role-player
       for (Plays play : define.relates) {
         toRet.append(String
-            .format("t_relates(t_%d,r_%d).\n", typeNum, c.getPlaysNumber(play)));
+            .format("t_relates(%s,r_%d).\n", typeString, c.getPlaysNumber(play)));
       }
       toRet.append("\n");
     } else if (q instanceof QueryInsert) {
@@ -78,7 +78,7 @@ public class ASTInterpreter {
       //Get a unique number to represent this 'thing'
       Integer iNum = c.getInstanceNumber();
       //Add the fact that this instance is of a type
-      toRet.append(String.format("instanceof(e_%d,t_%d).\n", iNum, c.getTypeNumber(insert.isa)));
+      toRet.append(String.format("instanceof(e_%d,%s).\n", iNum, c.getTypeString(insert.isa)));
       //Define this instance has each attribute
       for (Entry<Attribute, AttributeValue> entry : insert.attributes.entrySet()) {
         AttributeValue attribute = entry.getValue();
@@ -140,7 +140,7 @@ public class ASTInterpreter {
         List<String> invConditions = new ArrayList<>();
         List<String> invVars = new ArrayList<>();
         //The inverted rule is true iff the 'then' clause holds for the variables passed into the rule from then 'when' clause
-        invConditions.add(String.format("instanceof(X,t_%s)",c.getTypeNumber(then.isa)));
+        invConditions.add(String.format("instanceof(X,%s)",c.getTypeString(then.isa)));
         insert = new QueryInsert(null,then.isa);
         for (Entry<Plays,Variable> entry : then.plays) {
           String relates_s = "Var" + c.getVariableNumber(entry.getValue());
@@ -175,6 +175,10 @@ public class ASTInterpreter {
     if (DebugHelper.VERBOSE_DATALOG) {
       System.out.print(c.prettifyDatalog(toRet.toString()));
     }
+    if (DebugHelper.DUMP_DATALOG_ON_RESULT) {
+      System.out.println("\u001b[35;1mRAW DATALOG:\u001b[0m");
+      System.out.println(toRet.toString());
+    }
 
     //Tokenise and parse
     DatalogTokenizer tokenizer = new DatalogTokenizer(new StringReader(toRet.toString()));
@@ -207,7 +211,7 @@ public class ASTInterpreter {
         vars.add(varString);
         //Assert that $x must be of the required type
         datalogConditions
-            .add(String.format("instanceof(%s,t_%d)", varString, c.getTypeNumber(cond.type)));
+            .add(String.format("instanceof(%s,%s)", varString, c.getTypeString(cond.type)));
         //For every attribute it "has"
         for (Entry<Attribute, AttributeValue> entry : cond.has.entrySet()) {
           String attrval_s;
@@ -340,6 +344,10 @@ public class ASTInterpreter {
     }
     if (DebugHelper.VERBOSE_DATALOG) {//Debug if debug wanted
       System.out.print(c.prettifyDatalog(toRet.toString()));
+    }
+    if (DebugHelper.DUMP_DATALOG_ON_RESULT) {
+      System.out.println("\u001b[35;1mRAW DATALOG:\u001b[0m");
+      System.out.println(toRet.toString());
     }
     //Tokenise and parse, return as positive atom.
     DatalogTokenizer tokenizer = new DatalogTokenizer(new StringReader(toRet.toString()));
