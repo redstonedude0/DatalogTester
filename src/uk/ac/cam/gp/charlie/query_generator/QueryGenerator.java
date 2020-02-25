@@ -1,5 +1,7 @@
 package uk.ac.cam.gp.charlie.query_generator;
 
+import uk.ac.cam.gp.charlie.Result;
+import uk.ac.cam.gp.charlie.datalog.DatalogExecutor;
 import uk.ac.cam.gp.charlie.graql.GraqlExecutor;
 
 import java.util.ArrayList;
@@ -9,9 +11,9 @@ import java.util.Random;
 public class QueryGenerator {
     private static final int N_ENTITIES = 5;
     private static final int N_RELATIONS = 3;
-    private static final int OBJS_PER_ENTITY = 5;
+    private static final int OBJS_PER_ENTITY = 3;
     private static final int OBJS_PER_RELATION = 10;
-    private static final int[] TRAVERSE_QUERIES = {3, 3, 3};
+    private static final int[] TRAVERSE_QUERIES = {3, 4, 5};
 
     public static TestSet generateTestSet(){
         Random random = new Random();
@@ -94,7 +96,7 @@ public class QueryGenerator {
 
         List<String> graqlQueries = new ArrayList<>();
 
-        // traverse
+        // traverse queries
         int length = 0;
         while(length < TRAVERSE_QUERIES.length){
             length++;
@@ -103,6 +105,8 @@ public class QueryGenerator {
                 String lastId = "$" + randomString();
                 Entity lastEntity = entities.get(random.nextInt(entities.size()));
                 while(lastEntity.relations.size()==0) lastEntity = entities.get(random.nextInt(entities.size()));
+
+                str += " " + lastId + " has name " + lastId + "N; ";
 
                 for(int j = 0; j<length; j++){
                     Relation r = lastEntity.relations.get(random.nextInt(lastEntity.relations.size()));
@@ -116,11 +120,13 @@ public class QueryGenerator {
                             str += ", " + newEntity.name + "R: " + newId;
                         }
                     }
-                    str += ") isa " + r.name + "; ";
                     lastEntity = newEntity;
                     lastId = newId;
+                    str += ") isa " + r.name + "; ";
+                    str += " " + lastId + " has name " + lastId + "N; ";
+
                 }
-                str += "get;";
+                str += " get; ";
                 graqlQueries.add(str);
             }
         }
@@ -145,11 +151,19 @@ public class QueryGenerator {
         return str;
     }
 
+    private static void compareResults(GraqlExecutor gex, DatalogExecutor dex, String query){
+        Result r1 = gex.execute(query);
+        Result r2 = dex.execute(query);
+        if(!r1.equals(r2)){
+            System.err.println("Difference on query: "  + query);
+        }
+    }
+
     public static void main(String[] args) {
         TestSet ts = generateTestSet();
-        GraqlExecutor gex = new GraqlExecutor(ts.env);
-        ts.queries.forEach(gex::execute);
-
+        GraqlExecutor gex = new GraqlExecutor(ts.graqlEnv);
+        DatalogExecutor dex = new DatalogExecutor(ts.datalogEnv);
+        ts.queries.forEach(q -> compareResults(gex, dex, q));
     }
 
 

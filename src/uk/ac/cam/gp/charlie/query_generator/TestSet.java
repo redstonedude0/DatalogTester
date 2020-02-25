@@ -3,15 +3,21 @@ package uk.ac.cam.gp.charlie.query_generator;
 import uk.ac.cam.gp.charlie.TestEnvironment;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class TestSet {
-    TestEnvironment env;
+    TestEnvironment datalogEnv;
+    TestEnvironment graqlEnv;
     List<String> queries;
 
     public TestSet(List<String> schema, List<String> data, List<String> queries){
         String schemastr = String.join("\n", schema);
         String datastr = String.join("\n", data);
-        env = new TestEnvironment(schemastr, datastr);
+        graqlEnv = new TestEnvironment(schemastr, datastr);
+
+        schemastr = schema.stream().filter(q -> !q.contains("attribute")).collect(Collectors.joining("\n"));
+        datalogEnv = new TestEnvironment(schemastr, datastr);
+
         this.queries = queries;
     }
 }
