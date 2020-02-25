@@ -1,16 +1,15 @@
 package uk.ac.cam.gp.charlie;
 
+import uk.ac.cam.gp.charlie.datalog.DatalogExecutor;
+import uk.ac.cam.gp.charlie.graql.GraqlExecutor;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
-import uk.ac.cam.gp.charlie.datalog.DatalogExecutor;
-import uk.ac.cam.gp.charlie.graql.GraqlExecutor;
 
 public class TestLoader {
 

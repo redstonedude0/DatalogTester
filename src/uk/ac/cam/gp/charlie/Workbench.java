@@ -10,28 +10,6 @@ import abcdatalog.parser.DatalogParseException;
 import abcdatalog.parser.DatalogParser;
 import abcdatalog.parser.DatalogTokenizer;
 import com.google.common.collect.Lists;
-import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintStream;
-import java.io.StringReader;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.AbstractMap.SimpleEntry;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.function.Function;
-import java.util.stream.Stream;
 import org.junit.internal.TextListener;
 import org.junit.runner.JUnitCore;
 import uk.ac.cam.gp.charlie.ast.Attribute;
@@ -47,6 +25,18 @@ import uk.ac.cam.gp.charlie.datalog.DatalogExecutor;
 import uk.ac.cam.gp.charlie.datalog.tests.TESTAstInterpreter;
 import uk.ac.cam.gp.charlie.graql.GraqlExecutor;
 import uk.ac.cam.gp.charlie.graql.parsing.GraqlParser;
+
+import java.io.*;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.AbstractMap.SimpleEntry;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.function.Function;
+import java.util.stream.Stream;
 
 /**
  * Main file for running the interactive user workbench.
