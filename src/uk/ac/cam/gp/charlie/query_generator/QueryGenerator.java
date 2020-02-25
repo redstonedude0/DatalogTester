@@ -1,5 +1,6 @@
 package uk.ac.cam.gp.charlie.query_generator;
 
+import uk.ac.cam.gp.charlie.DebugHelper;
 import uk.ac.cam.gp.charlie.Result;
 import uk.ac.cam.gp.charlie.datalog.DatalogExecutor;
 import uk.ac.cam.gp.charlie.graql.GraqlExecutor;
@@ -9,10 +10,10 @@ import java.util.List;
 import java.util.Random;
 
 public class QueryGenerator {
-    private static final int N_ENTITIES = 5;
-    private static final int N_RELATIONS = 3;
-    private static final int OBJS_PER_ENTITY = 3;
-    private static final int OBJS_PER_RELATION = 10;
+    private static final int N_ENTITIES = 1;
+    private static final int N_RELATIONS = 1;
+    private static final int OBJS_PER_ENTITY = 1;
+    private static final int OBJS_PER_RELATION = 1;
     private static final int[] TRAVERSE_QUERIES = {3, 4, 5};
 
     public static TestSet generateTestSet(){

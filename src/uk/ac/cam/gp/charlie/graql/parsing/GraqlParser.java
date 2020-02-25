@@ -1,5 +1,6 @@
 package uk.ac.cam.gp.charlie.graql.parsing;
 
+import com.google.common.collect.Lists;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -94,7 +95,7 @@ public class GraqlParser {
     //Create a list of tags this regex may have, all not in the 'tags' param will be deleted from the string
     List<String> registeredTags = new ArrayList<>();
     //The graql can be considered a <block>*
-    regex = regex.replace("<block>*","<block>*+");//greedy
+    regex = regex.replace("<block>*","<block>*");//greedy
     regex = regex.replace("<block>","(<define_block>|<insert_block>|<match>)");
 
     //<editor-fold desc="Match statements">
@@ -185,11 +186,11 @@ public class GraqlParser {
     registeredTags.add("DEFINEHEADIDENT");
     registeredTags.add("DEFINEHEADSUBS");
     //'relates' definition
-    regex = regex.replace("<define_relates>","(<wso>,<ws>relates<ws><identifier>)");
+    regex = regex.replace("<define_relates>","(<wso>,<wso>relates<ws><identifier>)");
     //'plays' definition
-    regex = regex.replace("<define_plays>","(<wso>,<ws>plays<ws><identifier>)");
+    regex = regex.replace("<define_plays>","(<wso>,<wso>plays<ws><identifier>)");
     //'has' definition
-    regex = regex.replace("<define_has>","(<wso>,<ws>has<ws>(?<DEFINEHASIDENT><identifier>))");
+    regex = regex.replace("<define_has>","(<wso>,<wso>has<ws>(?<DEFINEHASIDENT><identifier>))");
     registeredTags.add("DEFINEHASIDENT");
     //</editor-fold>
 
@@ -288,21 +289,29 @@ public class GraqlParser {
   public List<Query> graqlToAST(String graql) {
     graql = removeComments(graql);
     List<Query> toRet = new ArrayList<>();
-    List<String> ss = matches(graql,"<block>*");
+    List<String> ss = matches(graql,"<block>");
     ss.forEach(s -> toRet.addAll(parseBlock(s)));
     return toRet;
   }
 
   private static List<Query> parseBlock(String graql) {
-    List<Query> toRet = new ArrayList<>();
-    List<String> ss;
-    ss = matches(graql,"<define_block>");
-    ss.forEach(s -> toRet.addAll(parseDefineBlock(s)));
-    ss = matches(graql,"<insert_block>");
-    ss.forEach(s -> toRet.addAll(parseInsertBlock(s)));
-    ss = matches(graql,"<match>");
-    ss.forEach(s -> toRet.add(parseMatch(s)));
-    return toRet;
+    Matcher m = matcher(graql,"<define_block>");
+    if (m.matches()) {
+      return parseDefineBlock(graql);
+    }
+    m = matcher(graql,"<insert_block>");
+    if (m.matches()) {
+      List<Query> toRet = new ArrayList<>();
+      toRet.addAll(parseInsertBlock(graql));
+      return toRet;
+    }
+    m = matcher(graql,"<match>");
+    if (m.matches()) {
+      List<Query> toRet = new ArrayList<>();
+      toRet.add(parseMatch(graql));
+      return toRet;
+    }
+    throw new RuntimeException("matched and then didn't :" + graql+":");
   }
 
   private static List<QueryInsert> parseInsertBlock(String graql) {
@@ -425,7 +434,7 @@ public class GraqlParser {
     }
     m = matcher(graql,"<insert_block>");
     if (m.matches()) {
-      //TODO - should be insert block - change querymatch to have a list<insertquery>
+      //TODO - should be insert block - change querymatch to have a list<insertquery>?
       q.setActionInsert(parseInsertBlock(graql).get(0));
       return;
     }
