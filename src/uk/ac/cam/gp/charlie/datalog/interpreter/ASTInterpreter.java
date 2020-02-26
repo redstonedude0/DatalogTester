@@ -5,21 +5,8 @@ import abcdatalog.ast.PositiveAtom;
 import abcdatalog.parser.DatalogParseException;
 import abcdatalog.parser.DatalogParser;
 import abcdatalog.parser.DatalogTokenizer;
-import java.io.StringReader;
-import java.util.AbstractMap.SimpleEntry;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
 import uk.ac.cam.gp.charlie.DebugHelper;
-import uk.ac.cam.gp.charlie.ast.Attribute;
-import uk.ac.cam.gp.charlie.ast.AttributeValue;
-import uk.ac.cam.gp.charlie.ast.ConstantValue;
-import uk.ac.cam.gp.charlie.ast.Plays;
-import uk.ac.cam.gp.charlie.ast.Variable;
+import uk.ac.cam.gp.charlie.ast.*;
 import uk.ac.cam.gp.charlie.ast.queries.Query;
 import uk.ac.cam.gp.charlie.ast.queries.QueryDefine;
 import uk.ac.cam.gp.charlie.ast.queries.QueryDefineRule;
@@ -28,6 +15,11 @@ import uk.ac.cam.gp.charlie.ast.queries.match.ConditionIsa;
 import uk.ac.cam.gp.charlie.ast.queries.match.ConditionNeq;
 import uk.ac.cam.gp.charlie.ast.queries.match.MatchCondition;
 import uk.ac.cam.gp.charlie.ast.queries.match.QueryMatch;
+
+import java.io.StringReader;
+import java.util.AbstractMap.SimpleEntry;
+import java.util.*;
+import java.util.Map.Entry;
 
 /**
  * Interprets an AST (AST->Datalog transformation)

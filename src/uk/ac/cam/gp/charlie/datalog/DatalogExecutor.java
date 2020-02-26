@@ -4,25 +4,11 @@ import abcdatalog.ast.Clause;
 import abcdatalog.ast.PositiveAtom;
 import abcdatalog.ast.validation.DatalogValidationException;
 import abcdatalog.engine.DatalogEngine;
-import abcdatalog.engine.bottomup.concurrent.ConcurrentBottomUpEngine;
 import abcdatalog.engine.bottomup.sequential.SemiNaiveEngine;
-import abcdatalog.engine.topdown.IterativeQsqEngine;
-import abcdatalog.engine.topdown.RecursiveQsqEngine;
 import abcdatalog.util.substitution.Substitution;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import uk.ac.cam.gp.charlie.DebugHelper;
-import uk.ac.cam.gp.charlie.Executor;
-import uk.ac.cam.gp.charlie.Result;
+import uk.ac.cam.gp.charlie.*;
 import uk.ac.cam.gp.charlie.Result.ResultValue;
 import uk.ac.cam.gp.charlie.Result.ResultValue.Type;
-import uk.ac.cam.gp.charlie.TestEnvironment;
-import uk.ac.cam.gp.charlie.Workbench;
 import uk.ac.cam.gp.charlie.ast.Variable;
 import uk.ac.cam.gp.charlie.ast.queries.Query;
 import uk.ac.cam.gp.charlie.ast.queries.QueryDefine;
@@ -32,6 +18,9 @@ import uk.ac.cam.gp.charlie.ast.queries.match.QueryMatch;
 import uk.ac.cam.gp.charlie.datalog.interpreter.ASTInterpreter;
 import uk.ac.cam.gp.charlie.datalog.interpreter.Context;
 import uk.ac.cam.gp.charlie.graql.parsing.GraqlParser;
+
+import java.util.*;
+import java.util.Map.Entry;
 
 public class DatalogExecutor extends Executor {
 

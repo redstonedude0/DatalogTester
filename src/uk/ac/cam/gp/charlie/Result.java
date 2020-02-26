@@ -2,21 +2,16 @@ package uk.ac.cam.gp.charlie;
 
 //import grakn.client.answer.ConceptMap;
 
-import com.google.common.collect.HashMultiset;
 import grakn.client.answer.ConceptMap;
 import grakn.client.concept.Concept;
 import grakn.client.concept.Role;
 import grakn.client.concept.Thing;
 import graql.lang.statement.Variable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import uk.ac.cam.gp.charlie.Result.ResultValue.Type;
+
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class Result {
 
