@@ -41,7 +41,7 @@ public class QueryDefine extends Query {
     return null;
   }
 
+  public static final QueryDefine THING = new QueryDefine("thing", null);
   public static final QueryDefine ENTITY = new QueryDefine("entity", null);
   public static final QueryDefine RELATION = new QueryDefine("relation", null);
-  public static final QueryDefine CONCEPT = new QueryDefine("concept", null);
 }

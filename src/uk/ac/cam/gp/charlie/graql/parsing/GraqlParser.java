@@ -630,7 +630,7 @@ public class GraqlParser {
     m.matches();
     String var = m.group("HAS1");//"$v1"
     var = var.substring(1);
-    ConditionIsa cond = new ConditionIsa(Variable.fromIdentifier(var),"concept");
+    ConditionIsa cond = new ConditionIsa(Variable.fromIdentifier(var),"thing");
     List<String> ss = matches(graql,"<has_subcondition>");
     ss.forEach(s -> {
       Entry<Attribute,AttributeValue> entry = parseCondition_hassubentry(s);

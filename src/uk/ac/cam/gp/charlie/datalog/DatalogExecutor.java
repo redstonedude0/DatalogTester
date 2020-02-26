@@ -72,6 +72,7 @@ public class DatalogExecutor extends Executor {
           for (Variable v : variables) {
             c.removeFromScope(v);
           }
+          break;//INSERTED ONE - NOW RE-CHECK INVARIANT
         }
       }
       //next
@@ -347,8 +348,7 @@ public class DatalogExecutor extends Executor {
                 || value.equals("entity")
                 || value.equals("relation")
                 || value.equals("role")
-                || value.equals("thing")
-                || value.equals("concept")) {
+                || value.equals("thing")) {
               rv = new ResultValue(Type.TYPE);
               rv.value = value;
             } else {

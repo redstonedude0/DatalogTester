@@ -81,8 +81,16 @@ public class Result {
    * @param results a
    */
   public Result(List<Map<String, ResultValue>> results) {
+    this(results,true);
+  }
+
+  public Result(List<Map<String, ResultValue>> results, boolean doSetify) {
     this.results = results;
-    setify();//ensure set-like
+///*UNDO*/    if (doSetify) {
+///*UNDO*/      System.out.println("Pre-Set-LIKE");
+///*UNDO*/      this.print();
+      setify();//ensure set-like
+///*UNDO*/    }
   }
 
   public static Result fromGrakn(List<List<ConceptMap>> graknResults) {
@@ -132,7 +140,7 @@ public class Result {
         results.add(result);
       }
     }
-    return new Result(results);
+    return new Result(results,false);
   }
 
   public void print() {
@@ -165,7 +173,7 @@ public class Result {
     loop: for (Map<String,ResultValue> res2: res2s) {
       for (Map<String,ResultValue> res1: res1s) {
         //if map equal
-        boolean mapEqual = resultMapsEqual(res2, res1);
+        boolean mapEqual = resultMapsEqual(res2, res1,false);
         if (mapEqual) {
           res1s.remove(res1);
           res2s.remove(res2);
@@ -180,7 +188,8 @@ public class Result {
   }
 
   private static boolean resultMapsEqual(Map<String, ResultValue> result1,
-      Map<String, ResultValue> result2) {
+      Map<String, ResultValue> result2, boolean strong) {
+    //USE strong comparison if from the same engine do want to test values
     boolean mapEqual = false;
     if (result2.size() == result1.size()) {
       boolean allEntriesEqual = true;
@@ -192,6 +201,16 @@ public class Result {
           continue;//Equal entry
         }
         if (value != null && value.equals(value2)) {
+          if (strong) {
+            if (!Objects.equals(value.value,value2.value)) {
+              allEntriesEqual = false;
+              break;
+            }
+            if (!Objects.equals(value.values,value2.values)) {
+              allEntriesEqual = false;
+              break;
+            }
+          }
           continue;//Equal entry
         }
         //Not equal, out
@@ -215,7 +234,7 @@ public class Result {
       boolean alreadyInNewResults = false;
       for (Map<String,ResultValue> newResult: newResults) {
         //if map equal
-        boolean mapEqual = resultMapsEqual(newResult, result);
+        boolean mapEqual = resultMapsEqual(newResult, result,false /* /*UNDO UNDO*/);
         if (mapEqual) {
           alreadyInNewResults = true;
           break;//no point checking rest of map

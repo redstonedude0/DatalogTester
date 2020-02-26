@@ -261,17 +261,78 @@ public class Workbench {
   }
 
   public static void interactive_live_comparison()
-      throws InvocationTargetException, NoSuchMethodException, IllegalAccessException, IOException {
+      throws IOException {
     //TODO: does not work for now as graqlparser does not parse properly
-    TestEnvironment te = new TestEnvironment("\n", "\n");
-    DatalogExecutor de = new DatalogExecutor(te);
-    DebugHelper.VERBOSE_AST = true;
-    DebugHelper.VERBOSE_DATALOG = true;
-    DebugHelper.VERBOSE_RESULTS = true;
-    interactiveLoop(de,new HashMap<>(), new HashMap<>(), true);
-    DebugHelper.VERBOSE_AST = false;
-    DebugHelper.VERBOSE_DATALOG = false;
-    DebugHelper.VERBOSE_RESULTS = false;
+    String schema_datalog = "";
+    String schema_graql = "";
+    String data_datalog = "";
+    String data_graql = "";
+    DatalogExecutor de = null;
+    GraqlExecutor ge = null;
+    BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+    System.out.println("Enter graql query to be compared");
+    System.out.println("Start a line with '~' for graql-only parsing");
+    System.out.println("Enter \"exit\" to exit to menu");
+    System.out.println("Terminate with \"schema\" to append to schema");
+    System.out.println("Termiante with \"data\" to append to data");
+    System.out.println("Termiante with \"query\" to execute query");
+    loop:
+    while (true) {
+      String input_graql = "";
+      String input_datalog = "";
+      String command = "";
+      while (true) {
+        String line = br.readLine();
+        if (line.equals("query") || line.equals("schema") || line.equals("data")) {
+          command = line;
+          break;
+        }
+        line += "\n";
+        if (!line.startsWith("~")) {
+          input_datalog += line;
+          input_graql += line;
+        } else {
+          input_graql += line.substring(1);
+        }
+      }
+      //Trim trailing newlines
+      input_datalog = input_datalog.replaceFirst("\n++$","");
+      input_graql = input_graql.replaceFirst("\n++$","");
+      if (input_graql.equals("exit")) {
+        break;
+      }
+      if (command.equals("schema")) {
+        schema_graql += input_graql;
+        schema_datalog += input_datalog;
+        System.out.println("Schema added");
+        continue ;
+      }
+      if (command.equals("data")) {
+        data_graql += input_graql;
+        data_datalog += input_datalog;
+        System.out.println("Data added");
+        continue ;
+      }
+      if (command.equals("query")) {
+        if (de == null) {
+          de = new DatalogExecutor(new TestEnvironment(schema_datalog, data_datalog));
+          ge = new GraqlExecutor(new TestEnvironment(schema_graql, data_graql));
+        }
+        Result r_d = de.execute(input_datalog);
+        Result r_g = ge.execute(input_graql);
+        System.out.println("Datalog Results:");
+        r_d.print();
+        System.out.println("Graql Results:");
+        r_g.print();
+        if (!r_d.equals(r_g)) {
+          System.out.println("\u001b[31mNot Equal\u001b[0m");
+        } else {
+          System.out.println("\u001b[32mEqual\u001b[0m");
+        }
+        continue ;
+      }
+      System.out.println("ERROR - UNKNOWN COMMAND");
+    }
   }
 
   /**

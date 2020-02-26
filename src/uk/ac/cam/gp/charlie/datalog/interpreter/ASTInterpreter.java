@@ -86,8 +86,8 @@ public class ASTInterpreter {
       //Define instance relations (e.g. insert ($x,$y) isa friends, inserts a friends with <friend,$x> as a plays entry
       for (Entry<Plays, Variable> entry : insert.plays) {
         toRet.append(String
-            .format("instancerel(e_%d,e_%d,r_%d).\n", iNum, c.resolveScope(entry.getValue()),
-                c.getPlaysNumber(entry.getKey())));
+            .format("instancerel(e_%d,e_%d,r_%d,%s).\n", iNum, c.resolveScope(entry.getValue()),
+                c.getPlaysNumber(entry.getKey()),c.getIdempotencyString()));
         //entry.getValue() is the variable which plays in this relation, here we're binding the instances
         //so that if x is deleted, then '(x,y)isa friends' is deleted.
         c.bindInstanceToInstance(c.resolveScope(entry.getValue()),iNum);
@@ -139,7 +139,7 @@ public class ASTInterpreter {
           vars.add(relates_s);
           invVars.add(relates_s);
           invConditions.add(String
-              .format("instancerel(X,%s,r_%d)",relates_s,c.getPlaysNumber(entry.getKey())));
+              .format("instancerel(X,%s,r_%d,_)",relates_s,c.getPlaysNumber(entry.getKey())));
           insert.plays.add(new SimpleEntry<>(entry.getKey(),entry.getValue()));
           variableMap.put(relates_s,entry.getValue());
         }
@@ -236,8 +236,10 @@ public class ASTInterpreter {
             relatesString = "Var"+c.getVariableNumber(null);
             vars.add(relatesString);
           }
+          String idem_var = "Var"+c.getVariableNumber(null);
+          vars.add(idem_var);
           datalogConditions.add(String
-              .format("instancerel(%s,%s,%s)", varString, relates_s, relatesString));
+              .format("instancerel(%s,%s,%s,%s)", varString, relates_s, relatesString,idem_var));
           entity_role_pairs.add(new SimpleEntry<>(relates_s,relatesString));
         }
         //the same variable cannot represent 2 relations with the same role and same binding

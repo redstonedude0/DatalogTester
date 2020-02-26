@@ -1,0 +1,28 @@
+###Schema
+
+#Testing with subtyping and direct types
+
+define
+
+friends sub relation,
+  relates friend;
+
+~name sub attribute,
+~  datatype string;
+
+person sub entity,
+  has name,
+  plays friend;
+
+adult sub person;
+
+###Data
+insert $a isa adult, has name "Alice";
+       $b isa adult, has name "Bob";
+       (friend: $a,friend: $b) isa friends;
+
+###Test
+match $a has name $aName; get;
+match $a isa adult; get;
+match $a isa person; get;
+match $a isa entity; get;
