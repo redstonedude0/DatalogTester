@@ -53,17 +53,16 @@ public class Workbench {
       System.out.println("##################################");
       System.out.println("Select Task:");
       System.out.println("  Interactive Interface:");
-      System.out.println("    (1) Interactive Graql->AST->Datalog input [ONLY SCHEMA]");
-      System.out.println("    (2) Interactive Graql->Datalog input w/ preloaded AST");
-      System.out
-          .println("    (3) Interactive Graql/Datalog Testing w/ result comparison [TO BE ADDED]");
+      System.out.println("    (1) Interactive Graql->AST->Datalog");
+      System.out.println("    (2) Interactive Graql->Datalog w/ shortcuts");
+      System.out.println("    (3) Interactive Graql/Datalog Testing w/ result comparison");
+      System.out.println("    (4) Interactive Comparison Tests");
       System.out.println("  Static Tests:");
-      System.out.println("    (4) Run TESTASTInterpreter for JUnit tests of AST->Datalog");
-      System.out.println("    (5) Run raw datalog from datalog.test");
+      System.out.println("    (5) Run Datalog check");
+      System.out.println("    (6) Run TESTASTInterpreter for JUnit tests of AST->Datalog");
+      System.out.println("    (7) Run raw datalog from datalog.test");
       System.out.println("    (6) Run stock Graql->AST test");
-      System.out.println("    (7) Run GRAKN graql test");
-      System.out.println("    [8] Interactive Datalog Interface");
-      System.out.println("    [9] Interactive Comparison Tests");
+      System.out.println("    (9) Run GRAKN graql test");
 
       String input = br.readLine();
       switch (input) {
@@ -74,25 +73,25 @@ public class Workbench {
           interactive_datalogPreloaded();
           break;
         case "3":
-          System.out.println("Unimplemented.");
+          interactive_live_comparison();
           break;
         case "4":
-          static_TESTASTInterpreter();
+          interactive_comparison();
           break;
         case "5":
-          static_datalogFile();
-          break;
-        case "6":
-          static_graqlAST();
-          break;
-        case "7":
-          static_graknconnection();
-          break;
-        case "8":
           interactive_datalog();
           break;
+        case "6":
+          static_TESTASTInterpreter();
+          break;
+        case "7":
+          static_datalogFile();
+          break;
+        case "8":
+          static_graqlAST();
+          break;
         case "9":
-          interactive_comparison();
+          static_graknconnection();
           break;
         default:
           System.out.println("Unknown input " + input);
@@ -182,39 +181,97 @@ public class Workbench {
     BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
     TestEnvironment te = new TestEnvironment("", "");
     DatalogEngine de = new SemiNaiveEngine();
-    String init = "";
-    init += "instanceof(e_0,employment).";
-    init += "instanceof(e_1,person).";
-    init += "instanceof(e_2,person).";
-    init += "t_playsrole(t_1,employee).";
-    init += "t_playsrole(t_1,employer).";
-    init += "instancerel(e_0,e_1,employee).";//e1,e2 are employees
-    init += "instancerel(e_0,e_1,employer).";
-    init += "test(a).";
-    init += "ground(P1,R1,W1,W2) :- instanceof(P1,W1), t_playsrole(W2,R1).";
-    init += "ground(P1,R1) :- ground(P1,R1,_,_).";
-    init += "disjoint(P1,R1,P2,R2) :- ground(P1,R1), ground(P2,R2), P1 != P2.";
-    init += "disjoint(P1,R1,P2,R2) :- ground(P1,R1), ground(P2,R2), R1 != R2.";
-    init += "query(P1,P2,P3,P4) :- \n"
-        + "                  instancerel(X,P1,P3),\n"
-        + "                  instancerel(X,P2,P4),\n"
-        + "                  disjoint(P1,P3,P2,P4),  \n"
-        + "                  disjoint(P2,P4,P1,P3).  \n"
-//        + "                        instanceof (Z,employment),\n"
-//        + "                        instancerel(Z,P2,employee),\n"
-//        + "                        instancerel(Z,Y ,employer),\n"
-//        + "                        P1 != P2,\n"
-//        + "                        not invariant_1_inv(P1,P2).\n"
-//        + "invariant_1_inv(P1,P2) :-  instanceof(W,coworkers),\n"
-//        + "                          instancerel(W,P1,employee),\n"
-//        + "                          instancerel(W,P2,employee).";
-    ;
-    String query = "query(P1,P2,P3,P4).";
+    String init = "instanceattr(e_3, a_0, const_3).\n"
+        + "t_subs(t_5, usflxmubia).\n"
+        + "instanceattr(e_2, a_0, const_2).\n"
+        + "t_hasattr(t_4, a_0).\n"
+        + "instanceattr(e_14, a_0, const_14).\n"
+        + "instanceattr(e_6, a_0, const_6).\n"
+        + "t_subs(t_6, relation).\n"
+        + "t_subs(t_1, entity).\n"
+        + "instanceattr(e_0, a_0, const_0).\n"
+        + "t_subs(t_7, relation).\n"
+        + "instanceof(e_17, t_7).\n"
+        + "instanceof(e_16, t_6).\n"
+        + "instancerel(e_15, e_14, r_0).\n"
+        + "instancerel(e_16, e_12, r_0).\n"
+        + "instanceof(e_13, t_5).\n"
+        + "t_subs(t_8, relation).\n"
+        + "instancerel(e_19, e_12, r_0).\n"
+        + "instanceof(e_18, t_8).\n"
+        + "instanceattr(e_12, a_0, const_12).\n"
+        + "instancerel(e_18, e_14, r_0).\n"
+        + "instancerel(e_20, e_13, r_0).\n"
+        + "instanceof(e_5, t_2).\n"
+        + "instanceattr(e_5, a_0, const_5).\n"
+        + "instanceattr(e_7, a_0, const_7).\n"
+        + "t_subs(relation, concept).\n"
+        + "instanceattr(e_10, a_0, const_10).\n"
+        + "ground(E1, R1, W1, W2, W3) :- instanceof(E1, W1), instancerel(W2, W3, R1).\n"
+        + "instanceof(e_10, t_4).\n"
+        + "t_hasattr(t_1, a_0).\n"
+        + "instanceof(Concept, Supertype) :- instanceof(Concept, Subtype), t_subs(Subtype, Supertype).\n"
+        + "instanceof(e_8, t_3).\n"
+        + "instanceattr(e_9, a_0, const_9).\n"
+        + "instancerel(e_15, e_1, r_1).\n"
+        + "instanceof(e_20, t_8).\n"
+        + "instancerel(e_20, e_6, r_2).\n"
+        + "t_subs(entity, concept).\n"
+        + "instanceof(e_12, t_5).\n"
+        + "instanceattr(e_8, a_0, const_8).\n"
+        + "instanceof(e_15, t_6).\n"
+        + "t_subs(rule, concept).\n"
+        + "t_subs(t_4, entity).\n"
+        + "t_hasattr(t_3, a_0).\n"
+        + "instanceof(e_11, t_4).\n"
+        + "instancerel(e_19, e_8, r_2).\n"
+        + "instanceof(e_4, t_2).\n"
+        + "instancerel(e_16, e_1, r_1).\n"
+        + "instanceof(e_2, t_1).\n"
+        + "ground(E1, R1) :- ground(E1, R1, _, _, _).\n"
+        + "instanceof(e_1, t_1).\n"
+        + "instanceattr(e_11, a_0, const_11).\n"
+        + "instanceattr(e_1, a_0, const_1).\n"
+        + "instanceattr(e_4, a_0, const_4).\n"
+        + "t_subs(t_3, mbjhsbmvpo).\n"
+        + "t_subs(t_0, relation).\n"
+        + "t_hasattr(t_2, a_0).\n"
+        + "disjoint(E1, R1, E2, R2) :- ground(E1, R1), ground(E2, R2), E1 != E2.\n"
+        + "instanceof(e_6, t_3).\n"
+        + "t_hasattr(t_5, a_0).\n"
+        + "instanceof(e_3, t_2).\n"
+        + "instanceof(e_19, t_8).\n"
+        + "instancerel(e_17, e_0, r_1).\n"
+        + "instanceof(e_7, t_3).\n"
+        + "instanceof(e_9, t_4).\n"
+        + "instancerel(e_17, e_7, r_2).\n"
+        + "instancerel(e_18, e_8, r_2).\n"
+        + "instanceof(e_14, t_5).\n"
+        + "instanceof(e_0, t_1).\n"
+        + "instanceattr(e_13, a_0, const_13).\n"
+        + "t_subs(t_2, azjwbsgazg).\n"
+        + "disjoint(E1, R1, E2, R2) :- ground(E1, R1), ground(E2, R2), R1 != R2."
+        + "query(Var0,Var1,Var2,Var3,Var4) :- instanceattr(Var0,a_0,Var1), instanceof(Var2,t_8), instancerel(Var2,Var0,r_2), instancerel(Var2,Var3,r_0), disjoint(Var0,r_2,Var3,r_0), disjoint(Var3,r_0,Var0,r_2), instanceof(Var3,concept), instanceattr(Var3,a_0,Var4).\n";
+    String query = "query(Var0,Var1,Var2,Var3,Var4).";
     de.init(DatalogParser.parseProgram(new DatalogTokenizer(new StringReader(init))));
     Set<PositiveAtom> b = de.query(
         DatalogParser.parseClauseAsPositiveAtom(new DatalogTokenizer(new StringReader(query))));
     System.out.println(b);
 
+  }
+
+  public static void interactive_live_comparison()
+      throws InvocationTargetException, NoSuchMethodException, IllegalAccessException, IOException {
+    //TODO: does not work for now as graqlparser does not parse properly
+    TestEnvironment te = new TestEnvironment("\n", "\n");
+    DatalogExecutor de = new DatalogExecutor(te);
+    DebugHelper.VERBOSE_AST = true;
+    DebugHelper.VERBOSE_DATALOG = true;
+    DebugHelper.VERBOSE_RESULTS = true;
+    interactiveLoop(de,new HashMap<>(), new HashMap<>(), true);
+    DebugHelper.VERBOSE_AST = false;
+    DebugHelper.VERBOSE_DATALOG = false;
+    DebugHelper.VERBOSE_RESULTS = false;
   }
 
   /**
@@ -247,7 +304,12 @@ public class Workbench {
     loop:
     while (true) {
       if (displayPrompt_ast || displayPrompt_graql) {
-        System.out.println("Enter graql query to be completed, terminate with blank line to execute");
+        if (extendedCommit) {
+          System.out
+              .println("Enter graql query to be completed, terminate with 'commit' on blank line to execute");
+        } else {
+          System.out.println("Enter graql query to be completed, terminate with blank line to execute");
+        }
         System.out.println("Enter \"exit\" to exit to menu");
         if (displayPrompt_ast) {
           int astNum = 0;

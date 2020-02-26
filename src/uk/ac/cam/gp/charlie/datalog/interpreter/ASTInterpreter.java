@@ -47,7 +47,7 @@ public class ASTInterpreter {
       //Get a unique type number to represent this new type (should be a t_ string)
       String typeString = c.getTypeString(define.identifier);
       //Define the type subs fact
-      toRet.append(String.format("t_subs(%s,%s).\n", typeString, define.subs.identifier));
+      toRet.append(String.format("t_subs(%s,%s).\n", typeString, c.getTypeString(define.subs.identifier)));
       //Define that this type has each attribute
       for (Attribute attribute : define.attributes) {
         toRet.append(String

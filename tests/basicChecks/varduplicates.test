@@ -22,3 +22,5 @@ insert $a isa person, has name "Alice";
 ###Test
 match $a has name $aName; ($a,$b) isa friends; $b has name $bName; get;
 match $a has name $aName; ($a,$b) isa friends; $a has name $aName; get;
+match $a has name $aName; (friend: $a,$b) isa friends; $a has name $aName; get;
+match $a has name $aName; (friend: $a) isa friends; $a has name $aName; get;
