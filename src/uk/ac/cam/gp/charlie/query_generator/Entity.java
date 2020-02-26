@@ -33,15 +33,13 @@ public class Entity {
         instances.add(name);
     }
 
-    String getRandomInstance(){
-        Random random = new Random();
-        Entity e = getRandomClosureEntity();
+    String getRandomInstance(Random random){
+        Entity e = getRandomClosureEntity(random);
         int ninstance = random.nextInt(e.instances.size());
         return e.instances.get(ninstance);
     }
 
-    private Entity getRandomClosureEntity(){
-        Random random = new Random();
+    private Entity getRandomClosureEntity(Random random){
         int n = random.nextInt(closure.size());
         for (Entity e : closure) {
             if (n-- == 0) return e;
