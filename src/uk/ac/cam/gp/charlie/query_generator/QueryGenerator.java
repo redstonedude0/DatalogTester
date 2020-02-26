@@ -1,5 +1,6 @@
 package uk.ac.cam.gp.charlie.query_generator;
 
+import uk.ac.cam.gp.charlie.DebugHelper;
 import uk.ac.cam.gp.charlie.Result;
 import uk.ac.cam.gp.charlie.datalog.DatalogExecutor;
 import uk.ac.cam.gp.charlie.graql.GraqlExecutor;
@@ -15,20 +16,15 @@ public class QueryGenerator {
     private static final int OBJS_PER_RELATION = 10;
     private static final int[] TRAVERSE_QUERIES = {3, 4, 5};
 
-    public static TestSet generateTestSet(){
-        Random random = new Random();
-        List<String> graqlSchema = new ArrayList<>();
+    private static void generateAttributes(List<String> graqlSchema){
+        String str = "define name sub attribute, datatype string;";
+        graqlSchema.add(str);
+    }
 
-        // generate attributes
-        {
-            String str = "define name sub attribute, datatype string;";
-            graqlSchema.add(str);
-        }
-
-        // generate entities
+    private static List<Entity> generateEntities(List<String> graqlSchema, Random random){
         List<Entity> entities = new ArrayList<>();
         for(int i = 0; i<N_ENTITIES; i++){
-            Entity entity = new Entity(randomString());
+            Entity entity = new Entity(randomString(random));
             entities.add(entity);
             entity.isChild(entities.get(random.nextInt(entities.size())));
             String str = "define " + entity.name + " sub " +
@@ -36,21 +32,22 @@ public class QueryGenerator {
                     ", plays " + entity.name + "R, has name;";
             graqlSchema.add(str);
         }
+        return entities;
+    }
 
-        {
-            // needed for the roles to be defined
-            String str = "define " + randomString() + " sub relation";
-            for(Entity e: entities){
-                str += ", relates " + e.name + "R";
-            }
-            str += ";";
-            graqlSchema.add(0, str);
+    private static void defineRoles(List<String> graqlSchema, List<Entity> entities){
+        String str = "define rolesDefiningRelation sub relation";
+        for(Entity e: entities){
+            str += ", relates " + e.name + "R";
         }
+        str += ";";
+        graqlSchema.add(0, str);
+    }
 
-        // generate relations
+    private static List<Relation> defineRelations(List<String> graqlSchema, List<Entity> entities, Random random){
         List<Relation> relations = new ArrayList<>();
         for(int i = 0; i<N_RELATIONS; i++){
-            Relation relation = new Relation(randomString());
+            Relation relation = new Relation(randomString(random));
             int nplayers = random.nextInt(2)+1;
             for (int j = 0; j<nplayers; j++){
                 relation.addPlayer(entities.get(random.nextInt(entities.size())));
@@ -63,28 +60,29 @@ public class QueryGenerator {
             relations.add(relation);
             graqlSchema.add(str);
         }
+        return relations;
+    }
 
-        List<String> graqlData = new ArrayList<>();
-
-        // insert entity instances
+    private static void insertEntities(List<String> graqlData, List<Entity> entities, Random random){
         for(Entity e : entities){
             for(int i = 0; i<OBJS_PER_ENTITY; i++){
-                String name = randomString();
+                String name = randomString(random);
                 e.addInstance(name);
                 String str = "insert $p isa " + e.name + ", has name \"" + name + "\";";
                 graqlData.add(str);
             }
         }
+    }
 
-        // insert relation instances
+    private static void insertRelations(List<String> graqlData, List<Relation> relations, Random random){
         for(Relation r : relations){
             for(int i = 0; i<OBJS_PER_RELATION; i++){
                 String str = "match ";
                 for(Entity e: r.players){
-                    String instance = e.getRandomInstance();
+                    String instance = e.getRandomInstance(random);
                     str += " $" + e.name + " isa " + e.name + ", has name \"" + instance + "\";";
                 }
-                str += " insert $" + randomString() + " (";
+                str += " insert $" + randomString(random) + " (";
                 for(Entity e: r.players){
                     str += " " + e.name + "R: $" + e.name + ", ";
                 }
@@ -93,16 +91,15 @@ public class QueryGenerator {
                 graqlData.add(str);
             }
         }
+    }
 
-        List<String> graqlQueries = new ArrayList<>();
-
-        // traverse queries
+    private static void traverseQueries(List<String> graqlQueries, List<Entity> entities, List<Relation> relations, Random random){
         int length = 0;
         while(length < TRAVERSE_QUERIES.length){
             length++;
             for(int i = 0; i<TRAVERSE_QUERIES[length-1]; i++){
                 String str = "match ";
-                String lastId = "$" + randomString();
+                String lastId = "$" + randomString(random);
                 Entity lastEntity = entities.get(random.nextInt(entities.size()));
                 while(lastEntity.relations.size()==0) lastEntity = entities.get(random.nextInt(entities.size()));
 
@@ -115,7 +112,7 @@ public class QueryGenerator {
                     Entity newEntity = lastEntity;
                     for(Entity e: r.players){
                         if (!e.equals(lastEntity)){
-                            newId = "$" + randomString();
+                            newId = "$" + randomString(random);
                             newEntity = e;
                             str += ", " + newEntity.name + "R: " + newId;
                         }
@@ -130,6 +127,39 @@ public class QueryGenerator {
                 graqlQueries.add(str);
             }
         }
+    }
+
+
+    public static TestSet generateTestSet(Random random){
+        // SCHEMA
+        List<String> graqlSchema = new ArrayList<>();
+
+        // generate attributes
+        generateAttributes(graqlSchema);
+
+        // generate entities
+        List<Entity> entities = generateEntities(graqlSchema, random);
+
+        // define roles, needed for the roles to be defined
+        defineRoles(graqlSchema, entities);
+
+        // generate relations
+        List<Relation> relations = defineRelations(graqlSchema, entities, random);
+
+        // DATA
+        List<String> graqlData = new ArrayList<>();
+
+        // insert entity instances
+        insertEntities(graqlData, entities, random);
+
+        // insert relation instances
+        insertRelations(graqlData, relations, random);
+
+        // QUERIES
+        List<String> graqlQueries = new ArrayList<>();
+
+        // traverse queries
+        traverseQueries(graqlQueries, entities, relations, random);
 
         graqlSchema.forEach(System.out::println);
         graqlData.forEach(System.out::println);
@@ -139,8 +169,7 @@ public class QueryGenerator {
     }
 
 
-    private static String randomString() {
-        Random random = new Random();
+    private static String randomString(Random random) {
         int char_a = 'a';
         int char_z = 'z';
         int length = 10;
@@ -159,12 +188,19 @@ public class QueryGenerator {
         }
     }
 
-    public static void main(String[] args) {
-        TestSet ts = generateTestSet();
+    public static void runTests(long seed){
+        Random random = new Random(seed);
+        TestSet ts = generateTestSet(random);
         GraqlExecutor gex = new GraqlExecutor(ts.graqlEnv);
         DatalogExecutor dex = new DatalogExecutor(ts.datalogEnv);
         ts.queries.forEach(q -> compareResults(gex, dex, q));
     }
+
+    public static void main(String[] args) {
+        runTests(0);
+    }
+
+
 
 
 }
