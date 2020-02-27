@@ -34,7 +34,8 @@ public class Context {
     //2 pairs (entity,role) are disjoint if either the entities, or roles, disunify (or provided by different relations)
     precode += "disjoint(E1,R1,E2,R2) :- ground(E1,R1), ground(E2,R2), E1 != E2.\n";
     precode += "disjoint(E1,R1,E2,R2) :- ground(E1,R1), ground(E2,R2), R1 != R2.\n";
-///*UNDO*/    precode += "disjoint(E1,R1,E2,R2) :- ground(E1,R1), ground(E2,R2), instancerel(_,E1,R1,IDEM1), instancerel(_,E2,E2,IDEM2).\n";
+    /*UNDO*/
+    precode += "disjoint(E1,R1,E2,R2) :- ground(E1,R1), ground(E2,R2), instancerel(_,E1,R1,IDEM1), instancerel(_,E2,E2,IDEM2), IDEM1 != IDEM2.\n";
     if (DebugHelper.VERBOSE_DATALOG) {
       System.out.println(prettifyDatalog(precode));
     }

@@ -86,11 +86,9 @@ public class Result {
 
   public Result(List<Map<String, ResultValue>> results, boolean doSetify) {
     this.results = results;
-///*UNDO*/    if (doSetify) {
-///*UNDO*/      System.out.println("Pre-Set-LIKE");
-///*UNDO*/      this.print();
-      setify();//ensure set-like
-///*UNDO*/    }
+    if (doSetify) {//Datalog will pre-setify results, graql won't incase it returns a non-set intentionally
+      setify();//ensure set-like (should be called iff datalog result)
+    }
   }
 
   public static Result fromGrakn(List<List<ConceptMap>> graknResults) {
@@ -234,7 +232,7 @@ public class Result {
       boolean alreadyInNewResults = false;
       for (Map<String,ResultValue> newResult: newResults) {
         //if map equal
-        boolean mapEqual = resultMapsEqual(newResult, result,false /* /*UNDO UNDO*/);
+        boolean mapEqual = resultMapsEqual(newResult, result,true);//Need strong matching here
         if (mapEqual) {
           alreadyInNewResults = true;
           break;//no point checking rest of map

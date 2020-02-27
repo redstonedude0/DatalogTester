@@ -65,7 +65,6 @@ insert $aa isa person, has name "Alice";
        (friend:$ab,friend:$aa) isa friends;
        (friend:$ac,friend:$bc) isa friends;
        (friend:$ab,friend:$ba) isa friends;
-
 ###Test
 match ($a) isa employment; get;
 match ($a,$b) isa employment; get;

@@ -1,0 +1,34 @@
+###Schema
+define
+
+# Alice and Favio are friends
+# Alice and Bob are friends
+# Delta and Ellie are friends
+
+
+~name sub attribute,
+~  datatype string;
+
+person sub entity,
+  has name,
+  plays friend;
+
+friends sub relation,
+  relates friend;
+
+define friends-are-transitive sub rule, when {
+  (friend: $f1, friend:$f2) isa friends;
+  (friend: $f2, friend:$f3) isa friends;
+}, then {
+  (friend:$f1, friend:$f3) isa friends;
+};
+
+###Data
+insert $a isa person, has name "Alice";
+       $b isa person, has name "Bob";
+       $f isa person, has name "Favio";
+       (friend: $a, friend: $f) isa friends;
+       (friend: $a, friend: $b) isa friends;
+###Test
+match $rel (friend: $f1, friend: $f2) isa friends; get $f1, $f2;
+

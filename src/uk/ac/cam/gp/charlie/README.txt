@@ -46,3 +46,11 @@ Overview of quirks about the datalog implementation:
   interface to be smoother, and is how insertion within match queries (and rules) is calculated.
 - the engine automatically 'commits' on each match query, this is the point at which rule invariants are checked and fixed
 
+
+TESTS MEANT TO FAIL:
+large_employed.test (6/6) - rules currently allow insertion of illegal data
+  Expected: {0,5},{5,0},{0,1},{1,0},{5,1},{1,5},{3,4},{4,3}
+targetedtest_1.test (1/1) - same as large_employed.test
+  Expected: {0,1},{1,0},{0,2},{2,0},{1,2},{2,1}CHECK
+duplicants.test(4/7)
+  Expected: {0,3},{3,0},{1,0},{0,1},{2,5},{5,2},{1,3},{3,1}
