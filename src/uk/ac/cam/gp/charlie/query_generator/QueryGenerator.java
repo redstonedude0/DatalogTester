@@ -9,6 +9,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+/**
+ * @author gc579@cam.ac.uk
+ */
 public class QueryGenerator {
     private static final int N_ENTITIES = 5;
     private static final int N_RELATIONS = 3;

@@ -5,6 +5,7 @@ import java.util.List;
 
 /**
  * Represents a 'plays' relationship connection.
+ * @author hrjh2@cam.ac.uk
  */
 public class Plays {
 

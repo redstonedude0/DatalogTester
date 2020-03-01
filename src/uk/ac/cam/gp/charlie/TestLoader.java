@@ -11,6 +11,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
 
+/**
+ * @author hrjh2@cam.ac.uk
+ */
 public class TestLoader {
 
   private static class TestFile {

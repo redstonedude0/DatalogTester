@@ -27,6 +27,8 @@ import uk.ac.cam.gp.charlie.ast.queries.match.QueryMatch;
 
 /**
  * Parse Graql into an ASTE
+ * @author hrjh2@cam.ac.uk
+ * @author cp660@cam.ac.uk
  */
 public class GraqlParser {
 

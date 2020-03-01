@@ -15,6 +15,9 @@ import java.util.stream.Collectors;
 import static graql.lang.Graql.parseList;
 
 
+/**
+ * @author gc579@cam.ac.uk
+ */
 public class GraqlExecutor extends Executor {
 
   private GraknClient.Session session;

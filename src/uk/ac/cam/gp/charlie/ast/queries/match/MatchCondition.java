@@ -10,6 +10,7 @@ import uk.ac.cam.gp.charlie.ast.Variable;
  * - $emp (employer: $x, employee: $y) isa employment;
  * - $emp (employer: $x, employee: $y) isa employment, has reference-id $ref;
  * - $fr ($x, $y) isa friendship;
+ * @author hrjh2@cam.ac.uk
  */
 public abstract class MatchCondition {
 

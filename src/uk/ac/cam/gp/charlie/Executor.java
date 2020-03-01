@@ -4,6 +4,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * @author hrjh2@cam.ac.uk
+ */
 public abstract class Executor implements AutoCloseable{
 
   /**

@@ -13,6 +13,7 @@ import uk.ac.cam.gp.charlie.ast.Variable;
 /**
  * Represents an {@link MatchCondition} stating that a thing
  * is of a type, has some attributes, and plays in some relations
+ * @author hrjh2@cam.ac.uk
  */
 public class ConditionIsa extends MatchCondition {
 

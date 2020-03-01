@@ -7,6 +7,7 @@ package uk.ac.cam.gp.charlie.ast;
  *  e.g. '$x' in '$y has name $x'
  * - a ConstantValue
  *  e.g. 'Bob' in '$y has name "Bob"'
+ *  @author hrjh2@cam.ac.uk
  */
 public abstract class AttributeValue {
 

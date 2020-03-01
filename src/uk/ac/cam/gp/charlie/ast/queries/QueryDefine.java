@@ -7,6 +7,7 @@ import uk.ac.cam.gp.charlie.ast.Plays;
 
 /**
  * Represents a query to define the schema representing an entity or relation
+ * @author hrjh2@cam.ac.uk
  */
 public class QueryDefine extends Query {
 

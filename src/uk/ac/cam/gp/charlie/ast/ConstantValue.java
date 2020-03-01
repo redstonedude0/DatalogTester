@@ -6,6 +6,7 @@ import java.util.List;
 
 /**
  * Represents a constant
+ * @author hrjh2@cam.ac.uk
  */
 public class ConstantValue extends AttributeValue {
 

@@ -3,6 +3,9 @@ package uk.ac.cam.gp.charlie;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * @author hrjh2@cam.ac.uk
+ */
 public class TestResults {
 
   public String testName = "Unnamed Test";

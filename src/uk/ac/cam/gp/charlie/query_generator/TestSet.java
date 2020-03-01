@@ -5,6 +5,9 @@ import uk.ac.cam.gp.charlie.TestEnvironment;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * @author gc579@cam.ac.uk
+ */
 public class TestSet {
     TestEnvironment datalogEnv;
     TestEnvironment graqlEnv;

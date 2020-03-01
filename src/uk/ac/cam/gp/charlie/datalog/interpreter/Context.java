@@ -18,6 +18,7 @@ import java.util.Map.Entry;
 
 /**
  * Represents a schema and data (test environment) in AST form
+ * @author hrjh2@cam.ac.uk
  */
 public class Context {
 

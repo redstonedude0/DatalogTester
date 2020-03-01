@@ -23,6 +23,7 @@ import java.util.Map.Entry;
 
 /**
  * Interprets an AST (AST->Datalog transformation)
+ * @author hrjh2@cam.ac.uk
  */
 public class ASTInterpreter {
 

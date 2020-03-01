@@ -40,6 +40,7 @@ import java.util.stream.Stream;
 
 /**
  * Main file for running the interactive user workbench.
+ * @author hrjh2@cam.ac.uk
  */
 public class Workbench {
 

@@ -15,6 +15,7 @@ import java.util.Map.Entry;
 
 /**
  * Class to help with debugging, and provides interactive console output
+ * @author hrjh2@cam.ac.uk
  */
 public class DebugHelper {
 

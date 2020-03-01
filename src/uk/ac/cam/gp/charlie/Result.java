@@ -13,6 +13,9 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+/**
+ * @author hrjh2@cam.ac.uk
+ */
 public class Result {
 
   public static class ResultValue {

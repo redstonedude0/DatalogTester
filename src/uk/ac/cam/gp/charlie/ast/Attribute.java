@@ -7,6 +7,7 @@ import java.util.List;
  * Represents an attribute a thing (entity, relation) 'has'.
  *
  * Note: Later will need to change to DefineAttribute as something can sub attribute.
+ * @author hrjh2@cam.ac.uk
  */
 public class Attribute {
 

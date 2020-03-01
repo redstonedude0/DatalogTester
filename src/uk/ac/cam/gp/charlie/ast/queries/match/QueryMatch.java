@@ -8,6 +8,7 @@ import uk.ac.cam.gp.charlie.ast.queries.QueryInsert;
 
 /**
  * Represents a match query
+ * @author hrjh2@cam.ac.uk
  */
 public class QueryMatch extends Query {
 

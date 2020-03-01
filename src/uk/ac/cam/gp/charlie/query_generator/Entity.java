@@ -2,6 +2,9 @@ package uk.ac.cam.gp.charlie.query_generator;
 
 import java.util.*;
 
+/**
+ * @author gc579@cam.ac.uk
+ */
 public class Entity {
     String name;
     Set<Entity> closure;

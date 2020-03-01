@@ -5,6 +5,7 @@ import java.util.List;
 
 /**
  * Represents a variable
+ * @author hrjh2@cam.ac.uk
  */
 public class Variable extends AttributeValue{
 

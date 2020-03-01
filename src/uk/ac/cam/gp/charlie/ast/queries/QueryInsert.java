@@ -12,7 +12,7 @@ import uk.ac.cam.gp.charlie.ast.Variable;
 
 /**
  * Represents an insert statement
- *
+ *@author hrjh2@cam.ac.uk
  */
 public class QueryInsert extends Query {
 

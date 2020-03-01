@@ -23,6 +23,9 @@ import uk.ac.cam.gp.charlie.ast.queries.match.QueryMatch;
 import uk.ac.cam.gp.charlie.datalog.interpreter.ASTInterpreter;
 import uk.ac.cam.gp.charlie.datalog.interpreter.Context;
 
+/**
+ * @author hrjh2@cam.ac.uk
+ */
 public class TESTAstInterpreter {
 
   public void assertDatalogEqual(Set<Clause> datalog_parsed, Set<String> datalog_raw) {

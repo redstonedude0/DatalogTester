@@ -22,6 +22,9 @@ import uk.ac.cam.gp.charlie.graql.parsing.GraqlParser;
 import java.util.*;
 import java.util.Map.Entry;
 
+/**
+ * @author hrjh2@cam.ac.uk
+ */
 public class DatalogExecutor extends Executor {
 
   private DatalogEngine engine; //The engine to use for datalog interpretation

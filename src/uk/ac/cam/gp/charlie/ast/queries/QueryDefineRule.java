@@ -8,6 +8,7 @@ import uk.ac.cam.gp.charlie.ast.queries.match.MatchCondition;
 
 /**
  * Represents abstract definition of a Grakn Rule.
+ * @author hrjh2@cam.ac.uk
  */
 public class QueryDefineRule extends Query {
 
