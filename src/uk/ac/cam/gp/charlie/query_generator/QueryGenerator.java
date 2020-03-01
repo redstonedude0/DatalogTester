@@ -10,21 +10,24 @@ import java.util.List;
 import java.util.Random;
 
 /**
+ * Generates random schemas, data and queries
  * @author gc579@cam.ac.uk
  */
 public class QueryGenerator {
-    private static final int N_ENTITIES = 5;
-    private static final int N_RELATIONS = 3;
-    private static final int OBJS_PER_ENTITY = 3;
-    private static final int OBJS_PER_RELATION = 10;
-    private static final int[] TRAVERSE_QUERIES = {3, 4, 5};
+    private static final int N_ENTITIES = 5;                    // number of entities to define
+    private static final int N_RELATIONS = 3;                   // number of relations to define
+    private static final int OBJS_PER_ENTITY = 3;               // number of objects to add per each entity
+    private static final int OBJS_PER_RELATION = 10;            // number of instances to add per relation
+    private static final int[] TRAVERSE_QUERIES = {3, 4, 5};    // number of traverse queries to generate, in order of length from 1
 
     private static void generateAttributes(List<String> graqlSchema){
+        // defines a single attribute that the various entities will use to be distinguishable
         String str = "define name sub attribute, datatype string;";
         graqlSchema.add(str);
     }
 
     private static List<Entity> generateEntities(List<String> graqlSchema, Random random){
+        // generates a random directed acyclic graph of entities with random name
         List<Entity> entities = new ArrayList<>();
         for(int i = 0; i<N_ENTITIES; i++){
             Entity entity = new Entity(randomString(random));
@@ -39,6 +42,10 @@ public class QueryGenerator {
     }
 
     private static void defineRoles(List<String> graqlSchema, List<Entity> entities){
+        // for simplicity each entity plays the same role in each relation it partecipate in and this is generated
+        // by appending R to the name of the entity, this clause is used to define all of them at the beginning
+        // in a dummy relation that will not be used
+
         String str = "define rolesDefiningRelation sub relation";
         for(Entity e: entities){
             str += ", relates " + e.name + "R";
@@ -48,6 +55,7 @@ public class QueryGenerator {
     }
 
     private static List<Relation> defineRelations(List<String> graqlSchema, List<Entity> entities, Random random){
+        // defines a relations with a random number of players (atm limited between 1 and 3)
         List<Relation> relations = new ArrayList<>();
         for(int i = 0; i<N_RELATIONS; i++){
             Relation relation = new Relation(randomString(random));
@@ -67,6 +75,7 @@ public class QueryGenerator {
     }
 
     private static void insertEntities(List<String> graqlData, List<Entity> entities, Random random){
+        // inserts a number of objects with random name to each entity
         for(Entity e : entities){
             for(int i = 0; i<OBJS_PER_ENTITY; i++){
                 String name = randomString(random);
@@ -78,6 +87,7 @@ public class QueryGenerator {
     }
 
     private static void insertRelations(List<String> graqlData, List<Relation> relations, Random random){
+        // inserts a number of instances to each relation between objects in the closure of the entities of players
         for(Relation r : relations){
             for(int i = 0; i<OBJS_PER_RELATION; i++){
                 String str = "match ";
@@ -96,11 +106,15 @@ public class QueryGenerator {
         }
     }
 
-    private static void traverseQueries(List<String> graqlQueries, List<Entity> entities, List<Relation> relations, Random random){
+    private static void traverseQueries(List<String> graqlQueries, List<Entity> entities, Random random){
+        // generates based on random paths of different lengths taken from entities to relations to other entities
+        // the name attributes of the instances of entities taken along the way are retrieved in order to be able to
+        // compare them between the implementations
         int length = 0;
         while(length < TRAVERSE_QUERIES.length){
             length++;
             for(int i = 0; i<TRAVERSE_QUERIES[length-1]; i++){
+                // generate a query of length length
                 String str = "match ";
                 String lastId = "$" + randomString(random);
                 Entity lastEntity = entities.get(random.nextInt(entities.size()));
@@ -162,7 +176,7 @@ public class QueryGenerator {
         List<String> graqlQueries = new ArrayList<>();
 
         // traverse queries
-        traverseQueries(graqlQueries, entities, relations, random);
+        traverseQueries(graqlQueries, entities, random);
 
         graqlSchema.forEach(System.out::println);
         graqlData.forEach(System.out::println);
@@ -173,6 +187,7 @@ public class QueryGenerator {
 
 
     private static String randomString(Random random) {
+        // generates a random string of 10 characters
         int char_a = 'a';
         int char_z = 'z';
         int length = 10;
@@ -184,6 +199,7 @@ public class QueryGenerator {
     }
 
     private static void compareResults(GraqlExecutor gex, DatalogExecutor dex, String query){
+        // executes a query on the two implementations and compares the results
         Result r1 = gex.execute(query);
         Result r2 = dex.execute(query);
         if(!r1.equals(r2)){
@@ -192,6 +208,7 @@ public class QueryGenerator {
     }
 
     public static void runTests(long seed){
+        // runs a set of randomly generated tests and compares the results of the two implementations
         Random random = new Random(seed);
         TestSet ts = generateTestSet(random);
         GraqlExecutor gex = new GraqlExecutor(ts.graqlEnv);
@@ -202,8 +219,4 @@ public class QueryGenerator {
     public static void main(String[] args) {
         runTests(0);
     }
-
-
-
-
 }

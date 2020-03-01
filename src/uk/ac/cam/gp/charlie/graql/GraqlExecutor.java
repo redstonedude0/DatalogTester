@@ -16,6 +16,7 @@ import static graql.lang.Graql.parseList;
 
 
 /**
+ * Executes a set of queries in a set environment in a Graql session
  * @author gc579@cam.ac.uk
  */
 public class GraqlExecutor extends Executor {
@@ -37,6 +38,8 @@ public class GraqlExecutor extends Executor {
     if (!DebugHelper.VERBOSE_GRAQL) {
       DebugHelper.absorbOutput();
     }
+
+    // insert schema
     GraknClient.Transaction schemaTxn = session.transaction().write();
     parseList(environment.schema).forEach(schemaTxn::execute);
     schemaTxn.commit();
@@ -49,6 +52,8 @@ public class GraqlExecutor extends Executor {
       if (!DebugHelper.VERBOSE_GRAQL) {
         DebugHelper.absorbOutput();
       }
+
+      // insert data
       GraknClient.Transaction dataTxn = session.transaction().write();
       parseList(environment.data).forEach(dataTxn::execute);
       dataTxn.commit();
@@ -65,6 +70,7 @@ public class GraqlExecutor extends Executor {
 
   @Override
   public Result execute(String query) {
+    // executes a single Graql query
     GraknClient.Transaction readTxn = session.transaction().read();
     if (DebugHelper.VERBOSE_GRAQL_INPUT) {
       System.out.println("Executing Graql Queries: " + query);
@@ -82,9 +88,10 @@ public class GraqlExecutor extends Executor {
     return result;
   }
 
-  private String randomString() {
-    Random random = new Random();
+  private static String randomString() {
+    // generates a random string
 
+    Random random = new Random();
     int char_a = 'a';
     int char_z = 'z';
     int length = 10;
@@ -94,7 +101,6 @@ public class GraqlExecutor extends Executor {
             .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
             .toString();
 
-    System.out.println(str);
     return str;
   }
 }
