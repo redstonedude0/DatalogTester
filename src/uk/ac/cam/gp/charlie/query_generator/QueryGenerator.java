@@ -1,6 +1,5 @@
 package uk.ac.cam.gp.charlie.query_generator;
 
-import uk.ac.cam.gp.charlie.DebugHelper;
 import uk.ac.cam.gp.charlie.Result;
 import uk.ac.cam.gp.charlie.datalog.DatalogExecutor;
 import uk.ac.cam.gp.charlie.graql.GraqlExecutor;
@@ -207,7 +206,7 @@ public class QueryGenerator {
         }
     }
 
-    public static void runTests(long seed){
+    public static void runRandomTests(long seed){
         // runs a set of randomly generated tests and compares the results of the two implementations
         Random random = new Random(seed);
         TestSet ts = generateTestSet(random);
@@ -217,6 +216,6 @@ public class QueryGenerator {
     }
 
     public static void main(String[] args) {
-        runTests(0);
+        runRandomTests(0);
     }
 }

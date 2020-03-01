@@ -38,6 +38,8 @@ import java.util.Map.Entry;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import static uk.ac.cam.gp.charlie.query_generator.QueryGenerator.runRandomTests;
+
 /**
  * Main file for running the interactive user workbench.
  * @author hrjh2@cam.ac.uk
@@ -62,8 +64,10 @@ public class Workbench {
       System.out.println("    (5) Run Datalog check");
       System.out.println("    (6) Run TESTASTInterpreter for JUnit tests of AST->Datalog");
       System.out.println("    (7) Run raw datalog from datalog.test");
-      System.out.println("    (6) Run stock Graql->AST test");
+      System.out.println("    (8) Run stock Graql->AST test");
       System.out.println("    (9) Run GRAKN graql test");
+      System.out.println("  Random Tests:");
+      System.out.println("    (10) Run random tests on Datalog and Graql");
 
       String input = br.readLine();
       switch (input) {
@@ -93,6 +97,9 @@ public class Workbench {
           break;
         case "9":
           static_graknconnection();
+          break;
+        case "10":
+          runRandomTests(0);
           break;
         default:
           System.out.println("Unknown input " + input);
